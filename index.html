@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Firebase Publisher Example</title>
+  <meta charset="UTF-8" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { display: block; margin: 10px 0; padding: 8px; width: 300px; }
+  </style>
+</head>
+<body>
+  <h1>Manage Publisher Record (Firebase)</h1>
+
+  <input id="firstName" placeholder="First Name" />
+  <input id="lastName" placeholder="Last Name" />
+  <input type="date" id="birthdate" placeholder="Birthdate" />
+  <button onclick="savePublisher()">Save Publisher</button>
+
+  <h3>All Saved Publishers:</h3>
+  <ul id="publisherList"></ul>
+
+  <script>
+    // 🔧 Replace this with your actual Firebase config
+    const firebaseConfig = {
+  apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
+  authDomain: "field-service-reporter.firebaseapp.com",
+  projectId: "field-service-reporter",
+  storageBucket: "field-service-reporter.firebasestorage.app",
+  messagingSenderId: "434729902657",
+  appId: "1:434729902657:web:c1b06d2695a47924f89cc0",
+  measurementId: "G-9N52K2CGDD"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Save Publisher to Firestore
+    async function savePublisher() {
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const birthdate = document.getElementById("birthdate").value;
+
+      if (!firstName || !lastName || !birthdate) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const docId = `${lastName}_${firstName}_${birthdate}`.replace(/\s+/g, "_");
+
+      await db.collection("publishers").doc(docId).set({
+        firstName,
+        lastName,
+        birthdate,
+        fullName: `${lastName}, ${firstName}`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert("Publisher saved online!");
+      loadPublishers();
+    }
+
+    // Load All Publishers
+    async function loadPublishers() {
+      const list = document.getElementById("publisherList");
+      list.innerHTML = "";
+
+      const snapshot = await db.collection("publishers").orderBy("timestamp", "desc").get();
+      snapshot.forEach(doc => {
+        const pub = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${pub.fullName} (Born: ${pub.birthdate})`;
+        list.appendChild(li);
+      });
+    }
+
+    // Auto-load on page open
+    window.onload = loadPublishers;
+  </script>
+</body>
+</html>
