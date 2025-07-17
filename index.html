@@ -1,29 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Firebase Publisher Example</title>
   <meta charset="UTF-8" />
+  <title>Publisher App with Login</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { display: block; margin: 10px 0; padding: 8px; width: 300px; }
+    body { font-family: Arial; padding: 30px; }
+    .hidden { display: none; }
+    input, button { margin: 10px 0; padding: 8px; width: 300px; }
+    .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; width: 400px; }
+    button { width: auto; display: inline-block; margin-right: 10px; }
+    .danger { color: red; font-size: 12px; }
   </style>
 </head>
 <body>
-  <h1>Manage Publisher Record (Firebase)</h1>
 
+<!-- 🔐 LOGIN PAGE -->
+<div id="loginPage" class="box">
+  <h2>Login</h2>
+  <label>Username:<br><input type="text" id="loginUsername"></label><br>
+  <label>Password:<br><input type="password" id="loginPassword"></label><br>
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- 🏠 HOME PAGE -->
+<div id="homePage" class="box hidden">
+  <h2>Welcome, <span id="loggedInUser"></span>!</h2>
+  <button onclick="goToManagePublisher()">Manage Publisher Record</button>
+  <button>Review Approvals</button>
+  <button>Add Report</button>
+  <button>Update Report</button>
+  <button>Export to Excel</button>
+  <button>Logout</button>
+  <button>Manage Users</button>
+  <div style="margin-top: 30px;">
+    <button onclick="clearAllData()">Clear All Data</button><br>
+    <span class="danger">Warning: This will delete all publisher and report data.</span>
+  </div>
+</div>
+
+<!-- 📋 MANAGE PUBLISHER PAGE -->
+<div id="publisherPage" class="box hidden">
+  <h2>Manage Publisher Record (Firebase)</h2>
   <input id="firstName" placeholder="First Name" />
   <input id="lastName" placeholder="Last Name" />
   <input type="date" id="birthdate" placeholder="Birthdate" />
   <button onclick="savePublisher()">Save Publisher</button>
+  <button onclick="backToHome()">Back</button>
 
-  <h3>All Saved Publishers:</h3>
+  <h4>All Saved Publishers:</h4>
   <ul id="publisherList"></ul>
+</div>
 
-  <script>
-    // 🔧 Replace this with your actual Firebase config
-    const firebaseConfig = {
+<script>
+  // Replace with your Firebase config
+  const firebaseConfig = {
   apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
   authDomain: "field-service-reporter.firebaseapp.com",
   projectId: "field-service-reporter",
@@ -33,50 +65,83 @@
   measurementId: "G-9N52K2CGDD"
 };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-    // Save Publisher to Firestore
-    async function savePublisher() {
-      const firstName = document.getElementById("firstName").value.trim();
-      const lastName = document.getElementById("lastName").value.trim();
-      const birthdate = document.getElementById("birthdate").value;
+  // 🔐 Simple Login
+  function login() {
+    const user = document.getElementById("loginUsername").value;
+    const pass = document.getElementById("loginPassword").value;
 
-      if (!firstName || !lastName || !birthdate) {
-        alert("Please fill in all fields.");
-        return;
-      }
-
-      const docId = `${lastName}_${firstName}_${birthdate}`.replace(/\s+/g, "_");
-
-      await db.collection("publishers").doc(docId).set({
-        firstName,
-        lastName,
-        birthdate,
-        fullName: `${lastName}, ${firstName}`,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      alert("Publisher saved online!");
-      loadPublishers();
+    if (user === "admin" && pass === "admin123") {
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("homePage").classList.remove("hidden");
+      document.getElementById("loggedInUser").textContent = user;
+    } else {
+      alert("Invalid credentials.");
     }
+  }
 
-    // Load All Publishers
-    async function loadPublishers() {
-      const list = document.getElementById("publisherList");
-      list.innerHTML = "";
+  function logout() {
+    document.getElementById("homePage").classList.add("hidden");
+    document.getElementById("loginPage").classList.remove("hidden");
+  }
 
-      const snapshot = await db.collection("publishers").orderBy("timestamp", "desc").get();
-      snapshot.forEach(doc => {
-        const pub = doc.data();
-        const li = document.createElement("li");
-        li.textContent = `${pub.fullName} (Born: ${pub.birthdate})`;
-        list.appendChild(li);
+  function clearAllData() {
+    if (confirm("Are you sure you want to delete all publisher data?")) {
+      db.collection("publishers").get().then(snapshot => {
+        snapshot.forEach(doc => doc.ref.delete());
+        alert("All publisher records deleted.");
+        loadPublishers();
       });
     }
+  }
 
-    // Auto-load on page open
-    window.onload = loadPublishers;
-  </script>
+  // 🔁 Page Navigation
+  function goToManagePublisher() {
+    document.getElementById("homePage").classList.add("hidden");
+    document.getElementById("publisherPage").classList.remove("hidden");
+    loadPublishers();
+  }
+
+  function backToHome() {
+    document.getElementById("publisherPage").classList.add("hidden");
+    document.getElementById("homePage").classList.remove("hidden");
+  }
+
+  // 🔄 Firebase Save/Load
+  async function savePublisher() {
+    const fn = document.getElementById("firstName").value.trim();
+    const ln = document.getElementById("lastName").value.trim();
+    const bd = document.getElementById("birthdate").value;
+
+    if (!fn || !ln || !bd) return alert("Fill all fields.");
+
+    const docId = `${ln}_${fn}_${bd}`.replace(/\s+/g, "_");
+    await db.collection("publishers").doc(docId).set({
+      firstName: fn,
+      lastName: ln,
+      birthdate: bd,
+      fullName: `${ln}, ${fn}`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Saved!");
+    loadPublishers();
+  }
+
+  async function loadPublishers() {
+    const list = document.getElementById("publisherList");
+    list.innerHTML = "";
+
+    const snapshot = await db.collection("publishers").orderBy("timestamp", "desc").get();
+    snapshot.forEach(doc => {
+      const pub = doc.data();
+      const li = document.createElement("li");
+      li.textContent = `${pub.fullName} (Born: ${pub.birthdate})`;
+      list.appendChild(li);
+    });
+  }
+</script>
 </body>
 </html>
