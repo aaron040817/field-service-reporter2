@@ -49,12 +49,17 @@
   <label>Birthdate:<br><input id="birthdate" type="date" /></label><br>
 
   <label>Baptism Status:<br>
-    <select id="baptismStatus">
+    <select id="baptismStatus" onchange="toggleBaptismDate()">
       <option>-- Select --</option>
       <option>Unbaptized Publisher</option>
       <option>Baptized</option>
+      <option>Baptized but cannot remember the date</option>
     </select>
   </label><br>
+
+  <div id="baptismDateContainer" class="hidden">
+    <label>Baptism Date:<br><input id="baptismDate" type="date" /></label><br>
+  </div>
 
   <label>Gender:<br>
     <select id="gender">
@@ -67,15 +72,15 @@
   <label>Hope:<br>
     <select id="hope">
       <option>-- Select --</option>
-      <option>Heavenly</option>
-      <option>Earthly</option>
+      <option>Other Sheep</option>
+      <option>Anointed</option>
     </select>
   </label><br>
 
   <label>Privilege:<br>
     <select id="privilege">
       <option>-- Select --</option>
-      <option>Publisher</option>
+      <option>Not Applicable</option>
       <option>Ministerial Servant</option>
       <option>Elder</option>
     </select>
@@ -86,17 +91,23 @@
       <option>-- Select --</option>
       <option>Regular Pioneer</option>
       <option>Special Pioneer</option>
-      <option>Missionary</option>
+      <option>Field Missionary</option>
+      <option>Continuous Auxiliary Pioneer</option>
+      <option>Publisher/Auxi</option>
     </select>
   </label><br>
 
   <label>Field Service Group:<br>
     <select id="fieldServiceGroup">
       <option>-- Select --</option>
-      <option>Group 1</option>
-      <option>Group 2</option>
-      <option>Group 3</option>
-      <!-- Add more as needed -->
+      <option>Field Service Group 1</option>
+      <option>Field Service Group 2</option>
+      <option>Field Service Group 3</option>
+      <option>Field Service Group 4</option>
+      <option>Field Service Group 5</option>
+      <option>Field Service Group 6</option>
+      <option>Field Service Group 7</option>
+      <option>Field Service Group 8</option>
     </select>
   </label><br><br>
 
