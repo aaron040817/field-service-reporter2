@@ -171,10 +171,11 @@ let currentIndex = -1;  // Index of current displayed record
 
   // 🔁 Page Navigation
   function goToManagePublisher() {
-    document.getElementById("homePage").classList.add("hidden");
-    document.getElementById("publisherPage").classList.remove("hidden");
-    loadPublishers();
-  }
+  clearPublisherForm(); // Clear all form fields
+  document.getElementById("homePage").classList.add("hidden");
+  document.getElementById("publisherPage").classList.remove("hidden");
+  loadPublishers(); // Load records for navigation
+}
 
   function backToHome() {
     document.getElementById("publisherPage").classList.add("hidden");
