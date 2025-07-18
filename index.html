@@ -213,12 +213,11 @@ let currentIndex = -1;  // Index of current displayed record
   });
 
   if (publisherList.length > 0) {
-    currentIndex = 0;
-    displayPublisher(currentIndex);
-  } else {
-    clearPublisherForm();
-    alert("No publisher records found.");
-  }
+  currentIndex = -1; // start with no selection
+} else {
+  clearPublisherForm();
+  alert("No publisher records found.");
+}
 }
 
 function toggleBaptismDate() {
