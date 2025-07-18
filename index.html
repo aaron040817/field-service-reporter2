@@ -211,6 +211,18 @@
       list.appendChild(li);
     });
   }
+function toggleBaptismDate() {
+  const status = document.getElementById("baptismStatus").value;
+  const baptismDateContainer = document.getElementById("baptismDateContainer");
+
+  if (status === "Baptized") {
+    baptismDateContainer.classList.remove("hidden");
+  } else {
+    baptismDateContainer.classList.add("hidden");
+    document.getElementById("baptismDate").value = "";
+  }
+}
+
 </script>
 </body>
 </html>
