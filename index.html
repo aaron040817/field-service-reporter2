@@ -222,6 +222,59 @@ function toggleBaptismDate() {
     document.getElementById("baptismDate").value = "";
   }
 }
+async function addPublisher() {
+  const fn = document.getElementById("firstName").value.trim();
+  const ln = document.getElementById("lastName").value.trim();
+  const bd = document.getElementById("birthdate").value;
+  const bs = document.getElementById("baptismStatus").value;
+  const bDate = document.getElementById("baptismDate").value;
+  const gender = document.getElementById("gender").value;
+  const hope = document.getElementById("hope").value;
+  const privilege = document.getElementById("privilege").value;
+  const privilege2 = document.getElementById("privilege2").value;
+  const group = document.getElementById("fieldServiceGroup").value;
+
+  // Validate fields
+  if (!fn || !ln || !bd || !bs || !gender || !hope || !privilege || !privilege2 || !group ||
+      (bs === "Baptized" && !bDate)) {
+    alert("Please complete all fields before submitting.");
+    return;
+  }
+
+  const docId = `${ln}_${fn}_${bd}`.replace(/\s+/g, "_");
+
+  await db.collection("publishers").doc(docId).set({
+    firstName: fn,
+    lastName: ln,
+    birthdate: bd,
+    baptismStatus: bs,
+    baptismDate: bs === "Baptized" ? bDate : "",
+    gender: gender,
+    hope: hope,
+    privilege: privilege,
+    privilege2: privilege2,
+    fieldServiceGroup: group,
+    fullName: `${ln}, ${fn}`,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert("Publisher successfully added!");
+  clearPublisherForm();
+  loadPublishers();
+}
+function clearPublisherForm() {
+  document.getElementById("firstName").value = "";
+  document.getElementById("lastName").value = "";
+  document.getElementById("birthdate").value = "";
+  document.getElementById("baptismStatus").selectedIndex = 0;
+  document.getElementById("baptismDate").value = "";
+  document.getElementById("baptismDateContainer").classList.add("hidden");
+  document.getElementById("gender").selectedIndex = 0;
+  document.getElementById("hope").selectedIndex = 0;
+  document.getElementById("privilege").selectedIndex = 0;
+  document.getElementById("privilege2").selectedIndex = 0;
+  document.getElementById("fieldServiceGroup").selectedIndex = 0;
+}
 
 </script>
 </body>
