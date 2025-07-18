@@ -137,6 +137,9 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+let publisherList = []; // All publishers from Firebase
+let currentIndex = -1;  // Index of current displayed record
+  
   // 🔐 Simple Login
   function login() {
     const user = document.getElementById("loginUsername").value;
@@ -200,17 +203,23 @@
   }
 
   async function loadPublishers() {
-    const list = document.getElementById("publisherList");
-    list.innerHTML = "";
+  publisherList = [];
+  currentIndex = -1;
 
-    const snapshot = await db.collection("publishers").orderBy("timestamp", "desc").get();
-    snapshot.forEach(doc => {
-      const pub = doc.data();
-      const li = document.createElement("li");
-      li.textContent = `${pub.fullName} (Born: ${pub.birthdate})`;
-      list.appendChild(li);
-    });
+  const snapshot = await db.collection("publishers").orderBy("timestamp", "desc").get();
+  snapshot.forEach(doc => {
+    publisherList.push(doc.data());
+  });
+
+  if (publisherList.length > 0) {
+    currentIndex = 0;
+    displayPublisher(currentIndex);
+  } else {
+    clearPublisherForm();
+    alert("No publisher records found.");
   }
+}
+
 function toggleBaptismDate() {
   const status = document.getElementById("baptismStatus").value;
   const baptismDateContainer = document.getElementById("baptismDateContainer");
@@ -274,6 +283,47 @@ function clearPublisherForm() {
   document.getElementById("privilege").selectedIndex = 0;
   document.getElementById("privilege2").selectedIndex = 0;
   document.getElementById("fieldServiceGroup").selectedIndex = 0;
+}
+function displayPublisher(index) {
+  const pub = publisherList[index];
+  if (!pub) return;
+
+  document.getElementById("firstName").value = pub.firstName || "";
+  document.getElementById("lastName").value = pub.lastName || "";
+  document.getElementById("birthdate").value = pub.birthdate || "";
+  document.getElementById("baptismStatus").value = pub.baptismStatus || "";
+  document.getElementById("baptismDate").value = pub.baptismDate || "";
+
+  // Show/hide baptism date field
+  if (pub.baptismStatus === "Baptized") {
+    document.getElementById("baptismDateContainer").classList.remove("hidden");
+  } else {
+    document.getElementById("baptismDateContainer").classList.add("hidden");
+  }
+
+  document.getElementById("gender").value = pub.gender || "";
+  document.getElementById("hope").value = pub.hope || "";
+  document.getElementById("privilege").value = pub.privilege || "";
+  document.getElementById("privilege2").value = pub.privilege2 || "";
+  document.getElementById("fieldServiceGroup").value = pub.fieldServiceGroup || "";
+}
+function previousPublisher() {
+  if (publisherList.length === 0) return;
+  if (currentIndex > 0) {
+    currentIndex--;
+    displayPublisher(currentIndex);
+  } else {
+    alert("This is the first record.");
+  }
+}
+function nextPublisher() {
+  if (publisherList.length === 0) return;
+  if (currentIndex < publisherList.length - 1) {
+    currentIndex++;
+    displayPublisher(currentIndex);
+  } else {
+    alert("This is the last record.");
+  }
 }
 
 </script>
