@@ -252,6 +252,14 @@ async function addPublisher() {
 
   const docId = `${ln}_${fn}_${bd}`.replace(/\s+/g, "_");
 
+  // 🔎 Check if publisher already exists
+  const existingDoc = await db.collection("publishers").doc(docId).get();
+  if (existingDoc.exists) {
+    alert("A publisher with the same name and birthdate already exists.");
+    return;
+  }
+
+  // ✅ Add to Firebase
   await db.collection("publishers").doc(docId).set({
     firstName: fn,
     lastName: ln,
@@ -271,6 +279,7 @@ async function addPublisher() {
   clearPublisherForm();
   loadPublishers();
 }
+
 function clearPublisherForm() {
   document.getElementById("firstName").value = "";
   document.getElementById("lastName").value = "";
