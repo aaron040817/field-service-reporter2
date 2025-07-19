@@ -172,10 +172,11 @@ let currentDocId = null;
 
   // 🔁 Page Navigation
   function goToManagePublisher() {
-  clearPublisherForm(); // Clear all form fields
   document.getElementById("homePage").classList.add("hidden");
   document.getElementById("publisherPage").classList.remove("hidden");
-  loadPublishers(); // Load records for navigation
+
+  clearPublisherForm(); // ✅ clear muna agad
+  loadPublishers();     // ✅ tapos load ang list for navigation
 }
 
   function backToHome() {
@@ -294,10 +295,9 @@ function clearPublisherForm() {
   document.getElementById("privilege2").selectedIndex = 0;
   document.getElementById("fieldServiceGroup").selectedIndex = 0;
 
-// Redisplay the current record after clearing
-if (currentIndex >= 0 && currentIndex < publisherList.length) {
-  displayPublisher(currentIndex);
-}
+  // ✅ Clear selection index and current doc reference
+  currentIndex = -1;
+  currentDocId = null;
 }
 
 function displayPublisher(index) {
