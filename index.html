@@ -345,9 +345,9 @@ function nextPublisher() {
     alert("This is the last record.");
   }
 }
-async function updatePublisher() {
-  if (currentIndex === -1 || !publisherList[currentIndex] || !currentDocId) {
-    alert("Please select a record to update first.");
+function updatePublisher() {
+  if (!currentDocId) {
+    alert("Please select a publisher to update.");
     return;
   }
 
@@ -355,37 +355,39 @@ async function updatePublisher() {
   const ln = document.getElementById("lastName").value.trim();
   const bd = document.getElementById("birthdate").value;
   const bs = document.getElementById("baptismStatus").value;
-  const bDate = document.getElementById("baptismDate").value;
+  const bdate = document.getElementById("baptismDate").value;
   const gender = document.getElementById("gender").value;
   const hope = document.getElementById("hope").value;
-  const privilege = document.getElementById("privilege").value;
-  const privilege2 = document.getElementById("privilege2").value;
+  const priv = document.getElementById("privilege").value;
+  const priv2 = document.getElementById("privilege2").value;
   const group = document.getElementById("fieldServiceGroup").value;
 
-  if (!fn || !ln || !bd || !bs || !gender || !hope || !privilege || !privilege2 || !group ||
-      (bs === "Baptized" && !bDate)) {
-    alert("Please complete all fields before updating.");
+  if (!fn || !ln || !bd || !bs || !gender || !hope || !priv || !priv2 || !group ||
+      (bs === "Baptized" && !bdate)) {
+    alert("Please complete all fields.");
     return;
   }
 
-  // Use original docId to overwrite the correct record
-  await db.collection("publishers").doc(currentDocId).set({
+  const updatedData = {
     firstName: fn,
     lastName: ln,
     birthdate: bd,
     baptismStatus: bs,
-    baptismDate: bs === "Baptized" ? bDate : "",
+    baptismDate: bs === "Baptized" ? bdate : "",
     gender: gender,
     hope: hope,
-    privilege: privilege,
-    privilege2: privilege2,
+    privilege: priv,
+    privilege2: priv2,
     fieldServiceGroup: group,
     fullName: `${ln}, ${fn}`,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  };
 
-  alert("Publisher record updated successfully!");
-  loadPublishers();
+  db.collection("publishers").doc(currentDocId).update(updatedData).then(() => {
+    alert("Publisher updated successfully.");
+    clearPublisherForm();     // ✅ clear after update
+    loadPublishers();         // ✅ refresh records for navigation
+  });
 }
 
 </script>
