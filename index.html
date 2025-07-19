@@ -139,6 +139,7 @@
 
 let publisherList = []; // All publishers from Firebase
 let currentIndex = -1;  // Index of current displayed record
+let currentDocId = null;
   
   // 🔐 Simple Login
   function login() {
@@ -315,7 +316,11 @@ function displayPublisher(index) {
   document.getElementById("privilege").value = pub.privilege || "";
   document.getElementById("privilege2").value = pub.privilege2 || "";
   document.getElementById("fieldServiceGroup").value = pub.fieldServiceGroup || "";
+
+  // Save the current docId for updating
+  currentDocId = `${pub.lastName}_${pub.firstName}_${pub.birthdate}`.replace(/\s+/g, "_");
 }
+
 function previousPublisher() {
   if (publisherList.length === 0) return;
   if (currentIndex > 0) {
@@ -335,7 +340,7 @@ function nextPublisher() {
   }
 }
 async function updatePublisher() {
-  if (currentIndex === -1 || !publisherList[currentIndex]) {
+  if (currentIndex === -1 || !publisherList[currentIndex] || !currentDocId) {
     alert("Please select a record to update first.");
     return;
   }
@@ -351,17 +356,14 @@ async function updatePublisher() {
   const privilege2 = document.getElementById("privilege2").value;
   const group = document.getElementById("fieldServiceGroup").value;
 
-  // Validate fields
   if (!fn || !ln || !bd || !bs || !gender || !hope || !privilege || !privilege2 || !group ||
       (bs === "Baptized" && !bDate)) {
     alert("Please complete all fields before updating.");
     return;
   }
 
-  const docId = `${ln}_${fn}_${bd}`.replace(/\s+/g, "_");
-
-  // ✅ Overwrite the existing record
-  await db.collection("publishers").doc(docId).set({
+  // Use original docId to overwrite the correct record
+  await db.collection("publishers").doc(currentDocId).set({
     firstName: fn,
     lastName: ln,
     birthdate: bd,
@@ -377,7 +379,7 @@ async function updatePublisher() {
   });
 
   alert("Publisher record updated successfully!");
-  loadPublishers(); // Refresh list
+  loadPublishers();
 }
 
 </script>
