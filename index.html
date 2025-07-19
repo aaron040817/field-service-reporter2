@@ -293,7 +293,11 @@ function clearPublisherForm() {
   document.getElementById("privilege").selectedIndex = 0;
   document.getElementById("privilege2").selectedIndex = 0;
   document.getElementById("fieldServiceGroup").selectedIndex = 0;
+
+  // DO NOT reset currentIndex or publisherList here
+  // Leave them untouched so navigation still works
 }
+
 function displayPublisher(index) {
   const pub = publisherList[index];
   if (!pub) return;
