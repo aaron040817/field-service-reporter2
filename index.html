@@ -205,7 +205,7 @@ let currentDocId = null;
     loadPublishers();
   }
 
-  function loafunction clearPublisherForm(dPublishers() {
+  function loadPublishers() {
   db.collection("publishers").orderBy("timestamp", "desc").get().then(snapshot => {
     publisherList = [];
     snapshot.forEach(doc => {
@@ -214,7 +214,7 @@ let currentDocId = null;
 
     // ✅ Show only if something is selected (e.g., via navigation)
     if (currentIndex >= 0 && currentIndex < publisherList.length) {
-      displayPublisher(publisherList[currentIndex]);
+      displayPublisher(currentIndex);
     }
   });
 }
