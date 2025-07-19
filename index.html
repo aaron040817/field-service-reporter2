@@ -205,21 +205,18 @@ let currentDocId = null;
     loadPublishers();
   }
 
-  async function loadPublishers() {
-  publisherList = [];
-  currentIndex = -1;
+  function loafunction clearPublisherForm(dPublishers() {
+  db.collection("publishers").orderBy("timestamp", "desc").get().then(snapshot => {
+    publisherList = [];
+    snapshot.forEach(doc => {
+      publisherList.push({ id: doc.id, ...doc.data() });  // store document ID
+    });
 
-  const snapshot = await db.collection("publishers").orderBy("timestamp", "desc").get();
-  snapshot.forEach(doc => {
-    publisherList.push(doc.data());
+    // ✅ Show only if something is selected (e.g., via navigation)
+    if (currentIndex >= 0 && currentIndex < publisherList.length) {
+      displayPublisher(publisherList[currentIndex]);
+    }
   });
-
-  if (publisherList.length > 0) {
-  currentIndex = -1; // start with no selection
-} else {
-  clearPublisherForm();
-  alert("No publisher records found.");
-}
 }
 
 function toggleBaptismDate() {
@@ -297,7 +294,7 @@ function clearPublisherForm() {
 
   // ✅ Clear selection index and current doc reference
   currentIndex = -1;
-  currentDocId = null;
+  currentDocId = "";
 }
 
 function displayPublisher(index) {
@@ -385,8 +382,8 @@ function updatePublisher() {
 
   db.collection("publishers").doc(currentDocId).update(updatedData).then(() => {
     alert("Publisher updated successfully.");
-    clearPublisherForm();     // ✅ clear after update
-    loadPublishers();         // ✅ refresh records for navigation
+    clearPublisherForm();     // ✅ clear fields
+    loadPublishers();         // ✅ reload list (but won't re-display unless selected)
   });
 }
 
