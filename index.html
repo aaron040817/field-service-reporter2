@@ -294,8 +294,10 @@ function clearPublisherForm() {
   document.getElementById("privilege2").selectedIndex = 0;
   document.getElementById("fieldServiceGroup").selectedIndex = 0;
 
-  // DO NOT reset currentIndex or publisherList here
-  // Leave them untouched so navigation still works
+// Redisplay the current record after clearing
+if (currentIndex >= 0 && currentIndex < publisherList.length) {
+  displayPublisher(currentIndex);
+}
 }
 
 function displayPublisher(index) {
