@@ -406,6 +406,23 @@ function deletePublisher() {
       alert("Error deleting publisher. See console for details.");
     });
 }
+function logout() {
+  // Hide all pages
+  document.getElementById("homePage").classList.add("hidden");
+  document.getElementById("publisherPage").classList.add("hidden");
+
+  // Show login page
+  document.getElementById("loginPage").classList.remove("hidden");
+
+  // Clear input fields (optional, para clean slate)
+  document.getElementById("loginUsername").value = "";
+  document.getElementById("loginPassword").value = "";
+  clearPublisherForm();
+
+  // Reset tracking variables
+  currentIndex = -1;
+  currentDocId = null;
+}
 
 </script>
 </body>
