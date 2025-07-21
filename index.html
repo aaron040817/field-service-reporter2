@@ -260,8 +260,11 @@ searchInput.addEventListener("input", function () {
       suggestionBox.innerHTML = "";
 
       // Show record in form
-      currentIndex = index;
-      displayPublisher(currentIndex);
+      const originalIndex = publisherList.findIndex(p => p.fullName === pub.fullName);
+if (originalIndex !== -1) {
+  currentIndex = originalIndex;
+  displayPublisher(currentIndex);
+}
     });
     suggestionBox.appendChild(div);
   });
