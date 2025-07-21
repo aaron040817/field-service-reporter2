@@ -434,18 +434,6 @@ function updateFullName() {
   const ln = document.getElementById("lastName").value.trim();
   document.getElementById("fullName").value = ln && fn ? `${ln}, ${fn}` : "";
 }
-function displayPublisher(index) {
-  const publisher = publisherList[index];
-  if (!publisher) return;
-
-  // ... existing assignments
-  document.getElementById("firstName").value = publisher.firstName || "";
-  document.getElementById("lastName").value = publisher.lastName || "";
-  // etc...
-
-  // Auto-fill full name again
-  updateFullName();
-}
 
 </script>
 </body>
