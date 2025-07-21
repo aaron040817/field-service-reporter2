@@ -386,6 +386,26 @@ function updatePublisher() {
     loadPublishers();         // ✅ reload list (but won't re-display unless selected)
   });
 }
+function deletePublisher() {
+  if (!currentDocId) {
+    alert("Please select a publisher to delete.");
+    return;
+  }
+
+  const confirmed = confirm("Are you sure you want to delete this publisher?");
+  if (!confirmed) return;
+
+  db.collection("publishers").doc(currentDocId).delete()
+    .then(() => {
+      alert("Publisher deleted successfully.");
+      clearPublisherForm();
+      loadPublishers();
+    })
+    .catch((error) => {
+      console.error("Error deleting publisher:", error);
+      alert("Error deleting publisher. See console for details.");
+    });
+}
 
 </script>
 </body>
