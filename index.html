@@ -307,7 +307,6 @@ function displayPublisher(index) {
   document.getElementById("baptismStatus").value = pub.baptismStatus || "";
   document.getElementById("baptismDate").value = pub.baptismDate || "";
 
-  // Show/hide baptism date field
   if (pub.baptismStatus === "Baptized") {
     document.getElementById("baptismDateContainer").classList.remove("hidden");
   } else {
@@ -320,7 +319,9 @@ function displayPublisher(index) {
   document.getElementById("privilege2").value = pub.privilege2 || "";
   document.getElementById("fieldServiceGroup").value = pub.fieldServiceGroup || "";
 
-  // Save the current docId for updating
+  // ✅ Fill in the full name textbox
+  document.getElementById("fullName").value = `${pub.lastName}, ${pub.firstName}`;
+
   currentDocId = `${pub.lastName}_${pub.firstName}_${pub.birthdate}`.replace(/\s+/g, "_");
 }
 
