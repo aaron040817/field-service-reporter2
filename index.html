@@ -12,6 +12,24 @@
     .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; width: 400px; }
     button { width: auto; display: inline-block; margin-right: 10px; }
     .danger { color: red; font-size: 12px; }
+    .suggestions {
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  background: white;
+  position: absolute;
+  z-index: 100;
+  width: 100%;
+}
+
+.suggestion-item {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f0f0;
+}
   </style>
 </head>
 <body>
@@ -43,7 +61,9 @@
 <!-- 📋 MANAGE PUBLISHER PAGE -->
 <div id="publisherPage" class="box hidden" style="width: 600px;">
   <h2>Manage Publisher Record</h2>
-
+  <label for="searchPublisher">Search Publisher</label>
+<input type="text" id="searchPublisher" autocomplete="off" placeholder="Type to search..." />
+<div id="suggestionBox" class="suggestions"></div>
   <label>First Name:<br><input id="firstName" type="text" /></label><br>
   <label>Last Name:<br><input id="lastName" type="text" /></label><br>
   <label>Full Name:<br><input id="fullName" disabled type="text"/></label><br>
@@ -219,6 +239,35 @@ let currentDocId = null;
     }
   });
 }
+const searchInput = document.getElementById("searchPublisher");
+const suggestionBox = document.getElementById("suggestionBox");
+
+searchInput.addEventListener("input", function () {
+  const query = searchInput.value.toLowerCase();
+  suggestionBox.innerHTML = "";
+
+  if (!query) return;
+
+  const matches = publisherList.filter(pub =>
+    pub.fullName && pub.fullName.toLowerCase().includes(query)
+  );
+
+  matches.forEach((pub, index) => {
+    const div = document.createElement("div");
+    div.textContent = pub.fullName;
+    div.classList.add("suggestion-item");
+    div.addEventListener("click", () => {
+      // Show selected
+      searchInput.value = pub.fullName;
+      suggestionBox.innerHTML = "";
+
+      // Show record in form
+      currentIndex = index;
+      displayPublisher(currentIndex);
+    });
+    suggestionBox.appendChild(div);
+  });
+});
 
 function toggleBaptismDate() {
   const status = document.getElementById("baptismStatus").value;
