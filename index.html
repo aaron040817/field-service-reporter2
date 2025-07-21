@@ -284,18 +284,17 @@ function clearPublisherForm() {
   document.getElementById("firstName").value = "";
   document.getElementById("lastName").value = "";
   document.getElementById("birthdate").value = "";
-  document.getElementById("baptismStatus").selectedIndex = 0;
+  document.getElementById("baptismStatus").value = "";
   document.getElementById("baptismDate").value = "";
-  document.getElementById("baptismDateContainer").classList.add("hidden");
-  document.getElementById("gender").selectedIndex = 0;
-  document.getElementById("hope").selectedIndex = 0;
-  document.getElementById("privilege").selectedIndex = 0;
-  document.getElementById("privilege2").selectedIndex = 0;
-  document.getElementById("fieldServiceGroup").selectedIndex = 0;
+  document.getElementById("gender").value = "";
+  document.getElementById("hope").value = "";
+  document.getElementById("privilege").value = "";
+  document.getElementById("privilege2").value = "";
+  document.getElementById("fieldServiceGroup").value = "";
+  document.getElementById("fullName").value = ""; // ✅ Clear Full Name
 
-  // ✅ Clear selection index and current doc reference
-  currentIndex = -1;
   currentDocId = "";
+  currentIndex = -1;
 }
 
 function displayPublisher(index) {
