@@ -414,14 +414,17 @@ function logout() {
   // Show login page
   document.getElementById("loginPage").classList.remove("hidden");
 
-  // Clear input fields (optional, para clean slate)
+  // Clear login inputs
   document.getElementById("loginUsername").value = "";
   document.getElementById("loginPassword").value = "";
+
+  // Clear publisher form (in case opened before logout)
   clearPublisherForm();
 
-  // Reset tracking variables
+  // Reset state variables
   currentIndex = -1;
   currentDocId = null;
+  publisherList = [];
 }
 
 </script>
