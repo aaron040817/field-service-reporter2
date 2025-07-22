@@ -494,13 +494,17 @@ function updateFullName() {
   const ln = document.getElementById("lastName").value.trim();
   document.getElementById("fullName").value = ln && fn ? `${ln}, ${fn}` : "";
 }
-function goToAddReport() {
-  clearAddReportForm(); // Clear all fields first
+document.addEventListener("DOMContentLoaded", function () {
+  const addReportBtn = document.getElementById("addReportBtn");
+  if (addReportBtn) {
+    addReportBtn.addEventListener("click", goToAddReport);
+  }
+});
 
-  // Show Add Report page
-  document.getElementById("homePage").classList.add("hidden");
-  document.getElementById("addReportPage").classList.remove("hidden");
+function goToAddReport() {
+  window.location.href = "addReport.html"; // o ang tamang path mo sa Add Report page
 }
+
 function clearAddReportForm() {
   document.getElementById("searchPublisher").value = "";
   document.getElementById("publisherNameDropdown").selectedIndex = 0;
