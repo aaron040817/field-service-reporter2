@@ -51,11 +51,11 @@ input[disabled] {
 
 <!-- 🏠 HOME PAGE -->
 <div id="homePage" class="box hidden">
-<div id="addReportPage" class="hidden">...</div>
   <h2>Welcome, <span id="loggedInUser"></span>!</h2>
   <button onclick="goToManagePublisher()">Manage Publisher Record</button>
   <button>Review Approvals</button>
   <button id="addReportBtn">Add Report</button>
+  <div id="addReportPage" class="hidden"></div>
   <button>Update Report</button>
   <button>Export to Excel</button>
   <button>Logout</button>
@@ -532,7 +532,10 @@ function clearAddReportForm() {
 document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("addReportBtn").addEventListener("click", goToAddReport);
 });
-
+function goToAddReport() {
+  document.getElementById("homePage").classList.add("hidden");
+  document.getElementById("addReportPage").classList.remove("hidden");
+}
 </script>
 </body>
 </html>
