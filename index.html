@@ -148,7 +148,23 @@ input[disabled] {
   <button onclick="backToHome()">Back to HomePage</button>
   <button onclick="logout()">Logout</button>
 </div>
+ <!-- ✅ Add Report Page -->
+  <section id="addReportPage" class="hidden">
+    <h2>Add Report</h2>
 
+    <!-- Sample Add Report Form -->
+    <label for="publisherName">Publisher Name:</label><br />
+    <input type="text" id="publisherName" placeholder="Enter name" /><br /><br />
+
+    <label for="reportDate">Date:</label><br />
+    <input type="date" id="reportDate" /><br /><br />
+
+    <label for="hours">Hours:</label><br />
+    <input type="number" id="hours" /><br /><br />
+
+    <button id="submitReportBtn">Submit Report</button>
+    <button id="backToHomeBtn">Back to Home</button>
+  </section>
 <script>
   // Replace with your Firebase config
   const firebaseConfig = {
