@@ -55,7 +55,6 @@ input[disabled] {
   <button onclick="goToManagePublisher()">Manage Publisher Record</button>
   <button>Review Approvals</button>
   <button id="addReportBtn">Add Report</button>
-  <div id="addReportPage" class="hidden"></div>
   <button>Update Report</button>
   <button>Export to Excel</button>
   <button>Logout</button>
@@ -148,24 +147,50 @@ input[disabled] {
   <button onclick="backToHome()">Back to HomePage</button>
   <button onclick="logout()">Logout</button>
 </div>
- <!-- ✅ Add Report Page -->
-  <section id="addReportPage" class="hidden">
+ <!-- Add Report Section -->
+  <div id="addReportPage" class="hidden">
     <h2>Add Report</h2>
 
-    <!-- Sample Add Report Form -->
-    <label for="publisherName">Publisher Name:</label><br />
-    <input type="text" id="publisherName" placeholder="Enter name" /><br /><br />
+    <label>Search Publisher:</label>
+    <input type="text" id="searchPublisher" placeholder="Search Publisher...">
+    <div id="suggestionBox" class="suggestion-box"></div>
 
-    <label for="reportDate">Date:</label><br />
-    <input type="date" id="reportDate" /><br /><br />
+    <br><label>Publisher Name:</label>
+    <select id="publisherName">
+      <option>-- Select --</option>
+    </select>
 
-    <label for="hours">Hours:</label><br />
-    <input type="number" id="hours" /><br /><br />
+    <br><label>Field Service Group:</label>
+    <input type="text" id="fieldGroup" disabled>
 
-    <button id="submitReportBtn">Submit Report</button>
-    <button id="backToHomeBtn">Back to Home</button>
-  </section>
-<script>
+    <br><label>Privilege2:</label>
+    <input type="text" id="privilege2" disabled>
+
+    <br><label>Service Year:</label>
+    <select id="serviceYear">
+      <option>-- Select --</option>
+    </select>
+
+    <br><label>Month and Year:</label>
+    <select id="monthYear">
+      <option>-- Select --</option>
+    </select>
+
+    <br><label>Field Hours:</label>
+    <input type="number" id="fieldHours">
+
+    <br><label>Bible Studies:</label>
+    <input type="number" id="bibleStudies">
+
+    <br><label><input type="checkbox" id="shared"> Shared in Ministry</label>
+
+    <br><br>
+    <button id="saveReportBtn">Save Report</button>
+    <button id="clearReportBtn">Clear</button>
+    <button id="backHomeBtn">Back to HomePage</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+  <script>
   // Replace with your Firebase config
   const firebaseConfig = {
   apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -536,6 +561,101 @@ function goToAddReport() {
   document.getElementById("homePage").classList.add("hidden");
   document.getElementById("addReportPage").classList.remove("hidden");
 }
+// Sample publisher data
+    const publisherList = [
+      { fullName: "Tamayo, Aaron Jepte", group: "Group 1", privilege: "Elder" },
+      { fullName: "Tamayo, Auxi", group: "Group 2", privilege: "Publisher" },
+      { fullName: "Dela Cruz, Juan", group: "Group 3", privilege: "Ministerial Servant" }
+    ];
+
+    const homePage = document.getElementById("homePage");
+    const addReportPage = document.getElementById("addReportPage");
+
+    const searchInput = document.getElementById("searchPublisher");
+    const suggestionBox = document.getElementById("suggestionBox");
+
+    const publisherName = document.getElementById("publisherName");
+    const fieldGroup = document.getElementById("fieldGroup");
+    const privilege2 = document.getElementById("privilege2");
+
+    // Toggle to Add Report
+    document.getElementById("addReportBtn").addEventListener("click", () => {
+      homePage.classList.add("hidden");
+      addReportPage.classList.remove("hidden");
+      populatePublisherDropdown();
+    });
+
+    // Back to Homepage
+    document.getElementById("backHomeBtn").addEventListener("click", () => {
+      addReportPage.classList.add("hidden");
+      homePage.classList.remove("hidden");
+    });
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      alert("Logging out...");
+      window.location.href = "index.html"; // Replace with actual login page if any
+    });
+
+    // Auto-suggest for Search Publisher
+    searchInput.addEventListener("input", function () {
+      const query = searchInput.value.toLowerCase();
+      suggestionBox.innerHTML = "";
+
+      if (!query) return;
+
+      const matches = publisherList.filter(pub =>
+        pub.fullName.toLowerCase().includes(query)
+      );
+
+      matches.forEach(pub => {
+        const div = document.createElement("div");
+        div.textContent = pub.fullName;
+        div.classList.add("suggestion-item");
+        div.addEventListener("click", () => {
+          searchInput.value = pub.fullName;
+          suggestionBox.innerHTML = "";
+          fieldGroup.value = pub.group;
+          privilege2.value = pub.privilege;
+          selectPublisherOption(pub.fullName);
+        });
+        suggestionBox.appendChild(div);
+      });
+    });
+
+    function populatePublisherDropdown() {
+      publisherName.innerHTML = '<option>-- Select --</option>';
+      publisherList.forEach(pub => {
+        const opt = document.createElement("option");
+        opt.textContent = pub.fullName;
+        publisherName.appendChild(opt);
+      });
+    }
+
+    function selectPublisherOption(name) {
+      Array.from(publisherName.options).forEach(opt => {
+        if (opt.textContent === name) opt.selected = true;
+      });
+    }
+
+    // Clear
+    document.getElementById("clearReportBtn").addEventListener("click", () => {
+      searchInput.value = "";
+      suggestionBox.innerHTML = "";
+      publisherName.selectedIndex = 0;
+      fieldGroup.value = "";
+      privilege2.value = "";
+      document.getElementById("serviceYear").selectedIndex = 0;
+      document.getElementById("monthYear").selectedIndex = 0;
+      document.getElementById("fieldHours").value = "";
+      document.getElementById("bibleStudies").value = "";
+      document.getElementById("shared").checked = false;
+    });
+
+    // Save Report (just a placeholder alert)
+    document.getElementById("saveReportBtn").addEventListener("click", () => {
+      alert("Report saved!");
+    });
 </script>
 </body>
 </html>
