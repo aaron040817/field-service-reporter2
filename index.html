@@ -29,7 +29,12 @@
 .suggestion-item:hover {
   background-color: #f0f0f0;
 }  
-  </style>
+input[disabled] {
+  background-color: #f9f9f9;
+  color: #333;
+}
+  
+</style>
 </head>
 <body>
 
@@ -484,6 +489,24 @@ function updateFullName() {
   const fn = document.getElementById("firstName").value.trim();
   const ln = document.getElementById("lastName").value.trim();
   document.getElementById("fullName").value = ln && fn ? `${ln}, ${fn}` : "";
+}
+function goToAddReport() {
+  clearAddReportForm(); // Clear all fields first
+
+  // Show Add Report page
+  document.getElementById("homePage").classList.add("hidden");
+  document.getElementById("addReportPage").classList.remove("hidden");
+}
+function clearAddReportForm() {
+  document.getElementById("searchPublisher").value = "";
+  document.getElementById("publisherNameDropdown").selectedIndex = 0;
+  document.getElementById("fieldServiceGroup").value = "";
+  document.getElementById("privilege2").value = "";
+  document.getElementById("serviceYearDropdown").selectedIndex = 0;
+  document.getElementById("monthYearDropdown").selectedIndex = 0;
+  document.getElementById("fieldHours").value = "";
+  document.getElementById("bibleStudies").value = "";
+  document.getElementById("sharedMinistry").checked = false;
 }
 
 </script>
