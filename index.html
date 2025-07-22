@@ -517,7 +517,9 @@ function clearAddReportForm() {
   document.getElementById("sharedMinistry").checked = false;
 }
 
-document.getElementById("addReportBtn").addEventListener("click", goToAddReport);
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("addReportBtn").addEventListener("click", goToAddReport);
+});
 
 </script>
 </body>
