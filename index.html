@@ -33,7 +33,10 @@ input[disabled] {
   background-color: #f9f9f9;
   color: #333;
 }
-  
+.hidden {
+  display: none;
+}
+
 </style>
 </head>
 <body>
@@ -48,10 +51,11 @@ input[disabled] {
 
 <!-- 🏠 HOME PAGE -->
 <div id="homePage" class="box hidden">
+<div id="addReportPage" class="hidden">...</div>
   <h2>Welcome, <span id="loggedInUser"></span>!</h2>
   <button onclick="goToManagePublisher()">Manage Publisher Record</button>
   <button>Review Approvals</button>
-  <button>Add Report</button>
+  <button id="addReportBtn">Add Report</button>
   <button>Update Report</button>
   <button>Export to Excel</button>
   <button>Logout</button>
@@ -508,6 +512,8 @@ function clearAddReportForm() {
   document.getElementById("bibleStudies").value = "";
   document.getElementById("sharedMinistry").checked = false;
 }
+
+document.getElementById("addReportBtn").addEventListener("click", goToAddReport);
 
 </script>
 </body>
