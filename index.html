@@ -445,8 +445,8 @@
     });
 
     alert("Publisher record successfully added!");
-    clearPublisherForm();
     await loadPublishers(); // Reload to update list for navigation
+    clearPublisherForm();
 }
         async function updatePublisher() {
     if (!currentDocId) {
