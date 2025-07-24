@@ -1,136 +1,422 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
-    <meta charset="UTF-8" />
-    <title>Publisher App with Login</title>
+
+    <meta charset="UTF-8" />
+
+    <title>Publisher App with Login</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+
+        body { font-family: Arial; padding: 30px; }
+
+        .hidden { display: none; }
+
+        input, button { margin: 10px 0; padding: 8px; width: 300px; }
+
+        .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; width: 400px; }
+
+        button { width: auto; display: inline-block; margin-right: 10px; }
+
+        .danger { color: red; font-size: 12px; }
+
+        .suggestions {
+
+            max-height: 150px;
+
+            overflow-y: auto;
+
+            background: white;
+
+            position: absolute;
+
+            z-index: 100;
+
+            width: 100%;
+
+        }
+
+        .suggestion-item {
+
+            padding: 8px;
+
+            cursor: pointer;
+
+        }
+
+        .suggestion-item:hover {
+
+            background-color: #f0f0f0;
+
+        }
+
+        input[disabled] {
+
+            background-color: #f9f9f9;
+
+            color: #333;
+
+        }
+
+    </style>
+
 </head>
+
 <body>
-    <div id="loginPage">
-        <h2>Login</h2>
-        <input type="text" id="loginUsername" placeholder="Username">
-        <input type="password" id="loginPassword" placeholder="Password">
-        <button id="loginBtn">Login</button> </div>
 
-    <div id="homePage" class="hidden">
-        <h2>Welcome, <span id="loggedInUser"></span>!</h2>
-        <button id="addReportBtn">Add Report</button>
-        <button onclick="goToManagePublisher()">Manage Publisher</button>
-        <button onclick="clearAllData()">Clear All Data</button>
-        <button onclick="logout()">Logout</button>
-    </div>
 
-    <div id="addReportPage" class="hidden">
-        <h2>Add Field Service Report</h2>
-        <label for="publisherNameDropdown">Publisher Name:</label>
-        <select id="publisherNameDropdown"></select>
-        <input type="text" id="searchPublisherReport" placeholder="Search Publisher...">
-        <div id="suggestionBoxReport" class="suggestion-box"></div>
-        <input type="text" id="fieldGroup" disabled>
-        <input type="text" id="privilege2Report" disabled>
 
-        <label for="serviceYearDropdown">Service Year:</label>
-        <select id="serviceYearDropdown"></select>
+    <div id="loginPage" class="box">
 
-        <label for="monthYearDropdown">Month:</label>
-        <select id="monthYearDropdown"></select>
+        <h2>Login</h2>
 
-        <div id="auxPioneerQuestionContainer" class="hidden">
-            <label for="isAuxiliaryPioneerThisMonth">Is Auxiliary Pioneer this Month?</label>
-            <select id="isAuxiliaryPioneerThisMonth">
-                <option value="">-- Select --</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-            </select>
-        </div>
+        <label>Username:<br><input type="text" id="loginUsername"></label><br>
 
-        <div id="fieldHoursContainer" class="hidden">
-            <label for="fieldHours">Field Hours:</label>
-            <input type="number" id="fieldHours">
-        </div>
+        <label>Password:<br><input type="password" id="loginPassword"></label><br>
 
-        <div id="bibleStudiesContainer" class="hidden">
-            <label for="bibleStudies">Bible Studies:</label>
-            <input type="number" id="bibleStudies">
-        </div>
+        <button onclick="login()">Login</button>
 
-        <div id="sharedMinistryContainer" class="hidden">
-            <label for="sharedMinistry">Shared in Ministry:</label>
-            <input type="checkbox" id="sharedMinistry">
-        </div>
+    </div>
 
-        <div id="auxiliaryPioneerCheckboxContainer" class="hidden">
-            <label for="auxiliaryPioneerCheckbox">Auxiliary Pioneer:</label>
-            <input type="checkbox" id="auxiliaryPioneerCheckbox">
-        </div>
 
-        <button id="saveReportBtn">Save Report</button>
-        <button id="clearReportBtn">Clear Form</button>
-        <button id="backHomeFromReportBtn">Back to Home</button>
-    </div>
 
-    <div id="publisherPage" class="hidden">
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName">
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName">
-        <label for="fullName">Full Name:</label>
-        <input type="text" id="fullName" disabled>
-        <label for="birthdate">Birthdate:</label>
-        <input type="date" id="birthdate">
-        <label for="baptismStatus">Baptism Status:</label>
-        <select id="baptismStatus">
-            <option value="">-- Select --</option>
-            <option value="Baptized">Baptized</option>
-            <option value="Unbaptized">Unbaptized</option>
-        </select>
-        <div id="baptismDateContainer" class="hidden">
-            <label for="baptismDate">Baptism Date:</label>
-            <input type="date" id="baptismDate">
-        </div>
-        <label for="gender">Gender:</label>
-        <select id="gender">
-            <option value="">-- Select --</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-        </select>
-        <label for="hope">Hope:</label>
-        <select id="hope">
-            <option value="">-- Select --</option>
-            <option value="Heavenly">Heavenly</option>
-            <option value="Earthly">Earthly</option>
-        </select>
-        <label for="privilege">Privilege:</label>
-        <select id="privilege">
-            <option value="">-- Select --</option>
-            <option value="Publisher">Publisher</option>
-            <option value="Ministerial Servant">Ministerial Servant</option>
-            <option value="Elder">Elder</option>
-        </select>
-        <label for="privilege2">Privilege 2:</label>
-        <select id="privilege2">
-            <option value="">-- Select --</option>
-            <option value="Regular Pioneer">Regular Pioneer</option>
-            <option value="Special Pioneer">Special Pioneer</option>
-            <option value="Field Missionary">Field Missionary</option>
-            <option value="Continuous Auxiliary Pioneer">Continuous Auxiliary Pioneer</option>
-            <option value="Publisher/Auxi">Publisher/Auxi</option>
-        </select>
-        <label for="fieldServiceGroup">Field Service Group:</label>
-        <select id="fieldServiceGroup">
-            <option value="">-- Select --</option>
-            <option value="Group 1">Group 1</option>
-            <option value="Group 2">Group 2</option>
-        </select>
-        <button onclick="addPublisher()">Add</button>
-        <button onclick="updatePublisher()">Update</button>
-        <button onclick="deletePublisher()">Delete</button>
-        <button onclick="previousPublisher()">Previous</button>
-        <button onclick="nextPublisher()">Next</button>
-        <input type="text" id="searchPublisher" placeholder="Search Publisher...">
-        <div id="suggestionBox" class="suggestion-box"></div>
-        <button onclick="clearPublisherForm()">Clear Form</button>
-        <button onclick="backToHome()">Back to Home</button>
-    </div>
+    <div id="homePage" class="box hidden">
+
+        <h2>Welcome, <span id="loggedInUser"></span>!</h2>
+
+        <button onclick="goToManagePublisher()">Manage Publisher Record</button>
+
+        <button>Review Approvals</button>
+
+        <button id="addReportBtn">Add Report</button>
+
+        <button>Update Report</button>
+
+        <button>Export to Excel</button>
+
+        <button onclick="logout()">Logout</button>
+
+        <button>Manage Users</button>
+
+        <div style="margin-top: 30px;">
+
+            <button onclick="clearAllData()">Clear All Data</button><br>
+
+            <span class="danger">Warning: This will delete all publisher and report data.</span>
+
+        </div>
+
+    </div>
+
+
+
+    <div id="publisherPage" class="box hidden" style="width: 600px;">
+
+        <h2>Manage Publisher Record</h2>
+
+        <label>Search Publisher:<br><input type="text" id="searchPublisher" autocomplete="off" placeholder="Type to search..." /><div id="suggestionBox" class="suggestions"></div></label><br>
+
+        <label>First Name:<br><input id="firstName" type="text" /></label><br>
+
+        <label>Last Name:<br><input id="lastName" type="text" /></label><br>
+
+        <label>Full Name:<br><input id="fullName" disabled type="text"/></label><br>
+
+        <label>Birthdate:<br><input id="birthdate" type="date" /></label><br>
+
+
+
+        <label>Baptism Status:<br>
+
+            <select id="baptismStatus" onchange="toggleBaptismDate()">
+
+                <option>-- Select --</option>
+
+                <option>Unbaptized Publisher</option>
+
+                <option>Baptized</option>
+
+                <option>Baptized but cannot remember the date</option>
+
+            </select>
+
+        </label><br>
+
+
+
+        <div id="baptismDateContainer" class="hidden">
+
+            <label>Baptism Date:<br><input id="baptismDate" type="date" /></label><br>
+
+        </div>
+
+
+
+        <label>Gender:<br>
+
+            <select id="gender">
+
+                <option>-- Select --</option>
+
+                <option>Male</option>
+
+                <option>Female</option>
+
+            </select>
+
+        </label><br>
+
+
+
+        <label>Hope:<br>
+
+            <select id="hope">
+
+                <option>-- Select --</option>
+
+                <option>Other Sheep</option>
+
+                <option>Anointed</option>
+
+            </select>
+
+        </label><br>
+
+
+
+        <label>Privilege:<br>
+
+            <select id="privilege">
+
+                <option>-- Select --</option>
+
+                <option>Not Applicable</option>
+
+                <option>Ministerial Servant</option>
+
+                <option>Elder</option>
+
+            </select>
+
+        </label><br>
+
+
+
+        <label>Privilege2:<br>
+
+            <select id="privilege2">
+
+                <option>-- Select --</option>
+
+                <option>Regular Pioneer</option>
+
+                <option>Special Pioneer</option>
+
+                <option>Field Missionary</option>
+
+                <option>Continuous Auxiliary Pioneer</option>
+
+                <option>Publisher/Auxi</option>
+
+            </select>
+
+        </label><br>
+
+
+
+        <label>Field Service Group:<br>
+
+            <select id="fieldServiceGroup">
+
+                <option>-- Select --</option>
+
+                <option>Field Service Group 1</option>
+
+                <option>Field Service Group 2</option>
+
+                <option>Field Service Group 3</option>
+
+                <option>Field Service Group 4</option>
+
+                <option>Field Service Group 5</option>
+
+                <option>Field Service Group 6</option>
+
+                <option>Field Service Group 7</option>
+
+                <option>Field Service Group 8</option>
+
+            </select>
+
+        </label><br><br>
+
+
+
+        <button onclick="addPublisher()">Add</button>
+
+        <button onclick="updatePublisher()">Update</button>
+
+        <button onclick="deletePublisher()">Delete</button>
+
+        <button onclick="previousPublisher()">←</button>
+
+        <button onclick="nextPublisher()">→</button>
+
+        <button onclick="clearPublisherForm()">Clear</button>
+
+        <button onclick="backToHome()">Back to HomePage</button>
+
+        <button onclick="logout()">Logout</button>
+
+    </div>
+
+
+
+    <div id="addReportPage" class="box hidden">
+
+    <h2>Add Report</h2>
+
+
+
+    <label>Search Publisher:<br>
+
+        <input type="text" id="searchPublisherReport" placeholder="Search Publisher..." autocomplete="off">
+
+        <div id="suggestionBoxReport" class="suggestions"></div>
+
+    </label><br>
+
+
+
+    <label>Publisher Name:<br>
+
+        <select id="publisherNameDropdown">
+
+            <option value="">-- Select --</option>
+
+        </select>
+
+    </label><br>
+
+
+
+    <label>Field Service Group:<br>
+
+        <input type="text" id="fieldGroup" disabled>
+
+    </label><br>
+
+
+
+    <label>Privilege2:<br>
+
+        <input type="text" id="privilege2Report" disabled>
+
+    </label><br>
+
+
+
+    <label>Service Year:<br>
+
+        <select id="serviceYearDropdown">
+
+            <option value="">-- Select --</option>
+
+        </select>
+
+    </label><br>
+
+
+
+    <label>Month and Year:<br>
+
+        <select id="monthYearDropdown">
+
+            <option value="">-- Select --</option>
+
+        </select>
+
+    </label><br>
+
+
+
+    <div id="auxPioneerQuestionContainer" class="hidden">
+
+        <label>Is The Publisher an Auxiliary Pioneer This Month?:<br>
+
+            <select id="isAuxiliaryPioneerThisMonth">
+
+                <option value="">-- Select --</option>
+
+                <option value="Yes">Yes</option>
+
+                <option value="No">No</option>
+
+            </select>
+
+        </label><br>
+
+    </div>
+
+
+
+    <div id="fieldHoursContainer" class="hidden">
+
+        <label>Field Hours:<br>
+
+            <input type="number" id="fieldHours">
+
+        </label><br>
+
+    </div>
+
+
+
+    <div id="bibleStudiesContainer" class="hidden">
+
+        <label>Bible Studies:<br>
+
+            <input type="number" id="bibleStudies">
+
+        </label><br>
+
+    </div>
+
+
+
+    <div id="sharedMinistryContainer" class="hidden">
+
+        <label><input type="checkbox" id="sharedMinistry"> Shared in Ministry</label><br>
+
+    </div>
+
+
+
+    <div id="auxiliaryPioneerCheckboxContainer" class="hidden">
+
+        <label><input type="checkbox" id="auxiliaryPioneerCheckbox"> Auxiliary Pioneer</label><br>
+
+    </div>
+
+
+
+    <br>
+
+    <button id="saveReportBtn">Save Report</button>
+
+    <button id="clearReportBtn">Clear</button>
+
+    <button id="backHomeFromReportBtn">Back to HomePage</button>
+
+    <button onclick="logout()">Logout</button>
+
+</div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
