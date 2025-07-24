@@ -216,7 +216,47 @@
             // Setup for publisher form
             document.getElementById("firstName").addEventListener("input", updateFullName);
             document.getElementById("lastName").addEventListener("input", updateFullName);
+        
+        // --- Ito na ang bagong code na ilalagay mo ---
+
+    // References to the search input and suggestion box
+    const searchInput = document.getElementById("searchPublisher");
+    const suggestionBox = document.getElementById("suggestionBox");
+
+    // Add this EventListener for search suggestions
+    searchInput.addEventListener("input", function () {
+        const query = searchInput.value.toLowerCase();
+        suggestionBox.innerHTML = ""; // Clear previous suggestions
+
+        if (!query) return; // Don't show suggestions if input is empty
+
+        const matches = publisherList.filter(pub =>
+            pub.fullName && pub.fullName.toLowerCase().includes(query)
+        );
+
+        matches.forEach((pub) => {
+            const div = document.createElement("div");
+            div.textContent = pub.fullName;
+            div.classList.add("suggestion-item");
+            div.addEventListener("click", () => {
+                // When a suggestion is clicked
+                searchInput.value = pub.fullName; // Fill search box
+                suggestionBox.innerHTML = ""; // Hide suggestions
+
+                // Find the original index of the selected publisher
+                const originalIndex = publisherList.findIndex(p => p.id === pub.id); // Use ID for precise matching
+                if (originalIndex !== -1) {
+                    currentIndex = originalIndex; // Set the current index
+                    displayPublisher(currentIndex); // Display the selected publisher's data
+                }
+            });
+            suggestionBox.appendChild(div);
         });
+    });
+
+    // --- Hanggang dito ang bagong code ---
+
+}); // End of DOMContentLoaded
 
         // --- Core Functions ---
         
@@ -399,7 +439,18 @@
         });
         
         // Placeholder for missing functions (you can add your logic here)
-        function toggleBaptismDate() { /* ... */ }
+        function toggleBaptismDate() {
+    const status = document.getElementById("baptismStatus").value;
+    const baptismDateContainer = document.getElementById("baptismDateContainer");
+    const baptismDateInput = document.getElementById("baptismDate");
+
+    if (status === "Baptized") {
+        baptismDateContainer.classList.remove("hidden"); // Show the container
+    } else {
+        baptismDateContainer.classList.add("hidden"); // Hide the container
+        baptismDateInput.value = ""; // Clear the date when hidden
+    }
+}
         async function addPublisher() {
     const fn = document.getElementById("firstName").value.trim();
     const ln = document.getElementById("lastName").value.trim();
