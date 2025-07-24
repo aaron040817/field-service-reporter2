@@ -311,8 +311,8 @@
         function goToManagePublisher() {
             document.getElementById("homePage").classList.add("hidden");
             document.getElementById("publisherPage").classList.remove("hidden");
-            loadPublishers();
             clearPublisherForm();
+            loadPublishers();
         }
 
         function backToHome() {
@@ -323,15 +323,6 @@
         async function loadPublishers() {
     const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
     publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Ensure 'id' is included
-
-    if (publisherList.length > 0) {
-        currentIndex = 0; // Start with the first record
-        displayPublisher(currentIndex);
-    } else {
-        clearPublisherForm(); // Clear form if no records
-        currentIndex = -1;
-        currentDocId = null;
-    }
 }
         // --- Report Management Functions ---
 
@@ -598,19 +589,21 @@ function nextPublisher() {
     document.getElementById("firstName").value = "";
     document.getElementById("lastName").value = "";
     document.getElementById("birthdate").value = "";
-    document.getElementById("baptismStatus").value = "-- Select --"; // Reset select to default
+    document.getElementById("baptismStatus").value = "-- Select --";
     document.getElementById("baptismDate").value = "";
-    document.getElementById("baptismDateContainer").classList.add("hidden"); // Hide date field
-    document.getElementById("gender").value = "-- Select --"; // Reset select to default
-    document.getElementById("hope").value = "-- Select --"; // Reset select to default
-    document.getElementById("privilege").value = "-- Select --"; // Reset select to default
-    document.getElementById("privilege2").value = "-- Select --"; // Reset select to default
-    document.getElementById("fieldServiceGroup").value = "-- Select --"; // Reset select to default
+    document.getElementById("baptismDateContainer").classList.add("hidden");
+    document.getElementById("gender").value = "-- Select --";
+    document.getElementById("hope").value = "-- Select --";
+    document.getElementById("privilege").value = "-- Select --";
+    document.getElementById("privilege2").value = "-- Select --";
+    document.getElementById("fieldServiceGroup").value = "-- Select --";
     document.getElementById("fullName").value = "";
-    document.getElementById("searchPublisher").value = "";
-    document.getElementById("suggestionBox").innerHTML = ""; // Clear suggestions
 
-    // Reset current selected record
+    // ✅ Ito ang mga idinagdag para sa search fields
+    document.getElementById("searchPublisher").value = "";
+    document.getElementById("suggestionBox").innerHTML = "";
+
+    // Reset current selected record and index
     currentIndex = -1;
     currentDocId = null;
 }
