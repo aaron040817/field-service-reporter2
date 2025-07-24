@@ -400,9 +400,124 @@
         
         // Placeholder for missing functions (you can add your logic here)
         function toggleBaptismDate() { /* ... */ }
-        function addPublisher() { /* ... */ }
-        function updatePublisher() { /* ... */ }
-        function deletePublisher() { /* ... */ }
+        async function addPublisher() {
+    const fn = document.getElementById("firstName").value.trim();
+    const ln = document.getElementById("lastName").value.trim();
+    const bd = document.getElementById("birthdate").value;
+    const bs = document.getElementById("baptismStatus").value;
+    const bDate = document.getElementById("baptismDate").value;
+    const gender = document.getElementById("gender").value;
+    const hope = document.getElementById("hope").value;
+    const privilege = document.getElementById("privilege").value;
+    const privilege2 = document.getElementById("privilege2").value;
+    const group = document.getElementById("fieldServiceGroup").value;
+
+    // Validation: Check if all required fields are filled and select options are chosen
+    if (!fn || !ln || !bd || bs === "-- Select --" || gender === "-- Select --" || hope === "-- Select --" || privilege === "-- Select --" || privilege2 === "-- Select --" || group === "-- Select --" ||
+        (bs === "Baptized" && !bDate)) {
+        alert("Please complete all fields before adding a publisher.");
+        return;
+    }
+
+    const docId = `${ln}_${fn}_${bd}`.replace(/\s+/g, "_"); // Simplified docId for Firebase
+
+    // Check if publisher already exists
+    const existingDoc = await db.collection("publishers").doc(docId).get();
+    if (existingDoc.exists) {
+        alert("A publisher with the same last name, first name, and birthdate already exists.");
+        return;
+    }
+
+    // Add to Firebase
+    await db.collection("publishers").doc(docId).set({
+        firstName: fn,
+        lastName: ln,
+        birthdate: bd,
+        baptismStatus: bs,
+        baptismDate: bs === "Baptized" ? bDate : "", // Save baptism date only if status is "Baptized"
+        gender: gender,
+        hope: hope,
+        privilege: privilege,
+        privilege2: privilege2,
+        fieldServiceGroup: group,
+        fullName: `${ln}, ${fn}`, // Stored for easier search/display
+        timestamp: firebase.firestore.FieldValue.serverTimestamp() // For ordering
+    });
+
+    alert("Publisher record successfully added!");
+    clearPublisherForm();
+    await loadPublishers(); // Reload to update list for navigation
+}
+        async function updatePublisher() {
+    if (!currentDocId) {
+        alert("Please select a publisher record to update first.");
+        return;
+    }
+
+    const fn = document.getElementById("firstName").value.trim();
+    const ln = document.getElementById("lastName").value.trim();
+    const bd = document.getElementById("birthdate").value;
+    const bs = document.getElementById("baptismStatus").value;
+    const bdate = document.getElementById("baptismDate").value;
+    const gender = document.getElementById("gender").value;
+    const hope = document.getElementById("hope").value;
+    const priv = document.getElementById("privilege").value;
+    const priv2 = document.getElementById("privilege2").value;
+    const group = document.getElementById("fieldServiceGroup").value;
+
+    // Validation: Check if all required fields are filled and select options are chosen
+    if (!fn || !ln || !bd || bs === "-- Select --" || gender === "-- Select --" || hope === "-- Select --" || priv === "-- Select --" || priv2 === "-- Select --" || group === "-- Select --" ||
+        (bs === "Baptized" && !bdate)) {
+        alert("Please complete all fields before updating.");
+        return;
+    }
+
+    const updatedData = {
+        firstName: fn,
+        lastName: ln,
+        birthdate: bd,
+        baptismStatus: bs,
+        baptismDate: bs === "Baptized" ? bdate : "",
+        gender: gender,
+        hope: hope,
+        privilege: priv,
+        privilege2: priv2,
+        fieldServiceGroup: group,
+        fullName: `${ln}, ${fn}`, // Update full name in case of name change
+        timestamp: firebase.firestore.FieldValue.serverTimestamp() // Update timestamp if needed
+    };
+
+    try {
+        await db.collection("publishers").doc(currentDocId).update(updatedData);
+        alert("Publisher record updated successfully!");
+        clearPublisherForm();
+        await loadPublishers(); // Reload to update list for navigation
+    } catch (error) {
+        console.error("Error updating publisher:", error);
+        alert("Failed to update publisher record. Please try again.");
+    }
+}
+        async function deletePublisher() {
+    if (!currentDocId) {
+        alert("Please select a publisher record to delete first.");
+        return;
+    }
+
+    const confirmed = confirm("Are you sure you want to delete this publisher record? This action cannot be undone.");
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        await db.collection("publishers").doc(currentDocId).delete();
+        alert("Publisher record deleted successfully!");
+        clearPublisherForm();
+        await loadPublishers(); // Reload to update list and display next/previous record if available
+    } catch (error) {
+        console.error("Error deleting publisher:", error);
+        alert("Failed to delete publisher record. Please try again.");
+    }
+}
         function previousPublisher() {
     if (publisherList.length === 0) {
         alert("No records to display.");
@@ -428,7 +543,26 @@ function nextPublisher() {
         alert("This is the last record.");
     }
 }
-        function clearPublisherForm() { /* ... */ }
+        function clearPublisherForm() {
+    document.getElementById("firstName").value = "";
+    document.getElementById("lastName").value = "";
+    document.getElementById("birthdate").value = "";
+    document.getElementById("baptismStatus").value = "-- Select --"; // Reset select to default
+    document.getElementById("baptismDate").value = "";
+    document.getElementById("baptismDateContainer").classList.add("hidden"); // Hide date field
+    document.getElementById("gender").value = "-- Select --"; // Reset select to default
+    document.getElementById("hope").value = "-- Select --"; // Reset select to default
+    document.getElementById("privilege").value = "-- Select --"; // Reset select to default
+    document.getElementById("privilege2").value = "-- Select --"; // Reset select to default
+    document.getElementById("fieldServiceGroup").value = "-- Select --"; // Reset select to default
+    document.getElementById("fullName").value = "";
+    document.getElementById("searchPublisher").value = "";
+    document.getElementById("suggestionBox").innerHTML = ""; // Clear suggestions
+
+    // Reset current selected record
+    currentIndex = -1;
+    currentDocId = null;
+}
         function displayPublisher(index) {
     const pub = publisherList[index];
     if (!pub) {
