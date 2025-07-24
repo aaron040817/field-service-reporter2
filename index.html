@@ -282,16 +282,15 @@
 
         async function loadPublishers() {
     const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
-    publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Ensure 'id' is included
 
-    // ✅ NEW: If there are publishers, set currentIndex to 0 and display the first one.
     if (publisherList.length > 0) {
-        currentIndex = 0; // Set current index to the first record
-        displayPublisher(currentIndex); // Display the first record
+        currentIndex = 0; // Start with the first record
+        displayPublisher(currentIndex);
     } else {
-        clearPublisherForm(); // If no publishers, clear the form
-        currentIndex = -1; // Reset index
-        currentDocId = null; // Reset currentDocId
+        clearPublisherForm(); // Clear form if no records
+        currentIndex = -1;
+        currentDocId = null;
     }
 }
         // --- Report Management Functions ---
@@ -404,10 +403,68 @@
         function addPublisher() { /* ... */ }
         function updatePublisher() { /* ... */ }
         function deletePublisher() { /* ... */ }
-        function previousPublisher() { /* ... */ }
-        function nextPublisher() { /* ... */ }
+        function previousPublisher() {
+    if (publisherList.length === 0) {
+        alert("No records to display.");
+        return;
+    }
+    if (currentIndex > 0) {
+        currentIndex--;
+        displayPublisher(currentIndex);
+    } else {
+        alert("This is the first record.");
+    }
+}
+
+function nextPublisher() {
+    if (publisherList.length === 0) {
+        alert("No records to display.");
+        return;
+    }
+    if (currentIndex < publisherList.length - 1) {
+        currentIndex++;
+        displayPublisher(currentIndex);
+    } else {
+        alert("This is the last record.");
+    }
+}
         function clearPublisherForm() { /* ... */ }
-        function displayPublisher() { /* ... */ }
+        function displayPublisher(index) {
+    const pub = publisherList[index];
+    if (!pub) {
+        clearPublisherForm(); // Clear the form if no publisher is found at this index
+        currentDocId = null;
+        return;
+    }
+
+    document.getElementById("firstName").value = pub.firstName || "";
+    document.getElementById("lastName").value = pub.lastName || "";
+    document.getElementById("birthdate").value = pub.birthdate || "";
+    document.getElementById("baptismStatus").value = pub.baptismStatus || "";
+
+    // Toggle baptism date container
+    const baptismDateContainer = document.getElementById("baptismDateContainer");
+    const baptismDateInput = document.getElementById("baptismDate");
+    if (pub.baptismStatus === "Baptized") {
+        baptismDateContainer.classList.remove("hidden");
+        baptismDateInput.value = pub.baptismDate || "";
+    } else {
+        baptismDateContainer.classList.add("hidden");
+        baptismDateInput.value = ""; // Clear if not baptized
+    }
+
+    document.getElementById("gender").value = pub.gender || "";
+    document.getElementById("hope").value = pub.hope || "";
+    document.getElementById("privilege").value = pub.privilege || "";
+    document.getElementById("privilege2").value = pub.privilege2 || "";
+    document.getElementById("fieldServiceGroup").value = pub.fieldServiceGroup || "";
+
+    // Update Full Name field based on current data
+    document.getElementById("fullName").value = `${pub.lastName || ''}, ${pub.firstName || ''}`;
+
+    // ✅ Crucial: Update currentDocId
+    currentDocId = pub.id; // Use the actual document ID from Firebase
+}
     </script>
 </body>
 </html>
