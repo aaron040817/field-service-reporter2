@@ -281,20 +281,19 @@
         }
 
         async function loadPublishers() {
-            const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
-            publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
+    publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            if (currentIndex >= 0 && currentIndex < publisherList.length) {
-                displayPublisher(currentIndex);
-            }
-        }
-        
-        // ... (The rest of your publisher management functions like addPublisher, updatePublisher, etc. are here)
-        
-        // The rest of the publisher management functions are the same as your original code,
-        // but now the search/suggestion logic correctly uses the 'searchPublisher' and 'suggestionBox' IDs.
-        // I will not paste them again to save space.
-        
+    // ✅ NEW: If there are publishers, set currentIndex to 0 and display the first one.
+    if (publisherList.length > 0) {
+        currentIndex = 0; // Set current index to the first record
+        displayPublisher(currentIndex); // Display the first record
+    } else {
+        clearPublisherForm(); // If no publishers, clear the form
+        currentIndex = -1; // Reset index
+        currentDocId = null; // Reset currentDocId
+    }
+}
         // --- Report Management Functions ---
 
         function goToAddReport() {
