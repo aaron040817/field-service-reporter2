@@ -361,85 +361,17 @@ const monthYearDropdown = document.getElementById("monthYearDropdown");
             document.getElementById("homePage").classList.remove("hidden");
         }
 
-        function setupAddReportPage() {
-            const searchInput = document.getElementById("searchPublisherReport");
-            const suggestionBox = document.getElementById("suggestionBoxReport");
-            const publisherNameDropdown = document.getElementById("publisherNameDropdown");
-            const fieldGroupInput = document.getElementById("fieldGroup");
-            const privilege2Input = document.getElementById("privilege2Report");
-            
-            // Clear fields
-            searchInput.value = "";
-            publisherNameDropdown.innerHTML = '<option>-- Select --</option>';
-            fieldGroupInput.value = "";
-            privilege2Input.value = "";
-
-            // Populate publisher dropdown with data from Firebase
-            publisherList.forEach(pub => {
-                const opt = document.createElement("option");
-                opt.value = pub.id;
-                opt.textContent = pub.fullName;
-                publisherNameDropdown.appendChild(opt);
-            });
-
-            // Autocomplete search logic
-            searchInput.addEventListener("input", function () {
-                const query = searchInput.value.toLowerCase();
-                suggestionBox.innerHTML = "";
-                
-                if (!query) return;
-
-                const matches = publisherList.filter(pub =>
-                    pub.fullName && pub.fullName.toLowerCase().includes(query)
-                );
-
-                matches.forEach(pub => {
-                    const div = document.createElement("div");
-                    div.textContent = pub.fullName;
-                    div.classList.add("suggestion-item");
-                    div.addEventListener("click", () => {
-                        searchInput.value = pub.fullName;
-                        suggestionBox.innerHTML = "";
-                        fieldGroupInput.value = pub.fieldServiceGroup || "";
-                        privilege2Input.value = pub.privilege2 || "";
-                        selectPublisherOption(pub.id, publisherNameDropdown);
-                    });
-                    suggestionBox.appendChild(div);
-                });
-            });
-
-            // Handle dropdown change
-            publisherNameDropdown.addEventListener("change", function () {
-                const selectedPublisher = publisherList.find(pub => pub.id === this.value);
-                if (selectedPublisher) {
-                    fieldGroupInput.value = selectedPublisher.fieldServiceGroup || "";
-                    privilege2Input.value = selectedPublisher.privilege2 || "";
-                } else {
-                    fieldGroupInput.value = "";
-                    privilege2Input.value = "";
-                }
-            });
+        // Use this updated selectPublisherOption for both search and direct dropdown selection
+function selectPublisherOption(publisherId, dropdown) {
+    Array.from(dropdown.options).forEach(opt => {
+        if (opt.value === publisherId) {
+            opt.selected = true;
+        } else {
+            opt.selected = false; // Deselect others
         }
+    });
+}
         
-        function selectPublisherOption(publisherId, dropdown) {
-            Array.from(dropdown.options).forEach(opt => {
-                if (opt.value === publisherId) opt.selected = true;
-            });
-        }
-        
-        function clearAddReportForm() {
-            document.getElementById("searchPublisherReport").value = "";
-            document.getElementById("suggestionBoxReport").innerHTML = "";
-            document.getElementById("publisherNameDropdown").selectedIndex = 0;
-            document.getElementById("fieldGroup").value = "";
-            document.getElementById("privilege2Report").value = "";
-            document.getElementById("serviceYearDropdown").selectedIndex = 0;
-            document.getElementById("monthYearDropdown").selectedIndex = 0;
-            document.getElementById("fieldHours").value = "";
-            document.getElementById("bibleStudies").value = "";
-            document.getElementById("sharedMinistry").checked = false;
-        }
-
         // --- Other Functions ---
 
         function updateFullName() {
@@ -878,51 +810,25 @@ function attachInputListeners() {
     // These listeners will be dynamically attached/re-attached inside updateReportFieldsVisibility
     // to ensure they follow the conditional logic precisely.
 }
-function setupAddReportPage() {
-    // ... (Your existing code for searchPublisherReport, suggestionBoxReport, publisherNameDropdown) ...
-
-    // Populate service years and months
-    populateServiceYears();
-    populateMonths(); // Call initially in case a service year is pre-selected
-
-    // Event Listeners for dropdowns and inputs
-    serviceYearDropdown.addEventListener("change", populateMonths);
-
-    // ✅ IMPORTANT: Attach listener to privilege2Report input for real-time updates
-    // Use 'input' event for immediate changes, or 'change' if you prefer after field loses focus
-    // Since privilege2Report is 'disabled', its value changes programmatically.
-    // We need to listen to changes on the publisherNameDropdown or search input click.
-    
-    // When a publisher is selected via search input or dropdown, update fields visibility
-    document.getElementById("publisherNameDropdown").addEventListener("change", function() {
-        const selectedPublisher = publisherList.find(pub => pub.id === this.value);
-        if (selectedPublisher) {
-            fieldGroupInput.value = selectedPublisher.fieldServiceGroup || "";
-            privilege2ReportInput.value = selectedPublisher.privilege2 || ""; // Update privilege2Report here
-            updateReportFieldsVisibility(); // Call this after privilege2Report is updated
-        } else {
-            fieldGroupInput.value = "";
-            privilege2ReportInput.value = "";
-            updateReportFieldsVisibility(); // Call to hide fields if no publisher selected
-        }
-    });
-
-    // Also call updateReportFieldsVisibility when the aux pioneer question changes
-    isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
-
-    // Initial call to set up the fields based on initial state (e.g., if page reloaded with data)
-    updateReportFieldsVisibility();
-}
-
 function clearAddReportForm() {
     // ... (Your existing clear logic) ...
+
+    document.getElementById("searchPublisherReport").value = "";
+    document.getElementById("suggestionBoxReport").innerHTML = ""; // Clear suggestions
+
+    // Clear and reset values for autofilled fields
+    document.getElementById("publisherNameDropdown").value = ""; // Reset dropdown
+    document.getElementById("fieldGroup").value = "";
+    document.getElementById("privilege2Report").value = "";
+
+    // Clear and reset conditional fields
     document.getElementById("serviceYearDropdown").value = "";
     document.getElementById("monthYearDropdown").value = "";
     document.getElementById("fieldHours").value = "";
     document.getElementById("bibleStudies").value = "";
     document.getElementById("sharedMinistry").checked = false;
-    document.getElementById("isAuxiliaryPioneerThisMonth").value = ""; // Clear this select too
-    document.getElementById("auxiliaryPioneerCheckbox").checked = false; // Clear this checkbox
+    document.getElementById("isAuxiliaryPioneerThisMonth").value = "";
+    document.getElementById("auxiliaryPioneerCheckbox").checked = false;
 
     // Hide all conditional containers after clearing
     auxPioneerQuestionContainer.classList.add("hidden");
@@ -936,6 +842,133 @@ function clearAddReportForm() {
     bibleStudiesInput.oninput = null;
     isAuxiliaryPioneerThisMonth.onchange = null;
 }
+
+function populatePublisherDropdown() {
+    const publisherNameDropdown = document.getElementById("publisherNameDropdown");
+    publisherNameDropdown.innerHTML = '<option value="">-- Select --</option>'; // Clear previous options
+
+    // Make sure publisherList is populated (e.g., from loadPublishers() on login/page load)
+    if (publisherList && publisherList.length > 0) {
+        publisherList.forEach(pub => {
+            const opt = document.createElement("option");
+            opt.value = pub.id; // Store Firebase document ID as value
+            opt.textContent = pub.fullName;
+            publisherNameDropdown.appendChild(opt);
+        });
+    }
+}
+function autofillPublisherDetails(publisherId) {
+    const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
+    const fieldGroupInput = document.getElementById("fieldGroup");
+    const privilege2ReportInput = document.getElementById("privilege2Report"); // Use correct ID
+
+    if (selectedPublisher) {
+        fieldGroupInput.value = selectedPublisher.fieldServiceGroup || "";
+        privilege2ReportInput.value = selectedPublisher.privilege2 || "";
+    } else {
+        fieldGroupInput.value = "";
+        privilege2ReportInput.value = "";
+    }
+
+    // Trigger visibility update based on the newly autofilled privilege2
+    updateReportFieldsVisibility();
+}
+// Get references for Add Report's search fields
+const searchPublisherReportInput = document.getElementById("searchPublisherReport");
+const suggestionBoxReport = document.getElementById("suggestionBoxReport");
+
+searchPublisherReportInput.addEventListener("input", function () {
+    const query = searchPublisherReportInput.value.toLowerCase();
+    suggestionBoxReport.innerHTML = ""; // Clear previous suggestions
+
+    if (!query) return;
+
+    const matches = publisherList.filter(pub =>
+        pub.fullName && pub.fullName.toLowerCase().includes(query)
+    );
+
+    matches.forEach((pub) => {
+        const div = document.createElement("div");
+        div.textContent = pub.fullName;
+        div.classList.add("suggestion-item");
+        div.addEventListener("click", () => {
+            // When a suggestion is clicked
+            searchPublisherReportInput.value = pub.fullName; // Fill search box
+            suggestionBoxReport.innerHTML = ""; // Hide suggestions
+
+            // ✅ Select the corresponding option in the Publisher Name dropdown
+            const publisherNameDropdown = document.getElementById("publisherNameDropdown");
+            selectPublisherOption(pub.id, publisherNameDropdown); // Function to select dropdown option
+
+            // ✅ Autofill Field Service Group and Privilege2
+            autofillPublisherDetails(pub.id);
+        });
+        suggestionBoxReport.appendChild(div);
+    });
+});
+function setupAddReportPage() {
+    // 1. Get references to elements (moved inside the function for better scope management)
+    const searchInput = document.getElementById("searchPublisherReport");
+    const suggestionBox = document.getElementById("suggestionBoxReport");
+    const publisherNameDropdown = document.getElementById("publisherNameDropdown");
+    const fieldGroupInput = document.getElementById("fieldGroup");
+    const privilege2Input = document.getElementById("privilege2Report"); // This is the same as privilege2ReportInput from previous explanation
+
+    // 2. Clear fields (from your first setupAddReportPage)
+    searchInput.value = "";
+    publisherNameDropdown.innerHTML = '<option value="">-- Select --</option>'; // Added value=""
+    fieldGroupInput.value = "";
+    privilege2Input.value = "";
+
+    // 3. Populate Publisher Name dropdown (from previous response, using populatePublisherDropdown)
+    populatePublisherDropdown(); // This function will fill publisherNameDropdown
+
+    // 4. Autocomplete search logic (from your first setupAddReportPage, slightly modified)
+    searchInput.addEventListener("input", function () {
+        const query = searchInput.value.toLowerCase();
+        suggestionBox.innerHTML = "";
+
+        if (!query) return;
+
+        const matches = publisherList.filter(pub =>
+            pub.fullName && pub.fullName.toLowerCase().includes(query)
+        );
+
+        matches.forEach(pub => {
+            const div = document.createElement("div");
+            div.textContent = pub.fullName;
+            div.classList.add("suggestion-item");
+            div.addEventListener("click", () => {
+                searchInput.value = pub.fullName;
+                suggestionBox.innerHTML = "";
+                // Instead of directly setting value, use selectPublisherOption and then autofill
+                selectPublisherOption(pub.id, publisherNameDropdown); // Select in dropdown
+                autofillPublisherDetails(pub.id); // Autofill fields and trigger visibility update
+            });
+            suggestionBox.appendChild(div);
+        });
+    });
+
+    // 5. Handle Publisher Name dropdown change (from your first setupAddReportPage, modified to use autofillPublisherDetails)
+    publisherNameDropdown.addEventListener("change", function () {
+        autofillPublisherDetails(this.value); // Use the new autofill function
+    });
+
+    // 6. Populate service years and months (from previous response)
+    populateServiceYears();
+    populateMonths(); // Call initially in case a service year is pre-selected
+
+    // 7. Event Listener for Service Year dropdown change (from previous response)
+    serviceYearDropdown.addEventListener("change", populateMonths);
+
+    // 8. Event Listener for "Is Auxiliary Pioneer This Month?" dropdown (from previous response)
+    isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
+
+    // 9. Initial call to set up the fields based on initial state
+    // This will be triggered by autofillPublisherDetails when a publisher is selected
+    // If no publisher is selected initially, it will use the empty privilege2Input value
+    updateReportFieldsVisibility();
+}    
     </script>
 </body>
 </html>
