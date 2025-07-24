@@ -139,55 +139,76 @@
     </div>
 
     <div id="addReportPage" class="box hidden">
-        <h2>Add Report</h2>
+    <h2>Add Report</h2>
 
-        <label>Search Publisher:<br>
-            <input type="text" id="searchPublisherReport" placeholder="Search Publisher..." autocomplete="off">
-            <div id="suggestionBoxReport" class="suggestions"></div>
-        </label><br>
+    <label>Search Publisher:<br>
+        <input type="text" id="searchPublisherReport" placeholder="Search Publisher..." autocomplete="off">
+        <div id="suggestionBoxReport" class="suggestions"></div>
+    </label><br>
 
-        <label>Publisher Name:<br>
-            <select id="publisherNameDropdown">
-                <option>-- Select --</option>
+    <label>Publisher Name:<br>
+        <select id="publisherNameDropdown">
+            <option value="">-- Select --</option>
+        </select>
+    </label><br>
+
+    <label>Field Service Group:<br>
+        <input type="text" id="fieldGroup" disabled>
+    </label><br>
+
+    <label>Privilege2:<br>
+        <input type="text" id="privilege2Report" disabled>
+    </label><br>
+
+    <label>Service Year:<br>
+        <select id="serviceYearDropdown">
+            <option value="">-- Select --</option>
+        </select>
+    </label><br>
+
+    <label>Month and Year:<br>
+        <select id="monthYearDropdown">
+            <option value="">-- Select --</option>
+        </select>
+    </label><br>
+
+    <div id="auxPioneerQuestionContainer" class="hidden">
+        <label>Is The Publisher an Auxiliary Pioneer This Month?:<br>
+            <select id="isAuxiliaryPioneerThisMonth">
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
             </select>
         </label><br>
+    </div>
 
-        <label>Field Service Group:<br>
-            <input type="text" id="fieldGroup" disabled>
-        </label><br>
-
-        <label>Privilege2:<br>
-            <input type="text" id="privilege2Report" disabled>
-        </label><br>
-
-        <label>Service Year:<br>
-            <select id="serviceYearDropdown">
-                <option>-- Select --</option>
-            </select>
-        </label><br>
-
-        <label>Month and Year:<br>
-            <select id="monthYearDropdown">
-                <option>-- Select --</option>
-            </select>
-        </label><br>
-
+    <div id="fieldHoursContainer" class="hidden">
         <label>Field Hours:<br>
             <input type="number" id="fieldHours">
         </label><br>
+    </div>
 
+    <div id="bibleStudiesContainer" class="hidden">
         <label>Bible Studies:<br>
             <input type="number" id="bibleStudies">
         </label><br>
-
-        <label><input type="checkbox" id="sharedMinistry"> Shared in Ministry</label><br><br>
-
-        <button id="saveReportBtn">Save Report</button>
-        <button id="clearReportBtn">Clear</button>
-        <button id="backHomeFromReportBtn">Back to HomePage</button>
-        <button onclick="logout()">Logout</button>
     </div>
 
+    <div id="sharedMinistryContainer" class="hidden">
+        <label><input type="checkbox" id="sharedMinistry"> Shared in Ministry</label><br>
+    </div>
+
+    <div id="auxiliaryPioneerCheckboxContainer" class="hidden">
+        <label><input type="checkbox" id="auxiliaryPioneerCheckbox"> Auxiliary Pioneer</label><br>
+    </div>
+
+    <br>
+    <button id="saveReportBtn">Save Report</button>
+    <button id="clearReportBtn">Clear</button>
+    <button id="backHomeFromReportBtn">Back to HomePage</button>
+    <button onclick="logout()">Logout</button>
+</div>
+    
     <script>
         // Replace with your Firebase config
         const firebaseConfig = {
@@ -257,6 +278,9 @@
     // --- Hanggang dito ang bagong code ---
 
 }); // End of DOMContentLoaded
+
+const serviceYearDropdown = document.getElementById("serviceYearDropdown");
+const monthYearDropdown = document.getElementById("monthYearDropdown");
 
         // --- Core Functions ---
         
@@ -642,6 +666,275 @@ function nextPublisher() {
 
     // ✅ Crucial: Update currentDocId
     currentDocId = pub.id; // Use the actual document ID from Firebase
+}
+function populateServiceYears() {
+    // Clear existing options first
+    serviceYearDropdown.innerHTML = '<option value="">-- Select --</option>';
+    const currentYear = new Date().getFullYear();
+    // Assuming service year 2015 starts in Sep 2014, so current year should be valid
+    const startYear = 2015;
+    const endYear = 2200; // As per your requirement
+
+    for (let year = startYear; year <= endYear; year++) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        serviceYearDropdown.appendChild(option);
+    }
+}
+
+function populateMonths() {
+    monthYearDropdown.innerHTML = '<option value="">-- Select --</option>';
+    const selectedServiceYear = parseInt(serviceYearDropdown.value);
+
+    if (isNaN(selectedServiceYear)) {
+        return; // No service year selected
+    }
+
+    // Service Year Y runs from September of (Y-1) to August of Y
+    const startMonthYear = new Date(selectedServiceYear - 1, 8, 1); // September of (Service Year - 1)
+    const endMonthYear = new Date(selectedServiceYear, 7, 1);     // August of Service Year
+
+    let currentMonth = startMonthYear;
+    while (currentMonth <= endMonthYear) {
+        const option = document.createElement("option");
+        const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
+        const year = currentMonth.getFullYear();
+        option.value = `${monthName} ${year}`;
+        option.textContent = `${monthName} ${year}`;
+        monthYearDropdown.appendChild(option);
+
+        // Move to the next month
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+}
+// Get references to all conditional fields and their containers
+const auxPioneerQuestionContainer = document.getElementById("auxPioneerQuestionContainer");
+const isAuxiliaryPioneerThisMonth = document.getElementById("isAuxiliaryPioneerThisMonth");
+const fieldHoursContainer = document.getElementById("fieldHoursContainer");
+const fieldHoursInput = document.getElementById("fieldHours");
+const bibleStudiesContainer = document.getElementById("bibleStudiesContainer");
+const bibleStudiesInput = document.getElementById("bibleStudies");
+const sharedMinistryContainer = document.getElementById("sharedMinistryContainer");
+const sharedMinistryCheckbox = document.getElementById("sharedMinistry");
+const auxiliaryPioneerCheckboxContainer = document.getElementById("auxiliaryPioneerCheckboxContainer");
+const auxiliaryPioneerCheckbox = document.getElementById("auxiliaryPioneerCheckbox");
+const privilege2ReportInput = document.getElementById("privilege2Report"); // Get this element
+
+function updateReportFieldsVisibility() {
+    const privilege2 = privilege2ReportInput.value;
+    const isAuxPioneerSelected = isAuxiliaryPioneerThisMonth.value;
+
+    // Reset all to hidden/default states first
+    auxPioneerQuestionContainer.classList.add("hidden");
+    fieldHoursContainer.classList.add("hidden");
+    bibleStudiesContainer.classList.add("hidden");
+    sharedMinistryContainer.classList.add("hidden");
+    auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+
+    fieldHoursInput.disabled = false;
+    bibleStudiesInput.disabled = false;
+    sharedMinistryCheckbox.disabled = false;
+    auxiliaryPioneerCheckbox.disabled = false;
+
+    sharedMinistryCheckbox.checked = false;
+    auxiliaryPioneerCheckbox.checked = false;
+    fieldHoursInput.value = "";
+    bibleStudiesInput.value = "";
+
+    switch (privilege2) {
+        case "Regular Pioneer":
+        case "Special Pioneer":
+        case "Field Missionary":
+            fieldHoursContainer.classList.remove("hidden");
+            bibleStudiesContainer.classList.remove("hidden");
+            sharedMinistryContainer.classList.remove("hidden");
+
+            fieldHoursInput.oninput = () => { // Validate field hours input
+                fieldHoursInput.value = fieldHoursInput.value.replace(/[^0-9]/g, ''); // Allow only digits
+                const hours = parseInt(fieldHoursInput.value);
+                if (hours > 0) {
+                    sharedMinistryCheckbox.checked = true;
+                    sharedMinistryCheckbox.disabled = true; // Disable if checked automatically
+                } else {
+                    sharedMinistryCheckbox.checked = false;
+                    sharedMinistryCheckbox.disabled = false; // Enable if not checked automatically
+                }
+            };
+            bibleStudiesInput.oninput = () => { // Validate bible studies input
+                bibleStudiesInput.value = bibleStudiesInput.value.replace(/[^0-9]/g, ''); // Allow only digits
+            };
+            sharedMinistryCheckbox.disabled = true; // Initially disabled, controlled by Field Hours
+            break;
+
+        case "Continuous Auxiliary Pioneer":
+            fieldHoursContainer.classList.remove("hidden");
+            bibleStudiesContainer.classList.remove("hidden");
+            sharedMinistryContainer.classList.remove("hidden");
+            auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+
+            fieldHoursInput.oninput = () => {
+                fieldHoursInput.value = fieldHoursInput.value.replace(/[^0-9]/g, '');
+                const hours = parseInt(fieldHoursInput.value);
+                if (hours > 0) {
+                    sharedMinistryCheckbox.checked = true;
+                    sharedMinistryCheckbox.disabled = true;
+                    auxiliaryPioneerCheckbox.checked = true;
+                    auxiliaryPioneerCheckbox.disabled = true;
+                } else {
+                    sharedMinistryCheckbox.checked = false;
+                    sharedMinistryCheckbox.disabled = false;
+                    auxiliaryPioneerCheckbox.checked = false;
+                    auxiliaryPioneerCheckbox.disabled = false;
+                }
+            };
+            bibleStudiesInput.oninput = () => {
+                bibleStudiesInput.value = bibleStudiesInput.value.replace(/[^0-9]/g, '');
+            };
+            sharedMinistryCheckbox.disabled = true; // Initially disabled
+            auxiliaryPioneerCheckbox.disabled = true; // Initially disabled
+            break;
+
+        case "Publisher/Auxi":
+            auxPioneerQuestionContainer.classList.remove("hidden");
+
+            // Listen for changes on "Is The Publisher an Auxiliary Pioneer This Month?"
+            isAuxiliaryPioneerThisMonth.onchange = () => {
+                const currentAuxStatus = isAuxiliaryPioneerThisMonth.value;
+                // Reset states for "Publisher/Auxi" first
+                fieldHoursContainer.classList.add("hidden");
+                bibleStudiesContainer.classList.add("hidden");
+                sharedMinistryContainer.classList.add("hidden");
+                auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+
+                fieldHoursInput.disabled = false;
+                bibleStudiesInput.disabled = false;
+                sharedMinistryCheckbox.disabled = false;
+                auxiliaryPioneerCheckbox.disabled = false;
+
+                sharedMinistryCheckbox.checked = false;
+                auxiliaryPioneerCheckbox.checked = false;
+                fieldHoursInput.value = "";
+                bibleStudiesInput.value = "";
+
+
+                if (currentAuxStatus === "Yes") {
+                    fieldHoursContainer.classList.remove("hidden");
+                    bibleStudiesContainer.classList.remove("hidden");
+                    sharedMinistryContainer.classList.remove("hidden");
+                    auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+
+                    fieldHoursInput.oninput = () => {
+                        fieldHoursInput.value = fieldHoursInput.value.replace(/[^0-9]/g, '');
+                        const hours = parseInt(fieldHoursInput.value);
+                        if (hours > 0) {
+                            sharedMinistryCheckbox.checked = true;
+                            sharedMinistryCheckbox.disabled = true;
+                            auxiliaryPioneerCheckbox.checked = true;
+                            auxiliaryPioneerCheckbox.disabled = true;
+                        } else {
+                            sharedMinistryCheckbox.checked = false;
+                            sharedMinistryCheckbox.disabled = false;
+                            auxiliaryPioneerCheckbox.checked = false;
+                            auxiliaryPioneerCheckbox.disabled = false;
+                        }
+                    };
+                    bibleStudiesInput.oninput = () => {
+                        bibleStudiesInput.value = bibleStudiesInput.value.replace(/[^0-9]/g, '');
+                    };
+                    sharedMinistryCheckbox.disabled = true; // Initially disabled
+                    auxiliaryPioneerCheckbox.disabled = true; // Initially disabled
+
+                } else if (currentAuxStatus === "No") {
+                    // Field Hours should be hidden
+                    bibleStudiesContainer.classList.remove("hidden");
+                    sharedMinistryContainer.classList.remove("hidden");
+
+                    bibleStudiesInput.oninput = () => {
+                        bibleStudiesInput.value = bibleStudiesInput.value.replace(/[^0-9]/g, '');
+                    };
+                    sharedMinistryCheckbox.disabled = false; // Enabled for user to check
+                    auxiliaryPioneerCheckboxContainer.classList.add("hidden"); // Ensure hidden
+                }
+            };
+            // Trigger the onchange initially if a value is already set (e.g., from loading data)
+            isAuxiliaryPioneerThisMonth.onchange();
+            break;
+
+        default:
+            // All hidden as default
+            break;
+    }
+}
+
+// Validation function for numeric inputs (Field Hours, Bible Studies)
+function validateNumericInput(inputElement) {
+    // Only allow non-negative integers
+    inputElement.value = inputElement.value.replace(/[^0-9]/g, '');
+}
+
+// Function to attach validation and auto-check logic
+function attachInputListeners() {
+    // These listeners will be dynamically attached/re-attached inside updateReportFieldsVisibility
+    // to ensure they follow the conditional logic precisely.
+}
+function setupAddReportPage() {
+    // ... (Your existing code for searchPublisherReport, suggestionBoxReport, publisherNameDropdown) ...
+
+    // Populate service years and months
+    populateServiceYears();
+    populateMonths(); // Call initially in case a service year is pre-selected
+
+    // Event Listeners for dropdowns and inputs
+    serviceYearDropdown.addEventListener("change", populateMonths);
+
+    // ✅ IMPORTANT: Attach listener to privilege2Report input for real-time updates
+    // Use 'input' event for immediate changes, or 'change' if you prefer after field loses focus
+    // Since privilege2Report is 'disabled', its value changes programmatically.
+    // We need to listen to changes on the publisherNameDropdown or search input click.
+    
+    // When a publisher is selected via search input or dropdown, update fields visibility
+    document.getElementById("publisherNameDropdown").addEventListener("change", function() {
+        const selectedPublisher = publisherList.find(pub => pub.id === this.value);
+        if (selectedPublisher) {
+            fieldGroupInput.value = selectedPublisher.fieldServiceGroup || "";
+            privilege2ReportInput.value = selectedPublisher.privilege2 || ""; // Update privilege2Report here
+            updateReportFieldsVisibility(); // Call this after privilege2Report is updated
+        } else {
+            fieldGroupInput.value = "";
+            privilege2ReportInput.value = "";
+            updateReportFieldsVisibility(); // Call to hide fields if no publisher selected
+        }
+    });
+
+    // Also call updateReportFieldsVisibility when the aux pioneer question changes
+    isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
+
+    // Initial call to set up the fields based on initial state (e.g., if page reloaded with data)
+    updateReportFieldsVisibility();
+}
+
+function clearAddReportForm() {
+    // ... (Your existing clear logic) ...
+    document.getElementById("serviceYearDropdown").value = "";
+    document.getElementById("monthYearDropdown").value = "";
+    document.getElementById("fieldHours").value = "";
+    document.getElementById("bibleStudies").value = "";
+    document.getElementById("sharedMinistry").checked = false;
+    document.getElementById("isAuxiliaryPioneerThisMonth").value = ""; // Clear this select too
+    document.getElementById("auxiliaryPioneerCheckbox").checked = false; // Clear this checkbox
+
+    // Hide all conditional containers after clearing
+    auxPioneerQuestionContainer.classList.add("hidden");
+    fieldHoursContainer.classList.add("hidden");
+    bibleStudiesContainer.classList.add("hidden");
+    sharedMinistryContainer.classList.add("hidden");
+    auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+
+    // Remove any specific oninput listeners attached dynamically to avoid stale closures
+    fieldHoursInput.oninput = null;
+    bibleStudiesInput.oninput = null;
+    isAuxiliaryPioneerThisMonth.onchange = null;
 }
     </script>
 </body>
