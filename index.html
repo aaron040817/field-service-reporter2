@@ -490,8 +490,8 @@
     try {
         await db.collection("publishers").doc(currentDocId).update(updatedData);
         alert("Publisher record updated successfully!");
-        clearPublisherForm();
         await loadPublishers(); // Reload to update list for navigation
+        clearPublisherForm();
     } catch (error) {
         console.error("Error updating publisher:", error);
         alert("Failed to update publisher record. Please try again.");
@@ -511,8 +511,8 @@
     try {
         await db.collection("publishers").doc(currentDocId).delete();
         alert("Publisher record deleted successfully!");
-        clearPublisherForm();
         await loadPublishers(); // Reload to update list and display next/previous record if available
+        clearPublisherForm();
     } catch (error) {
         console.error("Error deleting publisher:", error);
         alert("Failed to delete publisher record. Please try again.");
