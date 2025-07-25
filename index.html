@@ -509,7 +509,7 @@
 
     function setupManagePublisherPage() {
         // MODIFIED: Always clear the form on entry to this page
-        clearPublisherForm();
+        
         loadPublishers().then(() => { // Load publishers for navigation and search
             // Add listeners here
             if (firstNameInput && lastNameInput) {
@@ -544,6 +544,7 @@
                 });
             }
         });
+    clearPublisherForm();
     }
 
 
