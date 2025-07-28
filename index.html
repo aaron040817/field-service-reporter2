@@ -42,20 +42,19 @@
     </div>
 
     <div id="homePage" class="page-container hidden">
-        <h2>Welcome, <span id="loggedInUser"></span>!</h2>
-        <button id="managePublisherBtn">Manage Publisher</button>
-        <button id="addReportBtn">Add Report</button>
-        <button id="updateReportPageBtn">Update Report</button>
-        <button id="reviewApprovalsBtn">Review Approvals</button>
-        <button id="exportExcelBtn">Export to Excel</button>
-        <button id="manageUsersBtn" class="hidden">Manage Users</button>
-        <button id="logoutBtn" class="logout-btn">Logout</button>
-        <div id="adminSection" class="hidden" style="margin-top: 20px;">
-             <button id="clearAllDataBtn">Clear All Data</button>
-             <p style="color: red; font-size: 12px; margin-top: 5px;">Warning: This will delete all publisher and report data.</p>
-        </div>
+    <h2>Welcome, <span id="loggedInUser"></span>!</h2>
+    <button id="managePublisherBtn">Manage Publisher</button>
+    <button id="addReportBtn">Add Report</button>
+    <button id="updateReportPageBtn">Update Report</button>
+    <button id="reviewApprovalsBtn">Review Approvals</button>
+    <button id="exportExcelBtn">Export to Excel</button>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+    <div id="adminSection" style="margin-top: 20px;">
+         <button id="clearAllDataBtn">Clear All Data</button>
+         <p style="color: red; font-size: 12px; margin-top: 5px;">Warning: This will delete all publisher and report data.</p>
     </div>
-
+</div>
+    
     <div id="addReportPage" class="page-container hidden">
         <h2>Add Field Service Report</h2>
         <label for="searchPublisherReport">Search Publisher:</label>
@@ -229,41 +228,6 @@
         <button id="clearPublisherFormBtn" class="clear-btn">Clear Form</button>
         <button id="backHomeFromPublisherBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromPublisher" class="logout-btn">Logout</button>
-    </div>
-
-    <div id="manageUsersPage" class="page-container hidden">
-        <h2>Manage Users</h2>
-        
-        <label for="userEmail">Email (Username):</label>
-        <input type="email" id="userEmail">
-        
-        <label for="userPassword">Password:</label>
-        <input type="password" id="userPassword">
-        <div class="checkbox-container">
-            <input type="checkbox" id="showPassword">
-            <label for="showPassword">Show Password</label>
-        </div>
-
-        <label for="userFirstName">First Name:</label>
-        <input type="text" id="userFirstName">
-
-        <label for="userLastName">Last Name:</label>
-        <input type="text" id="userLastName">
-        
-        <label for="userRole">Role:</label>
-        <select id="userRole">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-        </select>
-
-        <button id="addUserBtn">Add</button>
-        <button id="updateUserBtn">Update</button>
-        <button id="deleteUserBtn" class="delete-btn">Delete</button>
-        <button id="previousUserBtn">Previous</button>
-        <button id="nextUserBtn">Next</button>
-        <button id="clearUserFormBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromUserBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromUser" class="logout-btn">Logout</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
