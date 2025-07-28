@@ -233,8 +233,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    
-    </body>
+</body>
 </html>
 
 <script>
@@ -553,14 +552,19 @@
                 fieldGroupUpdate.value = '';
                 privilege2Update.value = '';
             }
+            // Apply the field visibility logic first
+            updateReportFieldsVisibility_UpdatePage();
+            // Then attempt to fetch data which will populate the now-visible fields
             fetchReportData();
         }
         publisherNameDropdownUpdate.addEventListener('change', handlePublisherSelection);
         serviceYearDropdownUpdate.addEventListener('change', () => {
-            populateMonths(monthYearDropdownUpdate, serviceYearDropdownUpdate.value)
+            populateMonths(monthYearDropdownUpdate, serviceYearDropdownUpdate.value);
             fetchReportData();
         });
         monthYearDropdownUpdate.addEventListener('change', fetchReportData);
+        // Add listener for the Aux Pioneer Question on the update page
+        isAuxiliaryPioneerThisMonthUpdate.addEventListener('change', updateReportFieldsVisibility_UpdatePage);
     }
 
     // --- Publisher Management ---
@@ -696,70 +700,110 @@
         if(isAuxiliaryPioneerThisMonth) isAuxiliaryPioneerThisMonth.value = "";
         updateReportFieldsVisibility();
     }
-    function updateReportFieldsVisibility() {
-        auxPioneerQuestionContainer.classList.add("hidden");
-        fieldHoursContainer.classList.add("hidden");
-        bibleStudiesContainer.classList.add("hidden");
-        sharedMinistryContainer.classList.add("hidden");
-        auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-        fieldHoursInput.value = "";
-        bibleStudiesInput.value = "";
-        sharedMinistryCheckbox.checked = false;
-        auxiliaryPioneerCheckbox.checked = false;
-        sharedMinistryCheckbox.disabled = false;
-        auxiliaryPioneerCheckbox.disabled = false;
+    
+    // --- GENERIC FUNCTION for field logic ---
+    function handleReportFieldLogic(elements) {
+        elements.auxPioneerQuestionContainer.classList.add("hidden");
+        elements.fieldHoursContainer.classList.add("hidden");
+        elements.bibleStudiesContainer.classList.add("hidden");
+        elements.sharedMinistryContainer.classList.add("hidden");
+        elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+        elements.fieldHoursInput.value = "";
+        elements.bibleStudiesInput.value = "";
+        elements.sharedMinistryCheckbox.checked = false;
+        elements.auxiliaryPioneerCheckbox.checked = false;
+        elements.sharedMinistryCheckbox.disabled = false;
+        elements.auxiliaryPioneerCheckbox.disabled = false;
+
         const handleHoursInput = () => {
-            let value = fieldHoursInput.value.replace(/\D/g, '');
+            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
             if (value && parseInt(value, 10) === 0) { value = ''; }
-            fieldHoursInput.value = value;
+            elements.fieldHoursInput.value = value;
             const hasHours = parseInt(value, 10) > 0;
-            sharedMinistryCheckbox.checked = hasHours;
-            auxiliaryPioneerCheckbox.checked = hasHours;
+            elements.sharedMinistryCheckbox.checked = hasHours;
+            elements.auxiliaryPioneerCheckbox.checked = hasHours;
         };
-        const handleStudiesInput = () => { bibleStudiesInput.value = bibleStudiesInput.value.replace(/\D/g, ''); };
-        fieldHoursInput.oninput = null;
-        bibleStudiesInput.oninput = null;
-        const privilege2 = privilege2ReportInput.value;
+        const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
+        
+        elements.fieldHoursInput.oninput = null;
+        elements.bibleStudiesInput.oninput = null;
+        
+        const privilege2 = elements.privilegeInput.value;
         switch (privilege2) {
             case "Regular Pioneer": case "Special Pioneer": case "Field Missionary":
-                fieldHoursContainer.classList.remove("hidden");
-                bibleStudiesContainer.classList.remove("hidden");
-                sharedMinistryContainer.classList.remove("hidden");
-                sharedMinistryCheckbox.disabled = true;
-                fieldHoursInput.oninput = handleHoursInput;
-                bibleStudiesInput.oninput = handleStudiesInput;
+                elements.fieldHoursContainer.classList.remove("hidden");
+                elements.bibleStudiesContainer.classList.remove("hidden");
+                elements.sharedMinistryContainer.classList.remove("hidden");
+                elements.sharedMinistryCheckbox.disabled = true;
+                elements.fieldHoursInput.oninput = handleHoursInput;
+                elements.bibleStudiesInput.oninput = handleStudiesInput;
                 break;
             case "Continuous Auxiliary Pioneer":
-                fieldHoursContainer.classList.remove("hidden");
-                bibleStudiesContainer.classList.remove("hidden");
-                sharedMinistryContainer.classList.remove("hidden");
-                auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-                sharedMinistryCheckbox.disabled = true;
-                auxiliaryPioneerCheckbox.disabled = true;
-                fieldHoursInput.oninput = handleHoursInput;
-                bibleStudiesInput.oninput = handleStudiesInput;
+                elements.fieldHoursContainer.classList.remove("hidden");
+                elements.bibleStudiesContainer.classList.remove("hidden");
+                elements.sharedMinistryContainer.classList.remove("hidden");
+                elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                elements.sharedMinistryCheckbox.disabled = true;
+                elements.auxiliaryPioneerCheckbox.disabled = true;
+                elements.fieldHoursInput.oninput = handleHoursInput;
+                elements.bibleStudiesInput.oninput = handleStudiesInput;
                 break;
             case "Publisher/Auxi":
-                auxPioneerQuestionContainer.classList.remove("hidden");
-                const auxStatus = isAuxiliaryPioneerThisMonth.value;
+                elements.auxPioneerQuestionContainer.classList.remove("hidden");
+                const auxStatus = elements.isAuxiliaryPioneerThisMonth.value;
                 if (auxStatus === "Yes") {
-                    fieldHoursContainer.classList.remove("hidden");
-                    bibleStudiesContainer.classList.remove("hidden");
-                    sharedMinistryContainer.classList.remove("hidden");
-                    auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-                    sharedMinistryCheckbox.disabled = true;
-                    auxiliaryPioneerCheckbox.disabled = true;
-                    fieldHoursInput.oninput = handleHoursInput;
-                    bibleStudiesInput.oninput = handleStudiesInput;
+                    elements.fieldHoursContainer.classList.remove("hidden");
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                    elements.sharedMinistryCheckbox.disabled = true;
+                    elements.auxiliaryPioneerCheckbox.disabled = true;
+                    elements.fieldHoursInput.oninput = handleHoursInput;
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
                 } else if (auxStatus === "No") {
-                    bibleStudiesContainer.classList.remove("hidden");
-                    sharedMinistryContainer.classList.remove("hidden");
-                    sharedMinistryCheckbox.disabled = false;
-                    bibleStudiesInput.oninput = handleStudiesInput;
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    elements.sharedMinistryCheckbox.disabled = false;
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
                 }
                 break;
         }
     }
+
+    // --- Wrapper for Add Report Page ---
+    function updateReportFieldsVisibility() {
+        handleReportFieldLogic({
+            privilegeInput: privilege2ReportInput,
+            auxPioneerQuestionContainer: auxPioneerQuestionContainer,
+            isAuxiliaryPioneerThisMonth: isAuxiliaryPioneerThisMonth,
+            fieldHoursContainer: fieldHoursContainer,
+            fieldHoursInput: fieldHoursInput,
+            bibleStudiesContainer: bibleStudiesContainer,
+            bibleStudiesInput: bibleStudiesInput,
+            sharedMinistryContainer: sharedMinistryContainer,
+            sharedMinistryCheckbox: sharedMinistryCheckbox,
+            auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainer,
+            auxiliaryPioneerCheckbox: auxiliaryPioneerCheckbox
+        });
+    }
+    
+    // --- Wrapper for Update Report Page ---
+    function updateReportFieldsVisibility_UpdatePage() {
+         handleReportFieldLogic({
+            privilegeInput: privilege2Update,
+            auxPioneerQuestionContainer: auxPioneerQuestionContainerUpdate,
+            isAuxiliaryPioneerThisMonth: isAuxiliaryPioneerThisMonthUpdate,
+            fieldHoursContainer: fieldHoursContainerUpdate,
+            fieldHoursInput: fieldHoursUpdate,
+            bibleStudiesContainer: bibleStudiesContainerUpdate,
+            bibleStudiesInput: bibleStudiesUpdate,
+            sharedMinistryContainer: sharedMinistryContainerUpdate,
+            sharedMinistryCheckbox: sharedMinistryUpdate,
+            auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate,
+            auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
+        });
+    }
+
     async function saveReport() {
         if (!publisherNameDropdown.value) { alert("Validation Error: Please select a publisher."); return; }
         if (!serviceYearDropdown.value) { alert("Validation Error: Please select a service year."); return; }
@@ -779,17 +823,7 @@
             const doc = await reportRef.get();
             if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
             const reportData = {
-                publisherId: publisherId,
-                publisherFullName: publisherFullName,
-                serviceYear: serviceYear,
-                month: month,
-                fieldServiceGroup: fieldGroupInput.value,
-                privilege2AtTimeOfReport: privilege2ReportInput.value,
-                hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0,
-                bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0,
-                sharedInMinistry: sharedMinistryCheckbox.checked,
-                wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                publisherId: publisherId, publisherFullName: publisherFullName, serviceYear: serviceYear, month: month, fieldServiceGroup: fieldGroupInput.value, privilege2AtTimeOfReport: privilege2ReportInput.value, hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0, bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0, sharedInMinistry: sharedMinistryCheckbox.checked, wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked, timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             await reportRef.set(reportData);
             alert("Report saved successfully!");
@@ -814,18 +848,11 @@
                 const data = doc.data();
                 currentReportId = doc.id;
                 updateReportFieldsDiv.style.display = 'block';
+                // Populate the form with fetched data
                 fieldHoursUpdate.value = data.hours || '';
                 bibleStudiesUpdate.value = data.bibleStudies || '';
                 sharedMinistryUpdate.checked = data.sharedInMinistry || false;
                 auxiliaryPioneerCheckboxUpdate.checked = data.wasAuxiliaryPioneer || false;
-                fieldHoursContainerUpdate.classList.remove('hidden');
-                bibleStudiesContainerUpdate.classList.remove('hidden');
-                sharedMinistryContainerUpdate.classList.remove('hidden');
-                if(data.wasAuxiliaryPioneer || data.privilege2AtTimeOfReport?.includes("Pioneer")){
-                     auxiliaryPioneerCheckboxContainerUpdate.classList.remove('hidden');
-                } else {
-                     auxiliaryPioneerCheckboxContainerUpdate.classList.add('hidden');
-                }
             } else {
                 alert("No report found for the selected publisher and period.");
                 clearUpdateReportForm(false);
@@ -887,6 +914,13 @@
             fieldGroupUpdate.value = "";
             privilege2Update.value = "";
         }
+        // Also clear the data fields
+        fieldHoursUpdate.value = "";
+        bibleStudiesUpdate.value = "";
+        sharedMinistryUpdate.checked = false;
+        auxiliaryPioneerCheckboxUpdate.checked = false;
+        isAuxiliaryPioneerThisMonthUpdate.value = "";
+
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
