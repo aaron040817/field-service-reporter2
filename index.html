@@ -36,7 +36,7 @@
 <body>
     <div id="loginPage" class="page-container">
         <h2>Login</h2>
-        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="email" id="loginUsername" placeholder="Email">
         <input type="password" id="loginPassword" placeholder="Password">
         <button id="loginBtn">Login</button>
     </div>
@@ -48,9 +48,9 @@
         <button id="updateReportPageBtn">Update Report</button>
         <button id="reviewApprovalsBtn">Review Approvals</button>
         <button id="exportExcelBtn">Export to Excel</button>
-        <button id="manageUsersBtn">Manage Users</button>
+        <button id="manageUsersBtn" class="hidden">Manage Users</button>
         <button id="logoutBtn" class="logout-btn">Logout</button>
-        <div style="margin-top: 20px;">
+        <div id="adminSection" class="hidden" style="margin-top: 20px;">
              <button id="clearAllDataBtn">Clear All Data</button>
              <p style="color: red; font-size: 12px; margin-top: 5px;">Warning: This will delete all publisher and report data.</p>
         </div>
@@ -233,8 +233,9 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-</body>
+    </body>
 </html>
 
 <script>
@@ -252,6 +253,7 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.firestore();
+    const auth = firebase.auth(); 
 
     // --- Global State Variables ---
     let publisherList = [];
@@ -277,6 +279,7 @@
     let auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonthUpdate, updateReportFieldsDiv;
     let fieldHoursContainerUpdate, bibleStudiesContainerUpdate, sharedMinistryContainerUpdate, auxiliaryPioneerCheckboxContainerUpdate;
     let updateReportBtn, deleteReportBtn, clearUpdateFormBtn, backHomeFromUpdateBtn, logoutBtnFromUpdate;
+    let manageUsersBtn, adminSection;
     
     // --- CORE APPLICATION LIFECYCLE ---
     document.addEventListener("DOMContentLoaded", initializeApp);
@@ -284,11 +287,26 @@
     async function initializeApp() {
         getAllElements();
         attachAllListeners();
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            loggedInUser = localStorage.getItem('loggedInUser');
-            await loadPublishers();
-        }
-        handleRouteChange();
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                if (userDoc.exists) {
+                    currentUser = { uid: user.uid, email: user.email, role: userDoc.data().role };
+                    localStorage.setItem('userRole', currentUser.role);
+                } else {
+                    console.error("User document not found in Firestore. Signing out.");
+                    await auth.signOut();
+                    return;
+                }
+                await loadPublishers();
+                handleRouteChange();
+            } else {
+                currentUser = null;
+                localStorage.removeItem('userRole');
+                publisherList = [];
+                handleRouteChange();
+            }
+        });
     }
 
     function getAllElements() {
@@ -360,6 +378,8 @@
         clearUpdateFormBtn = document.getElementById('clearUpdateFormBtn');
         backHomeFromUpdateBtn = document.getElementById('backHomeFromUpdateBtn');
         logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
+        manageUsersBtn = document.getElementById('manageUsersBtn');
+        adminSection = document.getElementById('adminSection');
     }
     function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
@@ -382,10 +402,10 @@
         logoutBtnFromPublisher?.addEventListener("click", logout);
         document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => alert("Functionality for 'Review Approvals' is not yet implemented."));
         document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
-        document.getElementById("manageUsersBtn")?.addEventListener("click", () => alert("Functionality for 'Manage Users' is not yet implemented."));
+        document.getElementById("manageUsersBtn")?.addEventListener("click", () => showPage('manageUsersPage', '/manage-users'));
         updateReportBtn?.addEventListener("click", updateReport);
         deleteReportBtn?.addEventListener("click", deleteReport);
-        clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
+        clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
         backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromUpdate?.addEventListener("click", logout);
         window.addEventListener('popstate', handleRouteChange);
@@ -404,35 +424,44 @@
     }
     function handleRouteChange() {
         const path = window.location.pathname;
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        if (!isLoggedIn && path !== '/') { showPage('loginPage', '/'); return; }
+        if (!currentUser && path !== '/') {
+            showPage('loginPage', '/');
+            return;
+        }
         switch (path) {
-            case '/': showPage(isLoggedIn ? 'homePage' : 'loginPage', isLoggedIn ? '/home' : '/'); break;
+            case '/': showPage(currentUser ? 'homePage' : 'loginPage', currentUser ? '/home' : '/'); break;
             case '/home': showPage('homePage', '/home'); break;
             case '/add-report': showPage('addReportPage', '/add-report'); break;
             case '/manage-publisher': showPage('publisherPage', '/manage-publisher'); break;
             case '/update-report': showPage('updateReportPage', '/update-report'); break;
-            default: showPage(isLoggedIn ? 'homePage' : 'loginPage', isLoggedIn ? '/home' : '/'); break;
+            default: showPage(currentUser ? 'homePage' : 'loginPage', currentUser ? '/home' : '/'); break;
         }
     }
 
     // --- Login/Logout & Data Management ---
     async function login() {
-        const user = document.getElementById("loginUsername").value;
-        const pass = document.getElementById("loginPassword").value;
-        if (user === "admin" && pass === "admin123") {
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('loggedInUser', user);
-            loggedInUser = user;
-            await loadPublishers();
-            showPage('homePage', '/home');
-        } else { alert("Invalid credentials."); }
+        const email = document.getElementById("loginUsername").value;
+        const password = document.getElementById("loginPassword").value;
+        if (!email || !password) { alert("Please enter both email and password."); return; }
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+        } catch (error) {
+            console.error("Login failed:", error);
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                alert("Invalid email or password.");
+            } else {
+                alert("An error occurred during login. Please try again.");
+            }
+        }
     }
-    function logout() {
-        localStorage.clear();
-        loggedInUser = null;
-        publisherList = [];
-        showPage('loginPage', '/');
+    async function logout() {
+        try {
+            await auth.signOut();
+            // The onAuthStateChanged listener handles cleanup and routing
+        } catch (error) {
+            console.error("Logout failed:", error);
+            alert("An error occurred during logout.");
+        }
     }
     async function clearAllData() {
         if (confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
@@ -488,11 +517,18 @@
             alert("An error occurred during export. Please check the console.");
         }
     }
-
+    
     // --- Page Setups ---
     function updateHomePage() {
-        if (document.getElementById("loggedInUser")) {
-             document.getElementById("loggedInUser").textContent = loggedInUser || 'Guest';
+        if (currentUser) {
+            document.getElementById("loggedInUser").textContent = currentUser.email;
+            if (currentUser.role === 'admin') {
+                manageUsersBtn.classList.remove('hidden');
+                adminSection.classList.remove('hidden');
+            } else {
+                manageUsersBtn.classList.add('hidden');
+                adminSection.classList.add('hidden');
+            }
         }
     }
     function setupAddReportPage() {
@@ -736,7 +772,6 @@
         updateReportFieldsVisibility();
     }
     
-    // MODIFIED: This function now has two different hour handlers to fix the logic bug
     function handleReportFieldLogic(elements) {
         elements.auxPioneerQuestionContainer.classList.add("hidden");
         elements.fieldHoursContainer.classList.add("hidden");
@@ -872,14 +907,11 @@
             if (doc.exists) {
                 const data = doc.data();
                 currentReportId = doc.id;
-                
                 if (privilege2Update.value === 'Publisher/Auxi') {
                     const auxPioneerAnswer = data.wasAuxiliaryPioneer ? 'Yes' : 'No';
                     isAuxiliaryPioneerThisMonthUpdate.value = auxPioneerAnswer;
                 }
-                
                 updateReportFieldsVisibility_UpdatePage();
-                
                 updateReportFieldsDiv.style.display = 'block';
                 fieldHoursUpdate.value = data.hours || '';
                 bibleStudiesUpdate.value = data.bibleStudies || '';
@@ -907,9 +939,7 @@
         if (!sharedMinistryContainerUpdate.classList.contains('hidden') && !sharedMinistryUpdate.checked) { alert("Validation Error: The 'Shared in Ministry' box must be checked."); return; }
         if (!auxiliaryPioneerCheckboxContainerUpdate.classList.contains('hidden') && !auxiliaryPioneerCheckboxUpdate.checked) { alert("Validation Error: The 'Auxiliary Pioneer' box must be checked."); return; }
         if (!confirm("Are you sure you want to update this record?")) return;
-        
         const wasAuxPioneerThisMonth = (!auxPioneerQuestionContainerUpdate.classList.contains('hidden') && isAuxiliaryPioneerThisMonthUpdate.value === 'Yes') || (!auxiliaryPioneerCheckboxContainerUpdate.classList.contains('hidden') && auxiliaryPioneerCheckboxUpdate.checked);
-
         const updatedData = {
             hours: parseInt(fieldHoursUpdate.value) || 0,
             bibleStudies: parseInt(bibleStudiesUpdate.value) || 0,
@@ -953,6 +983,6 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-    </script>
+</script>
 </body>
 </html>
