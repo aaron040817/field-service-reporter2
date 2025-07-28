@@ -121,7 +121,7 @@
         <label for="monthYearDropdownUpdate">Month:</label>
         <select id="monthYearDropdownUpdate"></select>
         <hr style="margin: 20px 0;">
-        <div id="updateReportFields">
+        <div id="updateReportFields" style="display: none;">
             <div id="auxPioneerQuestionContainerUpdate" class="hidden">
                 <label for="isAuxiliaryPioneerThisMonthUpdate">Is Auxiliary Pioneer this Month?</label>
                 <select id="isAuxiliaryPioneerThisMonthUpdate">
@@ -234,8 +234,11 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
-    <script>
-    // --- script.js (FINAL & COMPLETE) ---
+    </body>
+</html>
+
+<script>
+    // --- script.js ---
 
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
@@ -275,9 +278,20 @@
     let fieldHoursContainerUpdate, bibleStudiesContainerUpdate, sharedMinistryContainerUpdate, auxiliaryPioneerCheckboxContainerUpdate;
     let updateReportBtn, deleteReportBtn, clearUpdateFormBtn, backHomeFromUpdateBtn, logoutBtnFromUpdate;
     
-    // --- CORE APPLICATION LOGIC ---
-    document.addEventListener("DOMContentLoaded", function () {
-        // Get All Element References
+    // --- CORE APPLICATION LIFECYCLE ---
+    document.addEventListener("DOMContentLoaded", initializeApp);
+
+    async function initializeApp() {
+        getAllElements();
+        attachAllListeners();
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            loggedInUser = localStorage.getItem('loggedInUser');
+            await loadPublishers();
+        }
+        handleRouteChange();
+    }
+
+    function getAllElements() {
         loginPage = document.getElementById('loginPage');
         homePage = document.getElementById('homePage');
         addReportPage = document.getElementById('addReportPage');
@@ -346,11 +360,12 @@
         clearUpdateFormBtn = document.getElementById('clearUpdateFormBtn');
         backHomeFromUpdateBtn = document.getElementById('backHomeFromUpdateBtn');
         logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
-
-        // Attach All Event Listeners
+    }
+    function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
-        document.getElementById("addReportBtn")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage', '/manage-publisher'));
+        document.getElementById("addReportBtn")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
+        document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
         document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
@@ -365,19 +380,16 @@
         clearPublisherFormBtn?.addEventListener("click", clearPublisherForm);
         backHomeFromPublisherBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromPublisher?.addEventListener("click", logout);
-        document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
         document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => alert("Functionality for 'Review Approvals' is not yet implemented."));
         document.getElementById("exportExcelBtn")?.addEventListener("click", () => alert("Functionality for 'Export to Excel' is not yet implemented."));
         document.getElementById("manageUsersBtn")?.addEventListener("click", () => alert("Functionality for 'Manage Users' is not yet implemented."));
         updateReportBtn?.addEventListener("click", updateReport);
         deleteReportBtn?.addEventListener("click", deleteReport);
-        clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
+        clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
         backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromUpdate?.addEventListener("click", logout);
-
         window.addEventListener('popstate', handleRouteChange);
-        handleRouteChange();
-    });
+    }
 
     // --- Routing ---
     function showPage(pageId, path) {
@@ -405,16 +417,15 @@
     }
 
     // --- Login/Logout & Data Management ---
-    function login() {
+    async function login() {
         const user = document.getElementById("loginUsername").value;
         const pass = document.getElementById("loginPassword").value;
         if (user === "admin" && pass === "admin123") {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('loggedInUser', user);
             loggedInUser = user;
-            loadPublishers().then(() => {
-                showPage('homePage', '/home');
-            });
+            await loadPublishers();
+            showPage('homePage', '/home');
         } else { alert("Invalid credentials."); }
     }
     function logout() {
@@ -443,7 +454,6 @@
 
     // --- Page Setups ---
     function updateHomePage() {
-        loggedInUser = localStorage.getItem('loggedInUser');
         if (document.getElementById("loggedInUser")) {
              document.getElementById("loggedInUser").textContent = loggedInUser || 'Guest';
         }
@@ -458,8 +468,8 @@
             publisherNameDropdown.appendChild(opt);
         });
         populateServiceYears(serviceYearDropdown);
-        publisherNameDropdown?.addEventListener("change", () => autofillPublisherDetails(publisherNameDropdown.value));
-        searchPublisherReportInput?.addEventListener("input", function () {
+        publisherNameDropdown.addEventListener("change", () => autofillPublisherDetails(publisherNameDropdown.value));
+        searchPublisherReportInput.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxReport.innerHTML = "";
             if (!query) return;
@@ -477,15 +487,15 @@
                 suggestionBoxReport.appendChild(div);
             });
         });
-        serviceYearDropdown?.addEventListener("change", () => populateMonths(monthYearDropdown, serviceYearDropdown.value));
-        isAuxiliaryPioneerThisMonth?.addEventListener("change", updateReportFieldsVisibility);
+        serviceYearDropdown.addEventListener("change", () => populateMonths(monthYearDropdown, serviceYearDropdown.value));
+        isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
     }
     function setupManagePublisherPage() {
         clearPublisherForm();
-        firstNameInput?.addEventListener("input", updateFullName);
-        lastNameInput?.addEventListener("input", updateFullName);
-        baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
-        searchInputManage?.addEventListener("input", function () {
+        firstNameInput.addEventListener("input", updateFullName);
+        lastNameInput.addEventListener("input", updateFullName);
+        baptismStatusDropdown.addEventListener("change", toggleBaptismDate);
+        searchInputManage.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxManage.innerHTML = "";
             if (!query) return;
@@ -515,7 +525,7 @@
         });
         populateServiceYears(serviceYearDropdownUpdate);
         
-        searchPublisherUpdate?.addEventListener("input", function () {
+        searchPublisherUpdate.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxUpdate.innerHTML = "";
             if (!query) return;
@@ -564,88 +574,46 @@
     function toggleBaptismDate() { baptismDateContainer.classList.toggle("hidden", baptismStatusDropdown.value !== "Baptized"); if (baptismStatusDropdown.value !== "Baptized") baptismDateInput.value = ""; }
     async function addPublisher() {
         if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before adding.");
-            return;
+            alert("Please complete all fields before adding."); return;
         }
         const docId = `${lastNameInput.value.trim()}_${firstNameInput.value.trim()}_${birthdateInput.value}`.replace(/\s+/g, "_");
         try {
             const existingDoc = await db.collection("publishers").doc(docId).get();
-            if (existingDoc.exists) {
-                alert("A publisher with the same last name, first name, and birthdate already exists.");
-                return;
-            }
+            if (existingDoc.exists) { alert("A publisher with the same last name, first name, and birthdate already exists."); return; }
             const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
             await db.collection("publishers").doc(docId).set({
-                firstName: firstNameInput.value.trim(),
-                lastName: lastNameInput.value.trim(),
-                birthdate: birthdateInput.value,
-                baptismStatus: baptismStatusDropdown.value,
-                baptismDate: baptismDateValue,
-                gender: genderDropdown.value,
-                hope: hopeDropdown.value,
-                privilege: privilegeDropdown.value,
-                privilege2: privilege2Dropdown.value,
-                fieldServiceGroup: fieldServiceGroupDropdown.value,
-                fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             alert("Publisher record successfully added!");
             await loadPublishers();
             clearPublisherForm();
-        } catch (error) {
-            console.error("Error adding publisher:", error);
-            alert("Failed to add publisher record.");
-        }
+        } catch (error) { console.error("Error adding publisher:", error); alert("Failed to add publisher record."); }
     }
     async function updatePublisher() {
-        if (!currentDocId) {
-            alert("Please select a publisher to update.");
-            return;
-        }
+        if (!currentDocId) { alert("Please select a publisher to update."); return; }
         if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before updating.");
-            return;
+            alert("Please complete all fields before updating."); return;
         }
         const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
         const updatedData = {
-            firstName: firstNameInput.value.trim(),
-            lastName: lastNameInput.value.trim(),
-            birthdate: birthdateInput.value,
-            baptismStatus: baptismStatusDropdown.value,
-            baptismDate: baptismDateValue,
-            gender: genderDropdown.value,
-            hope: hopeDropdown.value,
-            privilege: privilegeDropdown.value,
-            privilege2: privilege2Dropdown.value,
-            fieldServiceGroup: fieldServiceGroupDropdown.value,
-            fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
         try {
             await db.collection("publishers").doc(currentDocId).update(updatedData);
             alert("Publisher record updated successfully!");
             await loadPublishers();
             clearPublisherForm();
-        } catch (error) {
-            console.error("Error updating publisher:", error);
-            alert("Failed to update publisher record.");
-        }
+        } catch (error) { console.error("Error updating publisher:", error); alert("Failed to update publisher record."); }
     }
     async function deletePublisher() {
-        if (!currentDocId) {
-            alert("Please select a publisher to delete.");
-            return;
-        }
+        if (!currentDocId) { alert("Please select a publisher to delete."); return; }
         if (!confirm("Are you sure you want to permanently delete this publisher record? This action cannot be undone.")) return;
         try {
             await db.collection("publishers").doc(currentDocId).delete();
             alert("Publisher record deleted successfully!");
             await loadPublishers();
             clearPublisherForm();
-        } catch (error) {
-            console.error("Error deleting publisher:", error);
-            alert("Failed to delete publisher record.");
-        }
+        } catch (error) { console.error("Error deleting publisher:", error); alert("Failed to delete publisher record."); }
     }
     function previousPublisher() { if (currentIndex > 0) { currentIndex--; displayPublisher(currentIndex); } else { alert("This is the first record."); } }
     function nextPublisher() { if (currentIndex < publisherList.length - 1) { currentIndex++; displayPublisher(currentIndex); } else { alert("This is the last record."); } }
