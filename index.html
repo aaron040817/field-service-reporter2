@@ -1052,17 +1052,28 @@
         }
     }
     function clearUpdateReportForm(clearAll = true) {
-        if (clearAll) {
-            publisherNameDropdownUpdate.value = "";
-            serviceYearDropdownUpdate.value = "";
-            monthYearDropdownUpdate.innerHTML = '<option value="">-- Select Month --</option>';
-            searchPublisherUpdate.value = "";
-            fieldGroupUpdate.value = "";
-            privilege2Update.value = "";
-        }
-        updateReportFieldsDiv.style.display = 'none';
-        currentReportId = null;
+    if (clearAll) {
+        publisherNameDropdownUpdate.value = "";
+        serviceYearDropdownUpdate.value = "";
+        monthYearDropdownUpdate.innerHTML = '<option value="">-- Select Month --</option>';
+        searchPublisherUpdate.value = "";
+        fieldGroupUpdate.value = "";
+        privilege2Update.value = "";
     }
+    
+    // Clear the individual data fields
+    fieldHoursUpdate.value = "";
+    bibleStudiesUpdate.value = "";
+    sharedMinistryUpdate.checked = false;
+    auxiliaryPioneerCheckboxUpdate.checked = false;
+    isAuxiliaryPioneerThisMonthUpdate.value = "";
+
+    // Hide the container for the data fields
+    updateReportFieldsDiv.style.display = 'none';
+
+    // Reset the tracker for the currently loaded report
+    currentReportId = null;
+}
 
     // --- NEW: User Management Functions ---
     async function addUser() {
