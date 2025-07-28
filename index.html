@@ -455,63 +455,61 @@
 
     // --- NEW: Export to Excel Function ---
     async function exportToExcel() {
-        try {
-            // 1. Fetch all reports from Firestore, ordered for readability
-            const snapshot = await db.collection("reports")
-                .orderBy("publisherFullName", "asc")
-                .orderBy("serviceYear", "asc")
-                .orderBy("timestamp", "asc")
-                .get();
+    try {
+        // 1. Fetch all reports from Firestore, ordered by Publisher Name
+        // SIMPLIFIED QUERY: This is more robust and less likely to fail.
+        const snapshot = await db.collection("reports")
+            .orderBy("publisherFullName", "asc")
+            .get();
 
-            if (snapshot.empty) {
-                alert("No reports found to export.");
-                return;
-            }
-
-            const reports = snapshot.docs.map(doc => doc.data());
-
-            // 2. Define CSV Headers
-            const headers = [
-                "Publisher Name", "Service Year", "Month", "Field Service Group",
-                "Privilege at Time of Report", "Hours", "Bible Studies",
-                "Shared in Ministry", "Was Auxiliary Pioneer"
-            ];
-            let csvContent = headers.join(",") + "\n";
-
-            // 3. Add data rows to CSV string
-            reports.forEach(report => {
-                const row = [
-                    `"${report.publisherFullName || ''}"`, // Enclose in quotes to handle commas in names
-                    report.serviceYear || '',
-                    report.month || '',
-                    `"${report.fieldServiceGroup || ''}"`,
-                    `"${report.privilege2AtTimeOfReport || ''}"`,
-                    report.hours || 0,
-                    report.bibleStudies || 0,
-                    report.sharedInMinistry ? 'Yes' : 'No',
-                    report.wasAuxiliaryPioneer ? 'Yes' : 'No'
-                ];
-                csvContent += row.join(",") + "\n";
-            });
-
-            // 4. Create and trigger download
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            const dateStr = new Date().toISOString().slice(0, 10);
-            link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-        } catch (error) {
-            console.error("Error exporting to Excel:", error);
-            alert("An error occurred during export. Please check the console.");
+        if (snapshot.empty) {
+            alert("No reports found to export.");
+            return;
         }
-    }
 
+        const reports = snapshot.docs.map(doc => doc.data());
+
+        // 2. Define CSV Headers
+        const headers = [
+            "Publisher Name", "Service Year", "Month", "Field Service Group",
+            "Privilege at Time of Report", "Hours", "Bible Studies",
+            "Shared in Ministry", "Was Auxiliary Pioneer"
+        ];
+        let csvContent = headers.join(",") + "\n";
+
+        // 3. Add data rows to CSV string
+        reports.forEach(report => {
+            const row = [
+                `"${report.publisherFullName || ''}"`, // Enclose in quotes to handle commas in names
+                report.serviceYear || '',
+                report.month || '',
+                `"${report.fieldServiceGroup || ''}"`,
+                `"${report.privilege2AtTimeOfReport || ''}"`,
+                report.hours || 0,
+                report.bibleStudies || 0,
+                report.sharedInMinistry ? 'Yes' : 'No',
+                report.wasAuxiliaryPioneer ? 'Yes' : 'No'
+            ];
+            csvContent += row.join(",") + "\n";
+        });
+
+        // 4. Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        const dateStr = new Date().toISOString().slice(0, 10); // Format: YYYY-MM-DD
+        link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+    } catch (error) {
+        console.error("Error exporting to Excel:", error);
+        alert("An error occurred during export. Please check the console.");
+    }
+}
     // --- Page Setups ---
     function updateHomePage() {
         if (document.getElementById("loggedInUser")) {
