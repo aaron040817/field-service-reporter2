@@ -177,7 +177,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
     <script>
-    // --- script.js (FINAL & COMPLETE) ---
+    // --- script.js (FINAL, COMPLETE, AND VERIFIED) ---
 
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
@@ -403,7 +403,7 @@
         });
     }
 
-    // --- Publisher Management ---
+    // --- Publisher Management (LOGIC RESTORED) ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -413,9 +413,93 @@
     }
     function updateFullName() { fullNameInput.value = (lastNameInput.value.trim() && firstNameInput.value.trim()) ? `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}` : ""; }
     function toggleBaptismDate() { baptismDateContainer.classList.toggle("hidden", baptismStatusDropdown.value !== "Baptized"); if (baptismStatusDropdown.value !== "Baptized") baptismDateInput.value = ""; }
-    async function addPublisher() { /* Restored from previous versions */ }
-    async function updatePublisher() { /* Restored from previous versions */ }
-    async function deletePublisher() { /* Restored from previous versions */ }
+    
+    async function addPublisher() {
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
+            alert("Please complete all fields before adding.");
+            return;
+        }
+        const docId = `${lastNameInput.value.trim()}_${firstNameInput.value.trim()}_${birthdateInput.value}`.replace(/\s+/g, "_");
+        try {
+            const existingDoc = await db.collection("publishers").doc(docId).get();
+            if (existingDoc.exists) {
+                alert("A publisher with the same last name, first name, and birthdate already exists.");
+                return;
+            }
+            const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
+            await db.collection("publishers").doc(docId).set({
+                firstName: firstNameInput.value.trim(),
+                lastName: lastNameInput.value.trim(),
+                birthdate: birthdateInput.value,
+                baptismStatus: baptismStatusDropdown.value,
+                baptismDate: baptismDateValue,
+                gender: genderDropdown.value,
+                hope: hopeDropdown.value,
+                privilege: privilegeDropdown.value,
+                privilege2: privilege2Dropdown.value,
+                fieldServiceGroup: fieldServiceGroupDropdown.value,
+                fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("Publisher record successfully added!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) {
+            console.error("Error adding publisher:", error);
+            alert("Failed to add publisher record.");
+        }
+    }
+    async function updatePublisher() {
+        if (!currentDocId) {
+            alert("Please select a publisher to update.");
+            return;
+        }
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
+            alert("Please complete all fields before updating.");
+            return;
+        }
+        const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
+        const updatedData = {
+            firstName: firstNameInput.value.trim(),
+            lastName: lastNameInput.value.trim(),
+            birthdate: birthdateInput.value,
+            baptismStatus: baptismStatusDropdown.value,
+            baptismDate: baptismDateValue,
+            gender: genderDropdown.value,
+            hope: hopeDropdown.value,
+            privilege: privilegeDropdown.value,
+            privilege2: privilege2Dropdown.value,
+            fieldServiceGroup: fieldServiceGroupDropdown.value,
+            fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+            await db.collection("publishers").doc(currentDocId).update(updatedData);
+            alert("Publisher record updated successfully!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) {
+            console.error("Error updating publisher:", error);
+            alert("Failed to update publisher record.");
+        }
+    }
+    async function deletePublisher() {
+        if (!currentDocId) {
+            alert("Please select a publisher to delete.");
+            return;
+        }
+        if (!confirm("Are you sure you want to delete this publisher record? This action cannot be undone.")) return;
+        try {
+            await db.collection("publishers").doc(currentDocId).delete();
+            alert("Publisher record deleted successfully!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) {
+            console.error("Error deleting publisher:", error);
+            alert("Failed to delete publisher record.");
+        }
+    }
+    
     function previousPublisher() { if (currentIndex > 0) { currentIndex--; displayPublisher(currentIndex); } else { alert("This is the first record."); } }
     function nextPublisher() { if (currentIndex < publisherList.length - 1) { currentIndex++; displayPublisher(currentIndex); } else { alert("This is the last record."); } }
     function clearPublisherForm() {
@@ -446,7 +530,7 @@
         currentDocId = pub.id;
     }
 
-    // --- Report Management (HELPER FUNCTIONS RESTORED) ---
+    // --- Report Management ---
     function populatePublisherDropdown() {
         if (!publisherNameDropdown) return;
         publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
@@ -611,6 +695,6 @@
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
 
-    </script>
+</script>
 </body>
 </html>
