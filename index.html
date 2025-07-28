@@ -661,40 +661,89 @@
         }
     }
     async function saveReport() {
-        if (!publisherNameDropdown.value) { alert("Validation Error: Please select a publisher."); return; }
-        if (!serviceYearDropdown.value) { alert("Validation Error: Please select a service year."); return; }
-        if (!monthYearDropdown.value) { alert("Validation Error: Please select a month."); return; }
-        if (!auxPioneerQuestionContainer.classList.contains('hidden') && !isAuxiliaryPioneerThisMonth.value) { alert("Validation Error: Please answer 'Is Auxiliary Pioneer this Month?'."); return; }
-        if (!fieldHoursContainer.classList.contains('hidden') && !fieldHoursInput.value) { alert("Validation Error: Please enter the number of hours."); return; }
-        if (!bibleStudiesContainer.classList.contains('hidden') && !bibleStudiesInput.value) { alert("Validation Error: Please enter the number of bible studies."); return; }
-        const publisherId = publisherNameDropdown.value;
-        const serviceYear = serviceYearDropdown.value;
-        const month = monthYearDropdown.value;
-        const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
-        const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-        const reportRef = db.collection("reports").doc(reportId);
-        try {
-            const doc = await reportRef.get();
-            if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
-            const reportData = {
-                publisherId: publisherId,
-                publisherFullName: publisherFullName,
-                serviceYear: serviceYear,
-                month: month,
-                fieldServiceGroup: fieldGroupInput.value,
-                privilege2AtTimeOfReport: privilege2ReportInput.value,
-                hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0,
-                bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0,
-                sharedInMinistry: sharedMinistryCheckbox.checked,
-                wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            await reportRef.set(reportData);
-            alert("Report saved successfully!");
-            clearAddReportForm();
-        } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
+    // 1. --- VALIDATION ---
+    // Check for required fields that are always visible
+    if (!publisherNameDropdown.value) {
+        alert("Validation Error: Please select a publisher.");
+        return; // Stop execution, do not clear form
+    }
+    if (!serviceYearDropdown.value) {
+        alert("Validation Error: Please select a service year.");
+        return;
+    }
+    if (!monthYearDropdown.value) {
+        alert("Validation Error: Please select a month.");
+        return;
     }
 
+    // Check for conditionally visible fields
+    if (!auxPioneerQuestionContainer.classList.contains('hidden') && !isAuxiliaryPioneerThisMonth.value) {
+        alert("Validation Error: Please answer 'Is Auxiliary Pioneer this Month?'.");
+        return;
+    }
+    if (!fieldHoursContainer.classList.contains('hidden') && !fieldHoursInput.value) {
+        alert("Validation Error: Please enter the number of hours.");
+        return;
+    }
+    if (!bibleStudiesContainer.classList.contains('hidden') && !bibleStudiesInput.value) {
+        alert("Validation Error: Please enter the number of bible studies.");
+        return;
+    }
+
+    // --- BAGONG VALIDATION PARA SA CHECKBOXES ---
+    // Check if Shared in Ministry checkbox is visible and checked
+    if (!sharedMinistryContainer.classList.contains('hidden') && !sharedMinistryCheckbox.checked) {
+        alert("Validation Error: The 'Shared in Ministry' box must be checked for this type of report.");
+        return;
+    }
+    // Check if Auxiliary Pioneer checkbox is visible and checked
+    if (!auxiliaryPioneerCheckboxContainer.classList.contains('hidden') && !auxiliaryPioneerCheckbox.checked) {
+        alert("Validation Error: The 'Auxiliary Pioneer' box must be checked for this type of report.");
+        return;
+    }
+    
+    // --- If validation passes, proceed ---
+    
+    const publisherId = publisherNameDropdown.value;
+    const serviceYear = serviceYearDropdown.value;
+    const month = monthYearDropdown.value;
+    const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
+
+    // 2. --- DUPLICATE CHECK ---
+    const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+    const reportRef = db.collection("reports").doc(reportId);
+
+    try {
+        const doc = await reportRef.get();
+        if (doc.exists) {
+            alert("Error: A report for this publisher, service year, and month already exists. You cannot add a duplicate report.");
+            return;
+        }
+
+        // 3. --- PREPARE and SAVE DATA ---
+        const reportData = {
+            publisherId: publisherId,
+            publisherFullName: publisherFullName,
+            serviceYear: serviceYear,
+            month: month,
+            fieldServiceGroup: fieldGroupInput.value,
+            privilege2AtTimeOfReport: privilege2ReportInput.value,
+            hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0,
+            bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0,
+            sharedInMinistry: sharedMinistryCheckbox.checked,
+            wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await reportRef.set(reportData);
+        alert("Report saved successfully!");
+        clearAddReportForm();
+
+    } catch (error) {
+        console.error("Error saving report: ", error);
+        alert("An error occurred while saving the report. Please check the console and try again.");
+    }
+}
 </script>
 </body>
 </html>
