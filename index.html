@@ -230,7 +230,8 @@
         <button id="backHomeFromPublisherBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromPublisher" class="logout-btn">Logout</button>
     </div>
-<div id="manageUsersPage" class="page-container hidden">
+
+    <div id="manageUsersPage" class="page-container hidden">
         <h2>Manage Users</h2>
         
         <label for="userEmail">Email (Username):</label>
@@ -264,12 +265,12 @@
         <button id="backHomeFromUserBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUser" class="logout-btn">Logout</button>
     </div>
-    
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-    </body>
+</body>
 </html>
 
 <script>
@@ -291,13 +292,16 @@
 
     // --- Global State Variables ---
     let publisherList = [];
-    let currentIndex = -1;
+    let userList = []; // For Manage Users page
+    let currentIndex = -1; // For publisher navigation
+    let currentUserIndex = -1; // For user navigation
     let currentDocId = null;
-    let loggedInUser = null;
+    let currentUser = null; // To store user info including role
     let currentReportId = null; 
+    let currentUserDocId = null; // For tracking the loaded user to update/delete
 
     // --- Global Element References ---
-    let loginPage, homePage, addReportPage, publisherPage, updateReportPage;
+    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, manageUsersPage;
     let serviceYearDropdown, monthYearDropdown, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth;
     let fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput;
     let sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox;
@@ -314,6 +318,8 @@
     let fieldHoursContainerUpdate, bibleStudiesContainerUpdate, sharedMinistryContainerUpdate, auxiliaryPioneerCheckboxContainerUpdate;
     let updateReportBtn, deleteReportBtn, clearUpdateFormBtn, backHomeFromUpdateBtn, logoutBtnFromUpdate;
     let manageUsersBtn, adminSection;
+    let userEmail, userPassword, showPassword, userFirstName, userLastName, userRole;
+    let addUserBtn, updateUserBtn, deleteUserBtn, previousUserBtn, nextUserBtn, clearUserFormBtn, backHomeFromUserBtn, logoutBtnFromUser;
     
     // --- CORE APPLICATION LIFECYCLE ---
     document.addEventListener("DOMContentLoaded", initializeApp);
@@ -338,6 +344,7 @@
                 currentUser = null;
                 localStorage.removeItem('userRole');
                 publisherList = [];
+                userList = [];
                 handleRouteChange();
             }
         });
@@ -349,6 +356,7 @@
         addReportPage = document.getElementById('addReportPage');
         publisherPage = document.getElementById('publisherPage');
         updateReportPage = document.getElementById('updateReportPage');
+        manageUsersPage = document.getElementById('manageUsersPage');
         serviceYearDropdown = document.getElementById("serviceYearDropdown");
         monthYearDropdown = document.getElementById("monthYearDropdown");
         auxPioneerQuestionContainer = document.getElementById("auxPioneerQuestionContainer");
@@ -414,6 +422,20 @@
         logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
         manageUsersBtn = document.getElementById('manageUsersBtn');
         adminSection = document.getElementById('adminSection');
+        userEmail = document.getElementById('userEmail');
+        userPassword = document.getElementById('userPassword');
+        showPassword = document.getElementById('showPassword');
+        userFirstName = document.getElementById('userFirstName');
+        userLastName = document.getElementById('userLastName');
+        userRole = document.getElementById('userRole');
+        addUserBtn = document.getElementById('addUserBtn');
+        updateUserBtn = document.getElementById('updateUserBtn');
+        deleteUserBtn = document.getElementById('deleteUserBtn');
+        previousUserBtn = document.getElementById('previousUserBtn');
+        nextUserBtn = document.getElementById('nextUserBtn');
+        clearUserFormBtn = document.getElementById('clearUserFormBtn');
+        backHomeFromUserBtn = document.getElementById('backHomeFromUserBtn');
+        logoutBtnFromUser = document.getElementById('logoutBtnFromUser');
     }
     function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
@@ -442,6 +464,17 @@
         clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
         backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromUpdate?.addEventListener("click", logout);
+        addUserBtn?.addEventListener("click", addUser);
+        updateUserBtn?.addEventListener("click", updateUser);
+        deleteUserBtn?.addEventListener("click", deleteUser);
+        previousUserBtn?.addEventListener("click", previousUser);
+        nextUserBtn?.addEventListener("click", nextUser);
+        clearUserFormBtn?.addEventListener("click", clearUserForm);
+        backHomeFromUserBtn?.addEventListener("click", () => showPage('homePage', '/home'));
+        logoutBtnFromUser?.addEventListener("click", logout);
+        showPassword?.addEventListener('change', () => {
+            userPassword.type = showPassword.checked ? 'text' : 'password';
+        });
         window.addEventListener('popstate', handleRouteChange);
     }
 
@@ -455,6 +488,7 @@
         else if (pageId === 'addReportPage') { setupAddReportPage(); } 
         else if (pageId === 'publisherPage') { setupManagePublisherPage(); } 
         else if (pageId === 'updateReportPage') { setupUpdateReportPage(); }
+        else if (pageId === 'manageUsersPage') { setupManageUsersPage(); }
     }
     function handleRouteChange() {
         const path = window.location.pathname;
@@ -468,6 +502,14 @@
             case '/add-report': showPage('addReportPage', '/add-report'); break;
             case '/manage-publisher': showPage('publisherPage', '/manage-publisher'); break;
             case '/update-report': showPage('updateReportPage', '/update-report'); break;
+            case '/manage-users':
+                if (currentUser?.role === 'admin') {
+                    showPage('manageUsersPage', '/manage-users');
+                } else {
+                    alert("Access denied. You must be an admin to manage users.");
+                    showPage('homePage', '/home');
+                }
+                break;
             default: showPage(currentUser ? 'homePage' : 'loginPage', currentUser ? '/home' : '/'); break;
         }
     }
@@ -491,7 +533,6 @@
     async function logout() {
         try {
             await auth.signOut();
-            // The onAuthStateChanged listener handles cleanup and routing
         } catch (error) {
             console.error("Logout failed:", error);
             alert("An error occurred during logout.");
@@ -672,6 +713,21 @@
         isAuxiliaryPioneerThisMonthUpdate.addEventListener('change', updateReportFieldsVisibility_UpdatePage);
     }
 
+    async function setupManageUsersPage() {
+        clearUserForm();
+        try {
+            const snapshot = await db.collection('users').get();
+            userList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (userList.length > 0) {
+                currentUserIndex = 0;
+                displayUser(currentUserIndex);
+            }
+        } catch(error) {
+            console.error("Error fetching user list:", error);
+            alert("Could not fetch user list. You may not have admin privileges.");
+        }
+    }
+
     // --- Publisher Management ---
     async function loadPublishers() {
         try {
@@ -805,24 +861,20 @@
         if(isAuxiliaryPioneerThisMonth) isAuxiliaryPioneerThisMonth.value = "";
         updateReportFieldsVisibility();
     }
-    
     function handleReportFieldLogic(elements) {
         elements.auxPioneerQuestionContainer.classList.add("hidden");
         elements.fieldHoursContainer.classList.add("hidden");
         elements.bibleStudiesContainer.classList.add("hidden");
         elements.sharedMinistryContainer.classList.add("hidden");
         elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-        
         if(elements.privilegeInput.id === 'privilege2Report') {
             elements.fieldHoursInput.value = "";
             elements.bibleStudiesInput.value = "";
         }
-        
         elements.sharedMinistryCheckbox.checked = false;
         elements.auxiliaryPioneerCheckbox.checked = false;
         elements.sharedMinistryCheckbox.disabled = false;
         elements.auxiliaryPioneerCheckbox.disabled = false;
-
         const handleHoursInput_Standard = () => {
             let value = elements.fieldHoursInput.value.replace(/\D/g, '');
             if (value && parseInt(value, 10) === 0) { value = ''; }
@@ -838,12 +890,9 @@
             elements.sharedMinistryCheckbox.checked = hasHours;
             elements.auxiliaryPioneerCheckbox.checked = hasHours;
         };
-
         const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
-        
         elements.fieldHoursInput.oninput = null;
         elements.bibleStudiesInput.oninput = null;
-        
         const privilege2 = elements.privilegeInput.value;
         switch (privilege2) {
             case "Regular Pioneer": case "Special Pioneer": case "Field Missionary":
@@ -885,19 +934,16 @@
                 break;
         }
     }
-
     function updateReportFieldsVisibility() {
         handleReportFieldLogic({
             privilegeInput: privilege2ReportInput, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth, fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput, sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox
         });
     }
-    
     function updateReportFieldsVisibility_UpdatePage() {
          handleReportFieldLogic({
             privilegeInput: privilege2Update, auxPioneerQuestionContainer: auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonth: isAuxiliaryPioneerThisMonthUpdate, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
         });
     }
-
     async function saveReport() {
         if (!publisherNameDropdown.value) { alert("Validation Error: Please select a publisher."); return; }
         if (!serviceYearDropdown.value) { alert("Validation Error: Please select a service year."); return; }
@@ -1016,6 +1062,155 @@
         }
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
+    }
+
+    // --- NEW: User Management Functions ---
+    async function addUser() {
+        const email = userEmail.value;
+        const password = userPassword.value;
+        const firstName = userFirstName.value.trim();
+        const lastName = userLastName.value.trim();
+        const role = userRole.value;
+
+        if (!email || !password || !firstName || !lastName) {
+            alert("Please complete all user fields.");
+            return;
+        }
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters long.");
+            return;
+        }
+
+        try {
+            // This is the client-side method. It will log the admin out.
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const newUser = userCredential.user;
+
+            // Now, create the user document in Firestore with their role
+            await db.collection("users").doc(newUser.uid).set({
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                role: role
+            });
+
+            alert(`Successfully created user: ${email}.\n\nIMPORTANT: You (the admin) have been logged out. The new user is now logged in. Please log out and log back in with your admin account to continue managing users.`);
+            
+            // Re-initialize the app state for the new user
+            await initializeApp();
+
+        } catch (error) {
+            console.error("Error creating user:", error);
+            if (error.code == 'auth/email-already-in-use') {
+                alert('That email address is already in use!');
+            } else if (error.code == 'auth/invalid-email') {
+                alert('That email address is invalid!');
+            } else {
+                alert('Error creating user. Please check the console.');
+            }
+        }
+    }
+
+    async function updateUser() {
+        if (!currentUserDocId) {
+            alert("Please select a user to update.");
+            return;
+        }
+
+        const updatedData = {
+            firstName: userFirstName.value.trim(),
+            lastName: userLastName.value.trim(),
+            role: userRole.value
+        };
+
+        if (!updatedData.firstName || !updatedData.lastName) {
+            alert("First name and last name cannot be empty.");
+            return;
+        }
+
+        try {
+            await db.collection('users').doc(currentUserDocId).update(updatedData);
+            alert("User updated successfully!");
+            clearUserForm();
+            await setupManageUsersPage(); // Refresh the user list and form
+        } catch (error) {
+            console.error("Error updating user:", error);
+            alert("Failed to update user. See console for details.");
+        }
+    }
+
+    async function deleteUser() {
+        if (!currentUserDocId) {
+            alert("Please select a user to delete.");
+            return;
+        }
+
+        const userToDelete = userList[currentUserIndex];
+        if (userToDelete.uid === currentUser.uid) {
+            alert("You cannot delete your own account.");
+            return;
+        }
+
+        const confirmation = confirm(`This will only delete the user's data and role from the application database. For security, the actual login account must be deleted manually from the Firebase Console.\n\nContinue deleting '${userToDelete.email}' from the database?`);
+
+        if (confirmation) {
+            try {
+                await db.collection('users').doc(currentUserDocId).delete();
+                alert("User record deleted from the database. Remember to delete the account from Firebase Authentication.");
+                clearUserForm();
+                await setupManageUsersPage(); // Refresh list
+            } catch (error) {
+                console.error("Error deleting user document:", error);
+                alert("Failed to delete user document.");
+            }
+        }
+    }
+
+    function clearUserForm() {
+        userEmail.value = "";
+        userPassword.value = "";
+        userFirstName.value = "";
+        userLastName.value = "";
+        userRole.value = "user";
+        showPassword.checked = false;
+        userPassword.type = 'password';
+        userEmail.disabled = false;
+        currentUserIndex = -1;
+        currentUserDocId = null;
+    }
+
+    function displayUser(index) {
+        const user = userList[index];
+        if (!user) {
+            clearUserForm();
+            return;
+        }
+        userEmail.value = user.email || "";
+        userFirstName.value = user.firstName || "";
+        userLastName.value = user.lastName || "";
+        userRole.value = user.role || "user";
+        userPassword.value = "**********"; // Don't show real password
+        userEmail.disabled = true; // Cannot change email
+        currentUserDocId = user.id;
+        currentUserIndex = index;
+    }
+
+    function previousUser() {
+        if (currentUserIndex > 0) {
+            currentUserIndex--;
+            displayUser(currentUserIndex);
+        } else {
+            alert("This is the first user.");
+        }
+    }
+
+    function nextUser() {
+        if (currentUserIndex < userList.length - 1) {
+            currentUserIndex++;
+            displayUser(currentUserIndex);
+        } else {
+            alert("This is the last user.");
+        }
     }
 </script>
 </body>
