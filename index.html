@@ -26,7 +26,6 @@
         .back-btn { background-color: #6c757d; }
         .back-btn:hover { background-color: #5a6268; }
         
-        /* HIDDEN CLASS: This is crucial for hiding/showing pages */
         .hidden { display: none !important; }
 
         .suggestion-box { border: 1px solid #ddd; max-height: 150px; overflow-y: auto; background-color: white; position: absolute; width: calc(100% - 42px); z-index: 100; }
@@ -110,94 +109,12 @@
         <button id="saveReportBtn">Save Report</button>
         <button id="clearReportBtn" class="clear-btn">Clear Form</button>
         <button id="backHomeFromReportBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromReport" class="logout-btn">Logout</button>
     </div>
 
     <div id="publisherPage" class="page-container hidden">
         <h2>Manage Publisher Records</h2>
-
-        <input type="text" id="searchPublisher" placeholder="Search Publisher...">
-        <div id="suggestionBox" class="suggestion-box"></div>
-
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName">
-        
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName">
-        
-        <label for="fullName">Full Name:</label>
-        <input type="text" id="fullName" disabled>
-        
-        <label for="birthdate">Birthdate:</label>
-        <input type="date" id="birthdate">
-        
-        <label for="baptismStatus">Baptism Status:</label>
-        <select id="baptismStatus">
-            <option value="">-- Select --</option>
-            <option value="Baptized">Baptized</option>
-            <option value="Baptized but can't remember the date">Baptized but can't remember the date</option>
-            <option value="Unbaptized">Unbaptized</option>
-        </select>
-        
-        <div id="baptismDateContainer" class="hidden">
-            <label for="baptismDate">Baptism Date:</label>
-            <input type="date" id="baptismDate">
         </div>
-        
-        <label for="gender">Gender:</label>
-        <select id="gender">
-            <option value="">-- Select --</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-        </select>
-        
-        <label for="hope">Hope:</label>
-        <select id="hope">
-            <option value="">-- Select --</option>
-            <option value="Anointed">Anointed</option>
-            <option value="Other Sheep">Other Sheep</option>
-        </select>
-        
-        <label for="privilege">Privilege:</label>
-        <select id="privilege">
-            <option value="">-- Select --</option>
-            <option value="Not Applicable">Not Applicable</option>
-            <option value="Ministerial Servant">Ministerial Servant</option>
-            <option value="Elder">Elder</option>
-        </select>
-        
-        <label for="privilege2">Privilege 2:</label>
-        <select id="privilege2">
-            <option value="">-- Select --</option>
-            <option value="Regular Pioneer">Regular Pioneer</option>
-            <option value="Special Pioneer">Special Pioneer</option>
-            <option value="Field Missionary">Field Missionary</option>
-            <option value="Continuous Auxiliary Pioneer">Continuous Auxiliary Pioneer</option>
-            <option value="Publisher/Auxi">Publisher/Auxi</option>
-        </select>
-        
-        <label for="fieldServiceGroup">Field Service Group:</label>
-        <select id="fieldServiceGroup">
-            <option value="">-- Select --</option>
-            <option value="Field Service Group 1">Field Service Group 1</option>
-            <option value="Field Service Group 2">Field Service Group 2</option>
-            <option value="Field Service Group 3">Field Service Group 3</option>
-            <option value="Field Service Group 4">Field Service Group 4</option>
-            <option value="Field Service Group 5">Field Service Group 5</option>
-            <option value="Field Service Group 6">Field Service Group 6</option>
-            <option value="Field Service Group 7">Field Service Group 7</option>
-            <option value="Field Service Group 8">Field Service Group 8</option>
-        </select>
-
-        <button id="addPublisherBtn">Add</button>
-        <button id="updatePublisherBtn">Update</button>
-        <button id="deletePublisherBtn" class="delete-btn">Delete</button>
-        <button id="previousPublisherBtn">Previous</button>
-        <button id="nextPublisherBtn">Next</button>
-        
-        <button id="clearPublisherFormBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromPublisherBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromPublisher" class="logout-btn">Logout</button>
-    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -234,414 +151,137 @@
     let serviceYearDropdown, monthYearDropdown, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth;
     let fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput;
     let sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox;
-    let privilege2ReportInput;
+    let privilege2ReportInput, logoutBtnFromReport; // Added logoutBtnFromReport
     let searchPublisherReportInput, suggestionBoxReport, publisherNameDropdown, fieldGroupInput;
 
     // --- References for Manage Publisher page elements (GLOBAL) ---
-    let firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismStatusDropdown;
-    let baptismDateContainer, baptismDateInput, genderDropdown, hopeDropdown, privilegeDropdown;
-    let privilege2Dropdown, fieldServiceGroupDropdown;
-    let addPublisherBtn, updatePublisherBtn, deletePublisherBtn, previousPublisherBtn, nextPublisherBtn;
-    let clearPublisherFormBtn, backHomeFromPublisherBtn, logoutBtnFromPublisher;
-    let searchInputManage, suggestionBoxManage;
-
-
-    // --- ROUTING FUNCTIONS ---
-    function showPage(pageId, path) {
-        const allPages = document.querySelectorAll('.page-container');
-        allPages.forEach(page => page.classList.add('hidden'));
-        const targetPage = document.getElementById(pageId);
-        if (targetPage) {
-            targetPage.classList.remove('hidden');
-        }
-        if (path && window.location.pathname !== path) {
-            history.pushState({ page: pageId }, '', path);
-        }
-        if (pageId === 'homePage') updateHomePage();
-        else if (pageId === 'addReportPage') setupAddReportPage();
-        else if (pageId === 'publisherPage') setupManagePublisherPage();
-    }
-
-    function handleRouteChange() {
-        const path = window.location.pathname;
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        if (!isLoggedIn && path !== '/') {
-            showPage('loginPage', '/');
-            return;
-        }
-        switch (path) {
-            case '/': showPage(isLoggedIn ? 'homePage' : 'loginPage', isLoggedIn ? '/home' : '/'); break;
-            case '/home': showPage('homePage', '/home'); break;
-            case '/add-report': showPage('addReportPage', '/add-report'); break;
-            case '/manage-publisher': showPage('publisherPage', '/manage-publisher'); break;
-            default: showPage(isLoggedIn ? 'homePage' : 'loginPage', isLoggedIn ? '/home' : '/'); break;
-        }
-    }
-    window.addEventListener('popstate', handleRouteChange);
-
+    // ... existing references ...
 
     // --- CORE APPLICATION LOGIC (Combined) ---
     document.addEventListener("DOMContentLoaded", function () {
-        loginPage = document.getElementById('loginPage');
-        homePage = document.getElementById('homePage');
-        addReportPage = document.getElementById('addReportPage');
-        publisherPage = document.getElementById('publisherPage');
-        serviceYearDropdown = document.getElementById("serviceYearDropdown");
-        monthYearDropdown = document.getElementById("monthYearDropdown");
-        auxPioneerQuestionContainer = document.getElementById("auxPioneerQuestionContainer");
-        isAuxiliaryPioneerThisMonth = document.getElementById("isAuxiliaryPioneerThisMonth");
-        fieldHoursContainer = document.getElementById("fieldHoursContainer");
-        fieldHoursInput = document.getElementById("fieldHours");
-        bibleStudiesContainer = document.getElementById("bibleStudiesContainer");
-        bibleStudiesInput = document.getElementById("bibleStudies");
-        sharedMinistryContainer = document.getElementById("sharedMinistryContainer");
-        sharedMinistryCheckbox = document.getElementById("sharedMinistry");
-        auxiliaryPioneerCheckboxContainer = document.getElementById("auxiliaryPioneerCheckboxContainer");
-        auxiliaryPioneerCheckbox = document.getElementById("auxiliaryPioneerCheckbox");
-        privilege2ReportInput = document.getElementById("privilege2Report");
-        searchPublisherReportInput = document.getElementById("searchPublisherReport");
-        suggestionBoxReport = document.getElementById("suggestionBoxReport");
-        publisherNameDropdown = document.getElementById("publisherNameDropdown");
-        fieldGroupInput = document.getElementById("fieldGroup");
-        firstNameInput = document.getElementById("firstName");
-        lastNameInput = document.getElementById("lastName");
-        fullNameInput = document.getElementById("fullName");
-        birthdateInput = document.getElementById("birthdate");
-        baptismStatusDropdown = document.getElementById("baptismStatus");
-        baptismDateContainer = document.getElementById("baptismDateContainer");
-        baptismDateInput = document.getElementById("baptismDate");
-        genderDropdown = document.getElementById("gender");
-        hopeDropdown = document.getElementById("hope");
-        privilegeDropdown = document.getElementById("privilege");
-        privilege2Dropdown = document.getElementById("privilege2");
-        fieldServiceGroupDropdown = document.getElementById("fieldServiceGroup");
-        addPublisherBtn = document.getElementById("addPublisherBtn");
-        updatePublisherBtn = document.getElementById("updatePublisherBtn");
-        deletePublisherBtn = document.getElementById("deletePublisherBtn");
-        previousPublisherBtn = document.getElementById("previousPublisherBtn");
-        nextPublisherBtn = document.getElementById("nextPublisherBtn");
-        clearPublisherFormBtn = document.getElementById("clearPublisherFormBtn");
-        backHomeFromPublisherBtn = document.getElementById("backHomeFromPublisherBtn");
-        logoutBtnFromPublisher = document.getElementById("logoutBtnFromPublisher");
-        searchInputManage = document.getElementById("searchPublisher");
-        suggestionBoxManage = document.getElementById("suggestionBox");
-        
+        // ... existing element selections ...
+        logoutBtnFromReport = document.getElementById("logoutBtnFromReport");
+
+        // --- Event Listeners ---
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("addReportBtn")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage', '/manage-publisher'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
-        document.getElementById("saveReportBtn")?.addEventListener("click", () => { alert("Report saved! (Implement save logic here)"); clearAddReportForm(); });
+        
+        // MODIFIED: saveReportBtn now calls the main saveReport function
+        document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
         document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
         document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage', '/home'));
-        addPublisherBtn?.addEventListener("click", addPublisher);
-        updatePublisherBtn?.addEventListener("click", updatePublisher);
-        deletePublisherBtn?.addEventListener("click", deletePublisher);
-        previousPublisherBtn?.addEventListener("click", previousPublisher);
-        nextPublisherBtn?.addEventListener("click", nextPublisher);
-        clearPublisherFormBtn?.addEventListener("click", clearPublisherForm);
-        backHomeFromPublisherBtn?.addEventListener("click", () => showPage('homePage', '/home'));
-        logoutBtnFromPublisher?.addEventListener("click", logout);
+        
+        // ADDED: Listener for the new logout button
+        logoutBtnFromReport?.addEventListener("click", logout);
+
+        // ... other existing listeners ...
 
         handleRouteChange();
     });
-
+    
     // --- Login/Logout & Data Management ---
-    function login() {
-        const user = document.getElementById("loginUsername").value;
-        const pass = document.getElementById("loginPassword").value;
-        if (user === "admin" && pass === "admin123") {
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('loggedInUser', user);
-            loggedInUser = user;
-            showPage('homePage', '/home');
-        } else {
-            alert("Invalid credentials.");
-        }
-    }
-
-    function logout() {
-        localStorage.clear();
-        loggedInUser = null;
-        showPage('loginPage', '/');
-        clearPublisherForm();
-        clearAddReportForm();
-    }
-
-    async function clearAllData() {
-        if (confirm("Are you sure you want to delete ALL publisher data? This cannot be undone.")) {
-            try {
-                const snapshot = await db.collection("publishers").get();
-                const batch = db.batch();
-                snapshot.forEach(doc => { batch.delete(doc.ref); });
-                await batch.commit();
-                alert("All publisher records deleted.");
-                publisherList = [];
-                currentIndex = -1;
-                currentDocId = null;
-                clearPublisherForm();
-            } catch (error) {
-                console.error("Error clearing all data:", error);
-                alert("Failed to clear all data.");
-            }
-        }
-    }
-
+    function login() { /* ... existing function ... */ }
+    function logout() { /* ... existing function ... */ }
+    function clearAllData() { /* ... existing function ... */ }
+    
     // --- Page Setups ---
-    function updateHomePage() {
-        loggedInUser = localStorage.getItem('loggedInUser');
-        document.getElementById("loggedInUser").textContent = loggedInUser || 'Guest';
-    }
-
-    function setupAddReportPage() {
-        clearAddReportForm();
-        loadPublishers().then(() => {
-            publisherNameDropdown?.addEventListener("change", function () {
-                autofillPublisherDetails(this.value);
-            });
-            searchPublisherReportInput?.addEventListener("input", function () {
-                const query = this.value.toLowerCase();
-                suggestionBoxReport.innerHTML = "";
-                if (!query) return;
-                const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-                matches.forEach(pub => {
-                    const div = document.createElement("div");
-                    div.textContent = pub.fullName;
-                    div.classList.add("suggestion-item");
-                    div.addEventListener("click", () => {
-                        this.value = pub.fullName;
-                        suggestionBoxReport.innerHTML = "";
-                        publisherNameDropdown.value = pub.id;
-                        autofillPublisherDetails(pub.id);
-                    });
-                    suggestionBoxReport.appendChild(div);
-                });
-            });
-        });
-        populateServiceYears();
-        serviceYearDropdown?.addEventListener("change", populateMonths);
-        isAuxiliaryPioneerThisMonth?.addEventListener("change", updateReportFieldsVisibility);
-        updateReportFieldsVisibility();
-    }
-
-    function setupManagePublisherPage() {
-        clearPublisherForm();
-        loadPublishers().then(() => {
-            firstNameInput?.addEventListener("input", updateFullName);
-            lastNameInput?.addEventListener("input", updateFullName);
-            baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
-            searchInputManage?.addEventListener("input", function () {
-                const query = this.value.toLowerCase();
-                suggestionBoxManage.innerHTML = "";
-                if (!query) return;
-                const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-                matches.forEach((pub) => {
-                    const div = document.createElement("div");
-                    div.textContent = pub.fullName;
-                    div.classList.add("suggestion-item");
-                    div.addEventListener("click", () => {
-                        this.value = pub.fullName;
-                        suggestionBoxManage.innerHTML = "";
-                        currentIndex = publisherList.findIndex(p => p.id === pub.id);
-                        if (currentIndex !== -1) displayPublisher(currentIndex);
-                    });
-                    suggestionBoxManage.appendChild(div);
-                });
-            });
-        });
-    }
-
+    function updateHomePage() { /* ... existing function ... */ }
+    function setupAddReportPage() { /* ... existing function ... */ }
+    function setupManagePublisherPage() { /* ... existing function ... */ }
+    
     // --- Publisher Management ---
-    async function loadPublishers() {
-        try {
-            const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
-            publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            populatePublisherDropdown();
-        } catch (error) {
-            console.error("Error loading publishers:", error);
-        }
-    }
-    function updateFullName() { fullNameInput.value = (lastNameInput.value.trim() && firstNameInput.value.trim()) ? `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}` : ""; }
-    function toggleBaptismDate() {
-        if (baptismStatusDropdown.value === "Baptized") {
-            baptismDateContainer.classList.remove("hidden");
-        } else {
-            baptismDateContainer.classList.add("hidden");
-            baptismDateInput.value = "";
-        }
-    }
-    async function addPublisher() { /* ... existing code ... */ }
-    async function updatePublisher() { /* ... existing code ... */ }
-    async function deletePublisher() { /* ... existing code ... */ }
-    function previousPublisher() { if (currentIndex > 0) { currentIndex--; displayPublisher(currentIndex); } else { alert("This is the first record."); } }
-    function nextPublisher() { if (currentIndex < publisherList.length - 1) { currentIndex++; displayPublisher(currentIndex); } else { alert("This is the last record."); } }
-    function clearPublisherForm() { /* ... existing code ... */ }
-    function displayPublisher(index) { /* ... existing code ... */ }
+    async function loadPublishers() { /* ... existing function ... */ }
+    // ... other existing publisher functions ...
     
     // --- Report Management ---
-    function populatePublisherDropdown() {
-        publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
-        publisherList.forEach(pub => {
-            const opt = document.createElement("option");
-            opt.value = pub.id;
-            opt.textContent = pub.fullName;
-            publisherNameDropdown.appendChild(opt);
-        });
-    }
+    function populatePublisherDropdown() { /* ... existing function ... */ }
+    function autofillPublisherDetails(publisherId) { /* ... existing function ... */ }
+    function populateServiceYears() { /* ... existing function ... */ }
+    function populateMonths() { /* ... existing function ... */ }
+    function updateReportFieldsVisibility() { /* ... existing function ... */ }
+    function clearAddReportForm() { /* ... existing function ... */ }
 
-    function autofillPublisherDetails(publisherId) {
-        const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
-        if (selectedPublisher) {
-            fieldGroupInput.value = selectedPublisher.fieldServiceGroup || "";
-            privilege2ReportInput.value = selectedPublisher.privilege2 || "";
-        } else {
-            fieldGroupInput.value = "";
-            privilege2ReportInput.value = "";
+    // --- NEW and REBUILT Save Report Function ---
+    async function saveReport() {
+        // 1. --- VALIDATION ---
+        // Check for required fields that are always visible
+        if (!publisherNameDropdown.value) {
+            alert("Validation Error: Please select a publisher.");
+            return; // Stop execution, do not clear form
         }
-        updateReportFieldsVisibility();
-    }
-    
-    function populateServiceYears() { /* ... existing code ... */ }
-    function populateMonths() { /* ... existing code ... */ }
-
-    // --- REBUILT LOGIC: This function now handles all conditional visibility for the report page. ---
-    function updateReportFieldsVisibility() {
-        // 1. Reset all fields to their default state (hidden and cleared)
-        auxPioneerQuestionContainer.classList.add("hidden");
-        fieldHoursContainer.classList.add("hidden");
-        bibleStudiesContainer.classList.add("hidden");
-        sharedMinistryContainer.classList.add("hidden");
-        auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-
-        fieldHoursInput.value = "";
-        bibleStudiesInput.value = "";
-        sharedMinistryCheckbox.checked = false;
-        auxiliaryPioneerCheckbox.checked = false;
-        sharedMinistryCheckbox.disabled = false;
-        auxiliaryPioneerCheckbox.disabled = false;
-
-        // 2. Define input validation and checkbox logic handlers
-        const handleHoursInput = () => {
-            // Allow only positive integers (no zero, decimals, or negatives)
-            let value = fieldHoursInput.value.replace(/\D/g, ''); // Remove non-digits
-            if (value && parseInt(value, 10) === 0) {
-                 value = ''; // Disallow zero
-            }
-            fieldHoursInput.value = value;
-            const hasHours = parseInt(value, 10) > 0;
-            sharedMinistryCheckbox.checked = hasHours;
-            // This will only be visible for Continuous Pioneers, but the logic can be shared
-            auxiliaryPioneerCheckbox.checked = hasHours;
-        };
-
-        const handleStudiesInput = () => {
-            // Allow positive integers and zero
-            bibleStudiesInput.value = bibleStudiesInput.value.replace(/\D/g, '');
-        };
-
-        // 3. Apply logic based on the selected publisher's Privilege 2
-        const privilege2 = privilege2ReportInput.value;
-        fieldHoursInput.oninput = null; // Clear previous listeners
-        bibleStudiesInput.oninput = null;
-
-        switch (privilege2) {
-            case "Regular Pioneer":
-            case "Special Pioneer":
-            case "Field Missionary":
-                fieldHoursContainer.classList.remove("hidden");
-                bibleStudiesContainer.classList.remove("hidden");
-                sharedMinistryContainer.classList.remove("hidden");
-
-                sharedMinistryCheckbox.disabled = true;
-                fieldHoursInput.oninput = handleHoursInput;
-                bibleStudiesInput.oninput = handleStudiesInput;
-                break;
-
-            case "Continuous Auxiliary Pioneer":
-                fieldHoursContainer.classList.remove("hidden");
-                bibleStudiesContainer.classList.remove("hidden");
-                sharedMinistryContainer.classList.remove("hidden");
-                auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-
-                sharedMinistryCheckbox.disabled = true;
-                auxiliaryPioneerCheckbox.disabled = true;
-                fieldHoursInput.oninput = handleHoursInput;
-                bibleStudiesInput.oninput = handleStudiesInput;
-                break;
-
-            case "Publisher/Auxi":
-                auxPioneerQuestionContainer.classList.remove("hidden");
-                const auxStatus = isAuxiliaryPioneerThisMonth.value;
-
-                if (auxStatus === "Yes") {
-                    fieldHoursContainer.classList.remove("hidden");
-                    bibleStudiesContainer.classList.remove("hidden");
-                    sharedMinistryContainer.classList.remove("hidden");
-                    auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-
-                    sharedMinistryCheckbox.disabled = true;
-                    auxiliaryPioneerCheckbox.disabled = true;
-                    fieldHoursInput.oninput = handleHoursInput;
-                    bibleStudiesInput.oninput = handleStudiesInput;
-                } else if (auxStatus === "No") {
-                    bibleStudiesContainer.classList.remove("hidden");
-                    sharedMinistryContainer.classList.remove("hidden");
-                    
-                    sharedMinistryCheckbox.disabled = false; // User can check it freely
-                    bibleStudiesInput.oninput = handleStudiesInput;
-                }
-                break;
-
-            default:
-                // No privilege selected or privilege with no special reporting
-                break;
+        if (!serviceYearDropdown.value) {
+            alert("Validation Error: Please select a service year.");
+            return;
         }
-    }
+        if (!monthYearDropdown.value) {
+            alert("Validation Error: Please select a month.");
+            return;
+        }
 
-    function clearAddReportForm() {
-        searchPublisherReportInput.value = "";
-        suggestionBoxReport.innerHTML = "";
-        publisherNameDropdown.value = "";
-        fieldGroupInput.value = "";
-        privilege2ReportInput.value = "";
-        serviceYearDropdown.value = "";
-        monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
-        isAuxiliaryPioneerThisMonth.value = "";
+        // Check for conditionally visible fields
+        if (!auxPioneerQuestionContainer.classList.contains('hidden') && !isAuxiliaryPioneerThisMonth.value) {
+            alert("Validation Error: Please answer 'Is Auxiliary Pioneer this Month?'.");
+            return;
+        }
+        if (!fieldHoursContainer.classList.contains('hidden') && !fieldHoursInput.value) {
+            alert("Validation Error: Please enter the number of hours.");
+            return;
+        }
+        if (!bibleStudiesContainer.classList.contains('hidden') && !bibleStudiesInput.value) {
+            alert("Validation Error: Please enter the number of bible studies.");
+            return;
+        }
         
-        // This will trigger a full UI reset based on cleared inputs
-        updateReportFieldsVisibility();
-    }
-    
-    // Duplicated functions to be removed or refactored in a real scenario
-    async function addPublisher() { console.log("Adding publisher..."); }
-    async function updatePublisher() { console.log("Updating publisher..."); }
-    async function deletePublisher() { console.log("Deleting publisher..."); }
-    function clearPublisherForm() { console.log("Clearing publisher form..."); }
-    function displayPublisher(index) { console.log(`Displaying publisher index ${index}`); }
-    function populateServiceYears() {
-        serviceYearDropdown.innerHTML = '<option value="">-- Select Year --</option>';
-        const currentYear = new Date().getFullYear();
-        for (let year = 2015; year <= currentYear + 5; year++) {
-            const option = document.createElement("option");
-            option.value = year;
-            option.textContent = year;
-            serviceYearDropdown.appendChild(option);
+        // --- If validation passes, proceed ---
+        
+        const publisherId = publisherNameDropdown.value;
+        const serviceYear = serviceYearDropdown.value;
+        const month = monthYearDropdown.value;
+        const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
+
+        // 2. --- DUPLICATE CHECK ---
+        // Create a unique ID for the report to easily check for existence
+        const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const reportRef = db.collection("reports").doc(reportId);
+
+        try {
+            const doc = await reportRef.get();
+            if (doc.exists) {
+                alert("Error: A report for this publisher, service year, and month already exists. You cannot add a duplicate report.");
+                return; // Stop execution
+            }
+
+            // 3. --- PREPARE and SAVE DATA ---
+            const reportData = {
+                publisherId: publisherId,
+                publisherFullName: publisherFullName,
+                serviceYear: serviceYear,
+                month: month,
+                fieldServiceGroup: fieldGroupInput.value,
+                privilege2AtTimeOfReport: privilege2ReportInput.value,
+                hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0,
+                bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0,
+                sharedInMinistry: sharedMinistryCheckbox.checked,
+                wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await reportRef.set(reportData);
+            alert("Report saved successfully!");
+            clearAddReportForm(); // Clear form only after successful save
+
+        } catch (error) {
+            console.error("Error saving report: ", error);
+            alert("An error occurred while saving the report. Please check the console and try again.");
         }
     }
-    function populateMonths() {
-        monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
-        const year = parseInt(serviceYearDropdown.value);
-        if (!year) return;
-        const months = ["September", "October", "November", "December", "January", "February", "March", "April", "May", "June", "July", "August"];
-        months.forEach((month, index) => {
-            const reportYear = (index < 4) ? year - 1 : year;
-            const option = document.createElement("option");
-            option.value = `${month} ${reportYear}`;
-            option.textContent = `${month} ${reportYear}`;
-            monthYearDropdown.appendChild(option);
-        });
-    }
-
+    
+    // NOTE: Make sure the other functions (login, logout, setup pages, etc.) are present from the previous code.
+    // The placeholder /* ... existing function ... */ indicates where your previous code should be.
+    
     </script>
 </body>
 </html>
