@@ -381,11 +381,12 @@
         backHomeFromPublisherBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromPublisher?.addEventListener("click", logout);
         document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => alert("Functionality for 'Review Approvals' is not yet implemented."));
-        document.getElementById("exportExcelBtn")?.addEventListener("click", () => alert("Functionality for 'Export to Excel' is not yet implemented."));
+        // MODIFIED: This button now calls the new exportToExcel function
+        document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
         document.getElementById("manageUsersBtn")?.addEventListener("click", () => alert("Functionality for 'Manage Users' is not yet implemented."));
         updateReportBtn?.addEventListener("click", updateReport);
         deleteReportBtn?.addEventListener("click", deleteReport);
-        clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
+        clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
         backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromUpdate?.addEventListener("click", logout);
         window.addEventListener('popstate', handleRouteChange);
@@ -449,6 +450,65 @@
                 clearAddReportForm();
                 clearUpdateReportForm();
             } catch (error) { console.error("Error clearing data:", error); alert("Failed to clear data."); }
+        }
+    }
+
+    // --- NEW: Export to Excel Function ---
+    async function exportToExcel() {
+        try {
+            // 1. Fetch all reports from Firestore, ordered for readability
+            const snapshot = await db.collection("reports")
+                .orderBy("publisherFullName", "asc")
+                .orderBy("serviceYear", "asc")
+                .orderBy("timestamp", "asc")
+                .get();
+
+            if (snapshot.empty) {
+                alert("No reports found to export.");
+                return;
+            }
+
+            const reports = snapshot.docs.map(doc => doc.data());
+
+            // 2. Define CSV Headers
+            const headers = [
+                "Publisher Name", "Service Year", "Month", "Field Service Group",
+                "Privilege at Time of Report", "Hours", "Bible Studies",
+                "Shared in Ministry", "Was Auxiliary Pioneer"
+            ];
+            let csvContent = headers.join(",") + "\n";
+
+            // 3. Add data rows to CSV string
+            reports.forEach(report => {
+                const row = [
+                    `"${report.publisherFullName || ''}"`, // Enclose in quotes to handle commas in names
+                    report.serviceYear || '',
+                    report.month || '',
+                    `"${report.fieldServiceGroup || ''}"`,
+                    `"${report.privilege2AtTimeOfReport || ''}"`,
+                    report.hours || 0,
+                    report.bibleStudies || 0,
+                    report.sharedInMinistry ? 'Yes' : 'No',
+                    report.wasAuxiliaryPioneer ? 'Yes' : 'No'
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            // 4. Create and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        } catch (error) {
+            console.error("Error exporting to Excel:", error);
+            alert("An error occurred during export. Please check the console.");
         }
     }
 
@@ -698,25 +758,20 @@
         if(isAuxiliaryPioneerThisMonth) isAuxiliaryPioneerThisMonth.value = "";
         updateReportFieldsVisibility();
     }
-    
     function handleReportFieldLogic(elements) {
         elements.auxPioneerQuestionContainer.classList.add("hidden");
         elements.fieldHoursContainer.classList.add("hidden");
         elements.bibleStudiesContainer.classList.add("hidden");
         elements.sharedMinistryContainer.classList.add("hidden");
         elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-        
-        // Don't clear values here if it's the update form, fetchReportData will handle it
         if(elements.privilegeInput.id === 'privilege2Report') {
             elements.fieldHoursInput.value = "";
             elements.bibleStudiesInput.value = "";
         }
-        
         elements.sharedMinistryCheckbox.checked = false;
         elements.auxiliaryPioneerCheckbox.checked = false;
         elements.sharedMinistryCheckbox.disabled = false;
         elements.auxiliaryPioneerCheckbox.disabled = false;
-
         const handleHoursInput = () => {
             let value = elements.fieldHoursInput.value.replace(/\D/g, '');
             if (value && parseInt(value, 10) === 0) { value = ''; }
@@ -726,10 +781,8 @@
             elements.auxiliaryPioneerCheckbox.checked = hasHours;
         };
         const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
-        
         elements.fieldHoursInput.oninput = null;
         elements.bibleStudiesInput.oninput = null;
-        
         const privilege2 = elements.privilegeInput.value;
         switch (privilege2) {
             case "Regular Pioneer": case "Special Pioneer": case "Field Missionary":
@@ -771,19 +824,16 @@
                 break;
         }
     }
-
     function updateReportFieldsVisibility() {
         handleReportFieldLogic({
             privilegeInput: privilege2ReportInput, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth, fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput, sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox
         });
     }
-    
     function updateReportFieldsVisibility_UpdatePage() {
          handleReportFieldLogic({
             privilegeInput: privilege2Update, auxPioneerQuestionContainer: auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonth: isAuxiliaryPioneerThisMonthUpdate, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
         });
     }
-
     async function saveReport() {
         if (!publisherNameDropdown.value) { alert("Validation Error: Please select a publisher."); return; }
         if (!serviceYearDropdown.value) { alert("Validation Error: Please select a service year."); return; }
@@ -827,20 +877,16 @@
             if (doc.exists) {
                 const data = doc.data();
                 currentReportId = doc.id;
-                
                 if (privilege2Update.value === 'Publisher/Auxi') {
                     const auxPioneerAnswer = data.wasAuxiliaryPioneer ? 'Yes' : 'No';
                     isAuxiliaryPioneerThisMonthUpdate.value = auxPioneerAnswer;
                 }
-                
                 updateReportFieldsVisibility_UpdatePage();
-                
                 updateReportFieldsDiv.style.display = 'block';
                 fieldHoursUpdate.value = data.hours || '';
                 bibleStudiesUpdate.value = data.bibleStudies || '';
                 sharedMinistryUpdate.checked = data.sharedInMinistry || false;
                 auxiliaryPioneerCheckboxUpdate.checked = data.wasAuxiliaryPioneer || false;
-
             } else {
                 alert("No report found for the selected publisher and period.");
                 clearUpdateReportForm(false);
@@ -863,10 +909,7 @@
         if (!sharedMinistryContainerUpdate.classList.contains('hidden') && !sharedMinistryUpdate.checked) { alert("Validation Error: The 'Shared in Ministry' box must be checked."); return; }
         if (!auxiliaryPioneerCheckboxContainerUpdate.classList.contains('hidden') && !auxiliaryPioneerCheckboxUpdate.checked) { alert("Validation Error: The 'Auxiliary Pioneer' box must be checked."); return; }
         if (!confirm("Are you sure you want to update this record?")) return;
-        
-        // When updating, we also need to know if they were an Aux Pioneer based on the dropdown
         const wasAuxPioneerThisMonth = (!auxPioneerQuestionContainerUpdate.classList.contains('hidden') && isAuxiliaryPioneerThisMonthUpdate.value === 'Yes') || (!auxiliaryPioneerCheckboxContainerUpdate.classList.contains('hidden') && auxiliaryPioneerCheckboxUpdate.checked);
-
         const updatedData = {
             hours: parseInt(fieldHoursUpdate.value) || 0,
             bibleStudies: parseInt(bibleStudiesUpdate.value) || 0,
