@@ -43,7 +43,6 @@
 
     <div id="homePage" class="page-container hidden">
         <h2>Welcome, <span id="loggedInUser"></span>!</h2>
-        
         <div id="adminButtons">
             <button id="managePublisherBtn">Manage Publisher</button>
             <button id="addReportBtnAdmin">Add Report</button>
@@ -51,14 +50,11 @@
             <button id="reviewApprovalsBtn">Review Approvals</button>
             <button id="exportExcelBtn">Export to Excel</button>
         </div>
-
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
             <button id="submitRequestPageBtn">Submit Request to Update</button>
         </div>
-        
         <button id="logoutBtn" class="logout-btn">Logout</button>
-
         <div id="adminSection" style="margin-top: 20px;">
              <button id="clearAllDataBtn">Clear All Data</button>
              <p style="color: red; font-size: 12px; margin-top: 5px;">Warning: This will delete all publisher and report data.</p>
@@ -66,17 +62,181 @@
     </div>
 
     <div id="addReportPage" class="page-container hidden">
+        <h2>Add Field Service Report</h2>
+        <label for="publisherNameDropdown">Publisher Name:</label>
+        <select id="publisherNameDropdown"></select>
+        <input type="text" id="searchPublisherReport" placeholder="Search Publisher...">
+        <div id="suggestionBoxReport" class="suggestion-box"></div>
+        <label for="fieldGroup">Field Service Group:</label>
+        <input type="text" id="fieldGroup" disabled>
+        <label for="privilege2Report">Privilege 2:</label>
+        <input type="text" id="privilege2Report" disabled>
+        <label for="serviceYearDropdown">Service Year:</label>
+        <select id="serviceYearDropdown"></select>
+        <label for="monthYearDropdown">Month:</label>
+        <select id="monthYearDropdown"></select>
+        <div id="auxPioneerQuestionContainer" class="hidden">
+            <label for="isAuxiliaryPioneerThisMonth">Is Auxiliary Pioneer this Month?</label>
+            <select id="isAuxiliaryPioneerThisMonth">
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
         </div>
+        <div id="fieldHoursContainer" class="hidden">
+            <label for="fieldHours">Field Hours:</label>
+            <input type="number" id="fieldHours" min="1">
+        </div>
+        <div id="bibleStudiesContainer" class="hidden">
+            <label for="bibleStudies">Bible Studies:</label>
+            <input type="number" id="bibleStudies" min="0">
+        </div>
+        <div id="sharedMinistryContainer" class="hidden">
+            <div class="checkbox-container">
+                <input type="checkbox" id="sharedMinistry">
+                <label for="sharedMinistry">Shared in Ministry</label>
+            </div>
+        </div>
+        <div id="auxiliaryPioneerCheckboxContainer" class="hidden">
+            <div class="checkbox-container">
+                <input type="checkbox" id="auxiliaryPioneerCheckbox">
+                <label for="auxiliaryPioneerCheckbox">Auxiliary Pioneer</label>
+            </div>
+        </div>
+        <button id="saveReportBtn">Save Report</button>
+        <button id="clearReportBtn" class="clear-btn">Clear Form</button>
+        <button id="backHomeFromReportBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromReport" class="logout-btn">Logout</button>
+    </div>
 
     <div id="updateReportPage" class="page-container hidden">
+        <h2>Update Field Service Report</h2>
+        <label for="searchPublisherUpdate">Search Publisher:</label>
+        <input type="text" id="searchPublisherUpdate" placeholder="Search by Last Name, First Name...">
+        <div id="suggestionBoxUpdate" class="suggestion-box"></div>
+        <label for="publisherNameDropdownUpdate">Publisher Name:</label>
+        <select id="publisherNameDropdownUpdate"></select>
+        <label for="fieldGroupUpdate">Field Service Group:</label>
+        <input type="text" id="fieldGroupUpdate" disabled>
+        <label for="privilege2Update">Privilege 2:</label>
+        <input type="text" id="privilege2Update" disabled>
+        <label for="serviceYearDropdownUpdate">Service Year:</label>
+        <select id="serviceYearDropdownUpdate"></select>
+        <label for="monthYearDropdownUpdate">Month:</label>
+        <select id="monthYearDropdownUpdate"></select>
+        <hr style="margin: 20px 0;">
+        <div id="updateReportFields" style="display: none;">
+            <div id="auxPioneerQuestionContainerUpdate" class="hidden">
+                <label for="isAuxiliaryPioneerThisMonthUpdate">Is Auxiliary Pioneer this Month?</label>
+                <select id="isAuxiliaryPioneerThisMonthUpdate">
+                    <option value="">-- Select --</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div id="fieldHoursContainerUpdate" class="hidden">
+                <label for="fieldHoursUpdate">Field Hours:</label>
+                <input type="number" id="fieldHoursUpdate" min="1">
+            </div>
+            <div id="bibleStudiesContainerUpdate" class="hidden">
+                <label for="bibleStudiesUpdate">Bible Studies:</label>
+                <input type="number" id="bibleStudiesUpdate" min="0">
+            </div>
+            <div id="sharedMinistryContainerUpdate" class="hidden">
+                <div class="checkbox-container">
+                    <input type="checkbox" id="sharedMinistryUpdate">
+                    <label for="sharedMinistryUpdate">Shared in Ministry</label>
+                </div>
+            </div>
+            <div id="auxiliaryPioneerCheckboxContainerUpdate" class="hidden">
+                <div class="checkbox-container">
+                    <input type="checkbox" id="auxiliaryPioneerCheckboxUpdate">
+                    <label for="auxiliaryPioneerCheckboxUpdate">Auxiliary Pioneer</label>
+                </div>
+            </div>
         </div>
+        <button id="updateReportBtn">Update</button>
+        <button id="deleteReportBtn" class="delete-btn">Delete</button>
+        <button id="clearUpdateFormBtn" class="clear-btn">Clear</button>
+        <button id="backHomeFromUpdateBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromUpdate" class="logout-btn">Logout</button>
+    </div>
 
     <div id="publisherPage" class="page-container hidden">
+        <h2>Manage Publisher Records</h2>
+        <input type="text" id="searchPublisher" placeholder="Search Publisher...">
+        <div id="suggestionBox" class="suggestion-box"></div>
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName">
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName">
+        <label for="fullName">Full Name:</label>
+        <input type="text" id="fullName" disabled>
+        <label for="birthdate">Birthdate:</label>
+        <input type="date" id="birthdate">
+        <label for="baptismStatus">Baptism Status:</label>
+        <select id="baptismStatus">
+            <option value="">-- Select --</option>
+            <option value="Baptized">Baptized</option>
+            <option value="Baptized but can't remember the date">Baptized but can't remember the date</option>
+            <option value="Unbaptized">Unbaptized</option>
+        </select>
+        <div id="baptismDateContainer" class="hidden">
+            <label for="baptismDate">Baptism Date:</label>
+            <input type="date" id="baptismDate">
         </div>
+        <label for="gender">Gender:</label>
+        <select id="gender">
+            <option value="">-- Select --</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+        <label for="hope">Hope:</label>
+        <select id="hope">
+            <option value="">-- Select --</option>
+            <option value="Anointed">Anointed</option>
+            <option value="Other Sheep">Other Sheep</option>
+        </select>
+        <label for="privilege">Privilege:</label>
+        <select id="privilege">
+            <option value="">-- Select --</option>
+            <option value="Not Applicable">Not Applicable</option>
+            <option value="Ministerial Servant">Ministerial Servant</option>
+            <option value="Elder">Elder</option>
+        </select>
+        <label for="privilege2">Privilege 2:</label>
+        <select id="privilege2">
+            <option value="">-- Select --</option>
+            <option value="Regular Pioneer">Regular Pioneer</option>
+            <option value="Special Pioneer">Special Pioneer</option>
+            <option value="Field Missionary">Field Missionary</option>
+            <option value="Continuous Auxiliary Pioneer">Continuous Auxiliary Pioneer</option>
+            <option value="Publisher/Auxi">Publisher/Auxi</option>
+        </select>
+        <label for="fieldServiceGroup">Field Service Group:</label>
+        <select id="fieldServiceGroup">
+            <option value="">-- Select --</option>
+            <option value="Field Service Group 1">Field Service Group 1</option>
+            <option value="Field Service Group 2">Field Service Group 2</option>
+            <option value="Field Service Group 3">Field Service Group 3</option>
+            <option value="Field Service Group 4">Field Service Group 4</option>
+            <option value="Field Service Group 5">Field Service Group 5</option>
+            <option value="Field Service Group 6">Field Service Group 6</option>
+            <option value="Field Service Group 7">Field Service Group 7</option>
+            <option value="Field Service Group 8">Field Service Group 8</option>
+        </select>
+        <button id="addPublisherBtn">Add</button>
+        <button id="updatePublisherBtn">Update</button>
+        <button id="deletePublisherBtn" class="delete-btn">Delete</button>
+        <button id="previousPublisherBtn">Previous</button>
+        <button id="nextPublisherBtn">Next</button>
+        <button id="clearPublisherFormBtn" class="clear-btn">Clear Form</button>
+        <button id="backHomeFromPublisherBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromPublisher" class="logout-btn">Logout</button>
+    </div>
 
     <div id="submitRequestPage" class="page-container hidden">
         <h2>Submit Request to Update Report</h2>
-        
         <h4>Who do you want to update?</h4>
         <label for="searchPublisherRequest">Search Publisher:</label>
         <input type="text" id="searchPublisherRequest" placeholder="Search by Last Name, First Name...">
@@ -87,18 +247,14 @@
         <input type="text" id="fieldGroupRequest" disabled>
         <label for="privilege2Request">Privilege 2:</label>
         <input type="text" id="privilege2Request" disabled>
-
         <hr style="margin: 20px 0;">
-
         <h4>What Service Year and Month do you want to update?</h4>
         <label for="serviceYearRequest">Service Year:</label>
         <select id="serviceYearRequest"></select>
         <label for="monthYearRequest">Month:</label>
         <select id="monthYearRequest"></select>
-
         <div id="requestFields" style="display: none;">
             </div>
-
         <button id="submitRequestApprovalBtn">Submit Request for Admin Approval</button>
         <button id="clearRequestFormBtn" class="clear-btn">Clear Form</button>
         <button id="backHomeFromRequestBtn" class="back-btn">Back to Home</button>
@@ -116,12 +272,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-</body>
-</html>
-
-<script>
-    // --- script.js ---
-
+    <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -138,16 +289,15 @@
 
     // --- Global State Variables ---
     let publisherList = [];
-    let userList = [];
     let currentIndex = -1;
-    let currentUserIndex = -1;
     let currentDocId = null;
     let currentUser = null;
     let currentReportId = null; 
-    let currentUserDocId = null;
 
     // --- Global Element References ---
-    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, manageUsersPage, submitRequestPage, reviewApprovalsPage;
+    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage;
+    let loggedInUser, adminButtons, userButtons, adminSection;
+    let loginUsername, loginPassword;
     let serviceYearDropdown, monthYearDropdown, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth;
     let fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput;
     let sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox;
@@ -163,12 +313,9 @@
     let auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonthUpdate, updateReportFieldsDiv;
     let fieldHoursContainerUpdate, bibleStudiesContainerUpdate, sharedMinistryContainerUpdate, auxiliaryPioneerCheckboxContainerUpdate;
     let updateReportBtn, deleteReportBtn, clearUpdateFormBtn, backHomeFromUpdateBtn, logoutBtnFromUpdate;
-    let manageUsersBtn, adminSection, adminButtons, userButtons;
-    let userEmail, userPassword, showPassword, userFirstName, userLastName, userRole;
-    let addUserBtn, updateUserBtn, deleteUserBtn, previousUserBtn, nextUserBtn, clearUserFormBtn, backHomeFromUserBtn, logoutBtnFromUser;
     let searchPublisherRequest, suggestionBoxRequest, publisherNameDropdownRequest, fieldGroupRequest, privilege2Request;
     let serviceYearRequest, monthYearRequest, requestFields, submitRequestApprovalBtn, clearRequestFormBtn, backHomeFromRequestBtn, logoutBtnFromRequest;
-    
+
     // --- CORE APPLICATION LIFECYCLE ---
     document.addEventListener("DOMContentLoaded", initializeApp);
 
@@ -192,14 +339,12 @@
                 currentUser = null;
                 localStorage.removeItem('userRole');
                 publisherList = [];
-                userList = [];
                 handleRouteChange();
             }
         });
     }
 
     function getAllElements() {
-        // Page Containers
         loginPage = document.getElementById('loginPage');
         homePage = document.getElementById('homePage');
         addReportPage = document.getElementById('addReportPage');
@@ -207,13 +352,12 @@
         updateReportPage = document.getElementById('updateReportPage');
         submitRequestPage = document.getElementById('submitRequestPage');
         reviewApprovalsPage = document.getElementById('reviewApprovalsPage');
-        
-        // Home Page
+        loggedInUser = document.getElementById('loggedInUser');
         adminButtons = document.getElementById('adminButtons');
         userButtons = document.getElementById('userButtons');
         adminSection = document.getElementById('adminSection');
-        
-        // Add Report Page
+        loginUsername = document.getElementById('loginUsername');
+        loginPassword = document.getElementById('loginPassword');
         serviceYearDropdown = document.getElementById("serviceYearDropdown");
         monthYearDropdown = document.getElementById("monthYearDropdown");
         auxPioneerQuestionContainer = document.getElementById("auxPioneerQuestionContainer");
@@ -232,17 +376,51 @@
         publisherNameDropdown = document.getElementById("publisherNameDropdown");
         fieldGroupInput = document.getElementById("fieldGroup");
         logoutBtnFromReport = document.getElementById("logoutBtnFromReport");
-        
-        // Publisher Page
         firstNameInput = document.getElementById("firstName");
         lastNameInput = document.getElementById("lastName");
-        // ... (and all other publisher fields)
-        
-        // Update Report Page
+        fullNameInput = document.getElementById("fullName");
+        birthdateInput = document.getElementById("birthdate");
+        baptismStatusDropdown = document.getElementById("baptismStatus");
+        baptismDateContainer = document.getElementById("baptismDateContainer");
+        baptismDateInput = document.getElementById("baptismDate");
+        genderDropdown = document.getElementById("gender");
+        hopeDropdown = document.getElementById("hope");
+        privilegeDropdown = document.getElementById("privilege");
+        privilege2Dropdown = document.getElementById("privilege2");
+        fieldServiceGroupDropdown = document.getElementById("fieldServiceGroup");
+        addPublisherBtn = document.getElementById("addPublisherBtn");
+        updatePublisherBtn = document.getElementById("updatePublisherBtn");
+        deletePublisherBtn = document.getElementById("deletePublisherBtn");
+        previousPublisherBtn = document.getElementById("previousPublisherBtn");
+        nextPublisherBtn = document.getElementById("nextPublisherBtn");
+        clearPublisherFormBtn = document.getElementById("clearPublisherFormBtn");
+        backHomeFromPublisherBtn = document.getElementById("backHomeFromPublisherBtn");
+        logoutBtnFromPublisher = document.getElementById("logoutBtnFromPublisher");
+        searchInputManage = document.getElementById("searchPublisher");
+        suggestionBoxManage = document.getElementById("suggestionBox");
         publisherNameDropdownUpdate = document.getElementById('publisherNameDropdownUpdate');
-        // ... (and all other update report fields)
-        
-        // Submit Request Page
+        serviceYearDropdownUpdate = document.getElementById('serviceYearDropdownUpdate');
+        monthYearDropdownUpdate = document.getElementById('monthYearDropdownUpdate');
+        searchPublisherUpdate = document.getElementById('searchPublisherUpdate');
+        suggestionBoxUpdate = document.getElementById('suggestionBoxUpdate');
+        fieldGroupUpdate = document.getElementById('fieldGroupUpdate');
+        privilege2Update = document.getElementById('privilege2Update');
+        updateReportFieldsDiv = document.getElementById('updateReportFields');
+        fieldHoursUpdate = document.getElementById('fieldHoursUpdate');
+        bibleStudiesUpdate = document.getElementById('bibleStudiesUpdate');
+        sharedMinistryUpdate = document.getElementById('sharedMinistryUpdate');
+        auxiliaryPioneerCheckboxUpdate = document.getElementById('auxiliaryPioneerCheckboxUpdate');
+        auxPioneerQuestionContainerUpdate = document.getElementById('auxPioneerQuestionContainerUpdate');
+        isAuxiliaryPioneerThisMonthUpdate = document.getElementById('isAuxiliaryPioneerThisMonthUpdate');
+        fieldHoursContainerUpdate = document.getElementById('fieldHoursContainerUpdate');
+        bibleStudiesContainerUpdate = document.getElementById('bibleStudiesContainerUpdate');
+        sharedMinistryContainerUpdate = document.getElementById('sharedMinistryContainerUpdate');
+        auxiliaryPioneerCheckboxContainerUpdate = document.getElementById('auxiliaryPioneerCheckboxContainerUpdate');
+        updateReportBtn = document.getElementById('updateReportBtn');
+        deleteReportBtn = document.getElementById('deleteReportBtn');
+        clearUpdateFormBtn = document.getElementById('clearUpdateFormBtn');
+        backHomeFromUpdateBtn = document.getElementById('backHomeFromUpdateBtn');
+        logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
         searchPublisherRequest = document.getElementById('searchPublisherRequest');
         suggestionBoxRequest = document.getElementById('suggestionBoxRequest');
         publisherNameDropdownRequest = document.getElementById('publisherNameDropdownRequest');
@@ -256,12 +434,9 @@
         backHomeFromRequestBtn = document.getElementById('backHomeFromRequestBtn');
         logoutBtnFromRequest = document.getElementById('logoutBtnFromRequest');
     }
-
     function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
-        
-        // Home Page Buttons
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage', '/manage-publisher'));
         document.getElementById("addReportBtnAdmin")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
@@ -270,20 +445,28 @@
         document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
-
-        // Add Report Page Buttons
         document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
         document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
         document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromReport?.addEventListener("click", logout);
-        
-        // Submit Request Page Buttons
+        addPublisherBtn?.addEventListener("click", addPublisher);
+        updatePublisherBtn?.addEventListener("click", updatePublisher);
+        deletePublisherBtn?.addEventListener("click", deletePublisher);
+        previousPublisherBtn?.addEventListener("click", previousPublisher);
+        nextPublisherBtn?.addEventListener("click", nextPublisher);
+        clearPublisherFormBtn?.addEventListener("click", clearPublisherForm);
+        backHomeFromPublisherBtn?.addEventListener("click", () => showPage('homePage', '/home'));
+        logoutBtnFromPublisher?.addEventListener("click", logout);
+        updateReportBtn?.addEventListener("click", updateReport);
+        deleteReportBtn?.addEventListener("click", deleteReport);
+        clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
+        backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
+        logoutBtnFromUpdate?.addEventListener("click", logout);
         submitRequestApprovalBtn?.addEventListener('click', submitRequestForApproval);
         clearRequestFormBtn?.addEventListener('click', clearSubmitRequestForm);
         backHomeFromRequestBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromRequest?.addEventListener('click', logout);
         document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage', '/home'));
-
         window.addEventListener('popstate', handleRouteChange);
     }
 
@@ -327,8 +510,8 @@
 
     // --- Login/Logout & Data Management ---
     async function login() {
-        const email = document.getElementById("loginUsername").value;
-        const password = document.getElementById("loginPassword").value;
+        const email = loginUsername.value;
+        const password = loginPassword.value;
         if (!email || !password) { alert("Please enter both email and password."); return; }
         try {
             await auth.signInWithEmailAndPassword(email, password);
@@ -340,30 +523,70 @@
     async function logout() {
         try {
             await auth.signOut();
+            loginUsername.value = '';
+            loginPassword.value = '';
         } catch (error) {
             console.error("Logout failed:", error);
         }
     }
     async function clearAllData() {
         if (confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
-            // ... (code for clearing data remains the same)
+            try {
+                const publishers = await db.collection("publishers").get();
+                const reports = await db.collection("reports").get();
+                const batch = db.batch();
+                publishers.forEach(doc => batch.delete(doc.ref));
+                reports.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                alert("All publisher and report records deleted.");
+                publisherList = [];
+                clearPublisherForm();
+                clearAddReportForm();
+                clearUpdateReportForm();
+            } catch (error) { console.error("Error clearing data:", error); alert("Failed to clear data."); }
         }
     }
 
     // --- Export to Excel ---
     async function exportToExcel() {
-        // ... (code for export remains the same)
+        try {
+            const snapshot = await db.collection("reports").orderBy("publisherFullName", "asc").get();
+            if (snapshot.empty) {
+                alert("No reports found to export.");
+                return;
+            }
+            const reports = snapshot.docs.map(doc => doc.data());
+            const headers = [ "Publisher Name", "Service Year", "Month", "Field Service Group", "Privilege at Time of Report", "Hours", "Bible Studies", "Shared in Ministry", "Was Auxiliary Pioneer" ];
+            let csvContent = headers.join(",") + "\n";
+            reports.forEach(report => {
+                const row = [ `"${report.publisherFullName || ''}"`, `"${report.serviceYear || ''}"`, `"${report.month || ''}"`, `"${report.fieldServiceGroup || ''}"`, `"${report.privilege2AtTimeOfReport || ''}"`, report.hours || 0, report.bibleStudies || 0, report.sharedInMinistry ? 'Yes' : 'No', report.wasAuxiliaryPioneer ? 'Yes' : 'No' ];
+                csvContent += row.join(",") + "\n";
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Error exporting to Excel:", error);
+            alert("An error occurred during export. Please check the console.");
+        }
     }
     
     // --- Page Setups ---
     function updateHomePage() {
         if (currentUser) {
-            document.getElementById("loggedInUser").textContent = currentUser.email;
+            loggedInUser.textContent = currentUser.email;
             if (currentUser.role === 'admin') {
                 adminButtons.classList.remove('hidden');
                 adminSection.classList.remove('hidden');
                 userButtons.classList.add('hidden');
-            } else { // For 'user' role
+            } else { 
                 adminButtons.classList.add('hidden');
                 adminSection.classList.add('hidden');
                 userButtons.classList.remove('hidden');
@@ -371,7 +594,68 @@
         }
     }
     function setupAddReportPage() {
-        // ... (code remains the same)
+        clearAddReportForm();
+        serviceYearDropdown.disabled = false;
+        monthYearDropdown.disabled = false;
+        publisherNameDropdown.disabled = false;
+        searchPublisherReport.classList.remove('hidden');
+
+        if (currentUser.role === 'user') {
+            const userPublisher = publisherList.find(p => p.email === currentUser.email);
+            if (userPublisher) {
+                publisherNameDropdown.value = userPublisher.id;
+            }
+            publisherNameDropdown.disabled = true;
+            searchPublisherReport.classList.add('hidden');
+
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            let serviceYear = (currentMonth >= 9 && currentMonth <= 11) ? currentYear + 1 : currentYear;
+            
+            serviceYearDropdown.value = serviceYear;
+            serviceYearDropdown.disabled = true;
+
+            populateMonths(monthYearDropdown, serviceYear);
+            const prevMonthDate = new Date();
+            prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+            const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+            const prevMonthYear = prevMonthDate.getFullYear();
+            monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
+            monthYearDropdown.disabled = true;
+            
+            autofillPublisherDetails(publisherNameDropdown.value);
+        } else {
+            publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
+            publisherList.forEach(pub => {
+                const opt = document.createElement("option");
+                opt.value = pub.id;
+                opt.textContent = pub.fullName;
+                publisherNameDropdown.appendChild(opt);
+            });
+            searchPublisherReportInput.addEventListener("input", function () {
+                const query = this.value.toLowerCase();
+                suggestionBoxReport.innerHTML = "";
+                if (!query) return;
+                const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+                matches.forEach(pub => {
+                    const div = document.createElement("div");
+                    div.textContent = pub.fullName;
+                    div.classList.add("suggestion-item");
+                    div.addEventListener("click", () => {
+                        this.value = pub.fullName;
+                        suggestionBoxReport.innerHTML = "";
+                        publisherNameDropdown.value = pub.id;
+                        autofillPublisherDetails(pub.id);
+                    });
+                    suggestionBoxReport.appendChild(div);
+                });
+            });
+        }
+        populateServiceYears(serviceYearDropdown);
+        publisherNameDropdown.addEventListener("change", () => autofillPublisherDetails(publisherNameDropdown.value));
+        serviceYearDropdown.addEventListener("change", () => populateMonths(monthYearDropdown, serviceYearDropdown.value));
+        isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
     }
     function setupManagePublisherPage() {
         // ... (code remains the same)
@@ -389,7 +673,7 @@
             publisherNameDropdownRequest.appendChild(opt);
         });
         populateServiceYears(serviceYearRequest);
-
+        
         const handlePublisherSelection = () => {
             const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownRequest.value);
             if(selectedPublisher) {
@@ -399,17 +683,39 @@
                 fieldGroupRequest.value = '';
                 privilege2Request.value = '';
             }
-            // Logic to fetch existing report will be added here
+            fetchReportDataForRequest();
         }
 
+        searchPublisherRequest.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxRequest.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach(pub => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = pub.fullName;
+                    suggestionBoxRequest.innerHTML = "";
+                    publisherNameDropdownRequest.value = pub.id;
+                    publisherNameDropdownRequest.dispatchEvent(new Event('change'));
+                });
+                suggestionBoxRequest.appendChild(div);
+            });
+        });
+
         publisherNameDropdownRequest.addEventListener('change', handlePublisherSelection);
-        serviceYearRequest.addEventListener('change', () => populateMonths(monthYearRequest, serviceYearRequest.value));
+        serviceYearRequest.addEventListener('change', () => {
+            populateMonths(monthYearRequest, serviceYearRequest.value);
+            fetchReportDataForRequest();
+        });
+        monthYearRequest.addEventListener('change', fetchReportDataForRequest);
     }
     function setupReviewApprovalsPage() {
-        // Logic to fetch and display pending requests will go here in the future
+        // Logic for admin to see requests will go here
     }
-
-    // --- Publisher Management ---
+     // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -464,10 +770,31 @@
     function previousPublisher() { if (currentIndex > 0) { currentIndex--; displayPublisher(currentIndex); } else { alert("This is the first record."); } }
     function nextPublisher() { if (currentIndex < publisherList.length - 1) { currentIndex++; displayPublisher(currentIndex); } else { alert("This is the last record."); } }
     function clearPublisherForm() {
-        // ... (This function remains complete from previous versions)
+        const inputs = [firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismDateInput, searchInputManage];
+        const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown];
+        inputs.forEach(i => i && (i.value = ''));
+        selects.forEach(s => s && (s.value = ''));
+        baptismDateContainer?.classList.add("hidden");
+        suggestionBoxManage && (suggestionBoxManage.innerHTML = "");
+        currentIndex = -1;
+        currentDocId = null;
     }
     function displayPublisher(index) {
-        // ... (This function remains complete from previous versions)
+        const pub = publisherList[index];
+        if (!pub) { clearPublisherForm(); return; }
+        firstNameInput.value = pub.firstName || "";
+        lastNameInput.value = pub.lastName || "";
+        fullNameInput.value = pub.fullName || "";
+        birthdateInput.value = pub.birthdate || "";
+        baptismStatusDropdown.value = pub.baptismStatus || "";
+        toggleBaptismDate();
+        if (pub.baptismStatus === "Baptized") { baptismDateInput.value = pub.baptismDate || ""; }
+        genderDropdown.value = pub.gender || "";
+        hopeDropdown.value = pub.hope || "";
+        privilegeDropdown.value = pub.privilege || "";
+        privilege2Dropdown.value = pub.privilege2 || "";
+        fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
+        currentDocId = pub.id;
     }
 
     // --- Report Management ---
@@ -483,25 +810,153 @@
         updateReportFieldsVisibility();
     }
     function populateServiceYears(dropdownElement) {
-        // ... (This function remains complete from previous versions)
+        if (!dropdownElement) return;
+        dropdownElement.innerHTML = '<option value="">-- Select Year --</option>';
+        const currentYear = new Date().getFullYear();
+        for (let year = 2015; year <= currentYear + 5; year++) {
+            const option = document.createElement("option");
+            option.value = year;
+            option.textContent = year;
+            dropdownElement.appendChild(option);
+        }
     }
     function populateMonths(monthDropdown, serviceYear) {
-        // ... (This function remains complete from previous versions)
+        if (!monthDropdown || !serviceYear) { monthDropdown.innerHTML = '<option value="">-- Select Month --</option>'; return; };
+        monthDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        const selectedServiceYear = parseInt(serviceYear);
+        const startMonthYear = new Date(selectedServiceYear - 1, 8); // September
+        const endMonthYear = new Date(selectedServiceYear, 7);   // August
+        let currentMonth = new Date(startMonthYear);
+        while (currentMonth <= endMonthYear) {
+            const option = document.createElement("option");
+            const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
+            const year = currentMonth.getFullYear();
+            option.value = `${monthName} ${year}`;
+            option.textContent = `${monthName} ${year}`;
+            monthDropdown.appendChild(option);
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+        }
     }
     function clearAddReportForm() {
-        // ... (This function remains complete from previous versions)
+        if(searchPublisherReportInput) searchPublisherReportInput.value = "";
+        if(suggestionBoxReport) suggestionBoxReport.innerHTML = "";
+        if(publisherNameDropdown) publisherNameDropdown.value = "";
+        if(fieldGroupInput) fieldGroupInput.value = "";
+        if(privilege2ReportInput) privilege2ReportInput.value = "";
+        if(serviceYearDropdown) serviceYearDropdown.value = "";
+        if(monthYearDropdown) monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        if(isAuxiliaryPioneerThisMonth) isAuxiliaryPioneerThisMonth.value = "";
+        updateReportFieldsVisibility();
     }
+    
     function handleReportFieldLogic(elements) {
-        // ... (This function remains complete from previous versions)
+        elements.auxPioneerQuestionContainer.classList.add("hidden");
+        elements.fieldHoursContainer.classList.add("hidden");
+        elements.bibleStudiesContainer.classList.add("hidden");
+        elements.sharedMinistryContainer.classList.add("hidden");
+        elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+        if(elements.privilegeInput.id === 'privilege2Report') {
+            elements.fieldHoursInput.value = "";
+            elements.bibleStudiesInput.value = "";
+        }
+        elements.sharedMinistryCheckbox.checked = false;
+        elements.auxiliaryPioneerCheckbox.checked = false;
+        elements.sharedMinistryCheckbox.disabled = false;
+        elements.auxiliaryPioneerCheckbox.disabled = false;
+        const handleHoursInput_Standard = () => {
+            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+            if (value && parseInt(value, 10) === 0) { value = ''; }
+            elements.fieldHoursInput.value = value;
+            const hasHours = parseInt(value, 10) > 0;
+            elements.sharedMinistryCheckbox.checked = hasHours;
+        };
+        const handleHoursInput_WithAux = () => {
+            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+            if (value && parseInt(value, 10) === 0) { value = ''; }
+            elements.fieldHoursInput.value = value;
+            const hasHours = parseInt(value, 10) > 0;
+            elements.sharedMinistryCheckbox.checked = hasHours;
+            elements.auxiliaryPioneerCheckbox.checked = hasHours;
+        };
+        const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
+        elements.fieldHoursInput.oninput = null;
+        elements.bibleStudiesInput.oninput = null;
+        const privilege2 = elements.privilegeInput.value;
+        switch (privilege2) {
+            case "Regular Pioneer": case "Special Pioneer": case "Field Missionary":
+                elements.fieldHoursContainer.classList.remove("hidden");
+                elements.bibleStudiesContainer.classList.remove("hidden");
+                elements.sharedMinistryContainer.classList.remove("hidden");
+                elements.sharedMinistryCheckbox.disabled = true;
+                elements.fieldHoursInput.oninput = handleHoursInput_Standard;
+                elements.bibleStudiesInput.oninput = handleStudiesInput;
+                break;
+            case "Continuous Auxiliary Pioneer":
+                elements.fieldHoursContainer.classList.remove("hidden");
+                elements.bibleStudiesContainer.classList.remove("hidden");
+                elements.sharedMinistryContainer.classList.remove("hidden");
+                elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                elements.sharedMinistryCheckbox.disabled = true;
+                elements.auxiliaryPioneerCheckbox.disabled = true;
+                elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
+                elements.bibleStudiesInput.oninput = handleStudiesInput;
+                break;
+            case "Publisher/Auxi":
+                elements.auxPioneerQuestionContainer.classList.remove("hidden");
+                const auxStatus = elements.isAuxiliaryPioneerThisMonth.value;
+                if (auxStatus === "Yes") {
+                    elements.fieldHoursContainer.classList.remove("hidden");
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                    elements.sharedMinistryCheckbox.disabled = true;
+                    elements.auxiliaryPioneerCheckbox.disabled = true;
+                    elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
+                } else if (auxStatus === "No") {
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    elements.sharedMinistryCheckbox.disabled = false;
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
+                }
+                break;
+        }
     }
     function updateReportFieldsVisibility() {
-        // ... (This function remains complete from previous versions)
+        handleReportFieldLogic({
+            privilegeInput: privilege2ReportInput, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth, fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput, sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox
+        });
     }
     function updateReportFieldsVisibility_UpdatePage() {
-        // ... (This function remains complete from previous versions)
+         handleReportFieldLogic({
+            privilegeInput: privilege2Update, auxPioneerQuestionContainer: auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonth: isAuxiliaryPioneerThisMonthUpdate, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
+        });
     }
     async function saveReport() {
-        // ... (This function remains complete from previous versions)
+        if (!publisherNameDropdown.value) { alert("Validation Error: Please select a publisher."); return; }
+        if (!serviceYearDropdown.value) { alert("Validation Error: Please select a service year."); return; }
+        if (!monthYearDropdown.value) { alert("Validation Error: Please select a month."); return; }
+        if (!auxPioneerQuestionContainer.classList.contains('hidden') && !isAuxiliaryPioneerThisMonth.value) { alert("Validation Error: Please answer 'Is Auxiliary Pioneer this Month?'."); return; }
+        if (!fieldHoursContainer.classList.contains('hidden') && !fieldHoursInput.value) { alert("Validation Error: Please enter the number of hours."); return; }
+        if (!bibleStudiesContainer.classList.contains('hidden') && !bibleStudiesInput.value) { alert("Validation Error: Please enter the number of bible studies."); return; }
+        if (!sharedMinistryContainer.classList.contains('hidden') && !sharedMinistryCheckbox.checked) { alert("Validation Error: The 'Shared in Ministry' box must be checked for this type of report."); return; }
+        if (!auxiliaryPioneerCheckboxContainer.classList.contains('hidden') && !auxiliaryPioneerCheckbox.checked) { alert("Validation Error: The 'Auxiliary Pioneer' box must be checked for this type of report."); return; }
+        const publisherId = publisherNameDropdown.value;
+        const serviceYear = serviceYearDropdown.value;
+        const month = monthYearDropdown.value;
+        const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
+        const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const reportRef = db.collection("reports").doc(reportId);
+        try {
+            const doc = await reportRef.get();
+            if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
+            const reportData = {
+                publisherId: publisherId, publisherFullName: publisherFullName, serviceYear: serviceYear, month: month, fieldServiceGroup: fieldGroupInput.value, privilege2AtTimeOfReport: privilege2ReportInput.value, hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0, bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0, sharedInMinistry: sharedMinistryCheckbox.checked, wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await reportRef.set(reportData);
+            alert("Report saved successfully!");
+            clearAddReportForm();
+        } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
 
     // --- Update/Delete Report Logic ---
@@ -517,8 +972,8 @@
     function clearUpdateReportForm(clearAll = true) {
         // ... (This function remains complete from previous versions)
     }
-    
-    // --- NEW: Submit Request Logic ---
+
+    // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -526,32 +981,22 @@
         searchPublisherRequest.value = "";
         fieldGroupRequest.value = "";
         privilege2Request.value = "";
-        requestFields.innerHTML = ""; // Clear the dynamically added fields
+        requestFields.innerHTML = "";
         requestFields.style.display = 'none';
     }
-
     async function fetchReportDataForRequest() {
         const publisherId = publisherNameDropdownRequest.value;
         const serviceYear = serviceYearRequest.value;
         const month = monthYearRequest.value;
-
-        // Clear previous results first
         requestFields.innerHTML = "";
         requestFields.style.display = 'none';
-
-        if (!publisherId || !serviceYear || !month) {
-            return;
-        }
-
+        if (!publisherId || !serviceYear || !month) { return; }
         const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
         const reportRef = db.collection("reports").doc(reportId);
-
         try {
             const doc = await reportRef.get();
             if (doc.exists) {
                 const data = doc.data();
-                // Dynamically create the report fields inside the 'requestFields' div
-                // This is a simplified version of the main report form
                 let fieldsHTML = `
                     <div id="fieldHoursContainerRequest">
                         <label for="fieldHoursRequest">Field Hours:</label>
@@ -566,7 +1011,7 @@
                         <label for="sharedMinistryRequest">Shared in Ministry</label>
                     </div>
                 `;
-                if(data.wasAuxiliaryPioneer) {
+                if(data.wasAuxiliaryPioneer || privilege2Request.value.toLowerCase().includes('pioneer')) {
                     fieldsHTML += `
                         <div id="auxiliaryPioneerCheckboxContainerRequest" class="checkbox-container">
                             <input type="checkbox" id="auxiliaryPioneerRequest" ${data.wasAuxiliaryPioneer ? 'checked' : ''}>
@@ -576,7 +1021,6 @@
                 }
                 requestFields.innerHTML = fieldsHTML;
                 requestFields.style.display = 'block';
-
             } else {
                 alert("No existing report found for this period to update.");
             }
@@ -584,21 +1028,15 @@
             console.error("Error fetching report for request:", error);
         }
     }
-    
     async function submitRequestForApproval() {
         const publisherId = publisherNameDropdownRequest.value;
         const serviceYear = serviceYearRequest.value;
         const month = monthYearRequest.value;
-
-        // Validation
         if (!publisherId || !serviceYear || !month) {
             alert("Please select the publisher, service year, and month of the report you want to update.");
             return;
         }
-
         const originalReportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-
-        // Get new values from the dynamically created fields
         const hoursInput = document.getElementById('fieldHoursRequest');
         const studiesInput = document.getElementById('bibleStudiesRequest');
         const sharedMinistryInput = document.getElementById('sharedMinistryRequest');
@@ -608,14 +1046,12 @@
             alert("No report data loaded. Please select a valid period with an existing report.");
             return;
         }
-        
         const requestedChanges = {
             hours: parseInt(hoursInput.value) || 0,
             bibleStudies: parseInt(studiesInput.value) || 0,
             sharedInMinistry: sharedMinistryInput.checked,
             wasAuxiliaryPioneer: auxPioneerInput ? auxPioneerInput.checked : false
         };
-
         const requestData = {
             requestingUserUid: currentUser.uid,
             requestingUserEmail: currentUser.email,
@@ -628,7 +1064,6 @@
             status: 'pending',
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
-
         try {
             await db.collection('updateRequests').add(requestData);
             alert("Request Submitted. Please wait for the admin approval to take effect the changes.");
@@ -638,6 +1073,6 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-</script>
+</script>   
 </body>
 </html>
