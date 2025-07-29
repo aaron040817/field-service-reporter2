@@ -17,10 +17,11 @@
             margin-bottom: 20px;
         }
         input, select, textarea { display: block; width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 60px; }
         button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px; margin-bottom: 10px; }
         button:hover { background-color: #0056b3; }
-        .logout-btn, .delete-btn { background-color: #dc3545; }
-        .logout-btn:hover, .delete-btn:hover { background-color: #c82333; }
+        .logout-btn, .delete-btn, .reject-btn { background-color: #dc3545; }
+        .logout-btn:hover, .delete-btn:hover, .reject-btn:hover { background-color: #c82333; }
         .clear-btn { background-color: #ffc107; color: #333; }
         .clear-btn:hover { background-color: #e0a800; }
         .back-btn { background-color: #6c757d; }
@@ -35,6 +36,7 @@
         .checkbox-container { display: flex; align-items: center; margin-bottom: 10px; }
         .request-item { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
         .request-item h4 { margin-top: 0; }
+        .last-modified { font-style: italic; color: #888; font-size: 12px; margin-top: -5px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -108,6 +110,9 @@
                 <label for="auxiliaryPioneerCheckbox">Auxiliary Pioneer</label>
             </div>
         </div>
+        <label for="commentsAdd">Comments (Optional):</label>
+        <textarea id="commentsAdd"></textarea>
+        <div id="lastModifiedByAdd" class="last-modified"></div>
         <button id="saveReportBtn">Save Report</button>
         <button id="clearReportBtn" class="clear-btn">Clear Form</button>
         <button id="backHomeFromReportBtn" class="back-btn">Back to Home</button>
@@ -159,6 +164,9 @@
                     <label for="auxiliaryPioneerCheckboxUpdate">Auxiliary Pioneer</label>
                 </div>
             </div>
+            <label for="commentsUpdate">Comments (Optional):</label>
+            <textarea id="commentsUpdate"></textarea>
+            <div id="lastModifiedByUpdate" class="last-modified"></div>
         </div>
         <button id="updateReportBtn">Update</button>
         <button id="deleteReportBtn" class="delete-btn">Delete</button>
@@ -320,6 +328,7 @@
     let auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonthUpdate, updateReportFieldsDiv;
     let fieldHoursContainerUpdate, bibleStudiesContainerUpdate, sharedMinistryContainerUpdate, auxiliaryPioneerCheckboxContainerUpdate;
     let updateReportBtn, deleteReportBtn, clearUpdateFormBtn, backHomeFromUpdateBtn, logoutBtnFromUpdate;
+    let commentsAdd, lastModifiedByAdd, commentsUpdate, lastModifiedByUpdate;
     let searchPublisherRequest, suggestionBoxRequest, publisherNameDropdownRequest, fieldGroupRequest, privilege2Request;
     let serviceYearRequest, monthYearRequest, requestFields, submitRequestApprovalBtn, clearRequestFormBtn, backHomeFromRequestBtn, logoutBtnFromRequest;
     let pendingRequestsList, noPendingRequestsLabel;
@@ -384,6 +393,8 @@
         publisherNameDropdown = document.getElementById("publisherNameDropdown");
         fieldGroupInput = document.getElementById("fieldGroup");
         logoutBtnFromReport = document.getElementById("logoutBtnFromReport");
+        commentsAdd = document.getElementById('commentsAdd');
+        lastModifiedByAdd = document.getElementById('lastModifiedByAdd');
         firstNameInput = document.getElementById("firstName");
         lastNameInput = document.getElementById("lastName");
         fullNameInput = document.getElementById("fullName");
@@ -429,6 +440,8 @@
         clearUpdateFormBtn = document.getElementById('clearUpdateFormBtn');
         backHomeFromUpdateBtn = document.getElementById('backHomeFromUpdateBtn');
         logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
+        commentsUpdate = document.getElementById('commentsUpdate');
+        lastModifiedByUpdate = document.getElementById('lastModifiedByUpdate');
         searchPublisherRequest = document.getElementById('searchPublisherRequest');
         suggestionBoxRequest = document.getElementById('suggestionBoxRequest');
         publisherNameDropdownRequest = document.getElementById('publisherNameDropdownRequest');
@@ -465,7 +478,7 @@
         document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromReport?.addEventListener("click", logout);
 
-        // Manage Publisher Buttons
+        // Manage Publisher Buttons & Fields
         addPublisherBtn?.addEventListener("click", addPublisher);
         updatePublisherBtn?.addEventListener("click", updatePublisher);
         deletePublisherBtn?.addEventListener("click", deletePublisher);
@@ -474,6 +487,10 @@
         clearPublisherFormBtn?.addEventListener("click", clearPublisherForm);
         backHomeFromPublisherBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromPublisher?.addEventListener("click", logout);
+        firstNameInput?.addEventListener("input", updateFullName);
+        lastNameInput?.addEventListener("input", updateFullName);
+        baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
+
 
         // Update Report Page Buttons
         updateReportBtn?.addEventListener("click", updateReport);
@@ -495,6 +512,7 @@
         // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
+</script>
 // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
@@ -558,7 +576,7 @@
                 break;
         }
     }
-        // --- Login/Logout & Data Management ---
+    // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -573,7 +591,6 @@
     async function logout() {
         try {
             await auth.signOut();
-            // Clear login form fields upon logout
             loginUsername.value = '';
             loginPassword.value = '';
         } catch (error) {
@@ -607,10 +624,23 @@
                 return;
             }
             const reports = snapshot.docs.map(doc => doc.data());
-            const headers = [ "Publisher Name", "Service Year", "Month", "Field Service Group", "Privilege at Time of Report", "Hours", "Bible Studies", "Shared in Ministry", "Was Auxiliary Pioneer" ];
+            const headers = [ "Publisher Name", "Service Year", "Month", "Field Service Group", "Privilege at Time of Report", "Hours", "Bible Studies", "Shared in Ministry", "Was Auxiliary Pioneer", "Comments", "Last Modified By" ];
             let csvContent = headers.join(",") + "\n";
             reports.forEach(report => {
-                const row = [ `"${report.publisherFullName || ''}"`, `"${report.serviceYear || ''}"`, `"${report.month || ''}"`, `"${report.fieldServiceGroup || ''}"`, `"${report.privilege2AtTimeOfReport || ''}"`, report.hours || 0, report.bibleStudies || 0, report.sharedInMinistry ? 'Yes' : 'No', report.wasAuxiliaryPioneer ? 'Yes' : 'No' ];
+                const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
+                const row = [ 
+                    `"${report.publisherFullName || ''}"`, 
+                    `"${report.serviceYear || ''}"`, 
+                    `"${report.month || ''}"`, 
+                    `"${report.fieldServiceGroup || ''}"`, 
+                    `"${report.privilege2AtTimeOfReport || ''}"`, 
+                    report.hours || 0, 
+                    report.bibleStudies || 0, 
+                    report.sharedInMinistry ? 'Yes' : 'No', 
+                    report.wasAuxiliaryPioneer ? 'Yes' : 'No',
+                    `"${comments}"`,
+                    `"${report.lastModifiedBy || ''}"`
+                ];
                 csvContent += row.join(",") + "\n";
             });
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -630,13 +660,26 @@
     }
     
     // --- Page Setups ---
-    function updateHomePage() {
+    async function updateHomePage() {
         if (currentUser) {
             loggedInUser.textContent = currentUser.email;
+            const reviewApprovalsBtn = document.getElementById('reviewApprovalsBtn');
+
             if (currentUser.role === 'admin') {
                 adminButtons.classList.remove('hidden');
                 adminSection.classList.remove('hidden');
                 userButtons.classList.add('hidden');
+
+                // Fetch pending request count for admin
+                try {
+                    const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
+                    const count = snapshot.size;
+                    reviewApprovalsBtn.textContent = `Review Approvals ${count > 0 ? `(${count})` : ''}`;
+                } catch(e) {
+                    console.error("Could not fetch request count", e);
+                    reviewApprovalsBtn.textContent = "Review Approvals";
+                }
+
             } else { 
                 adminButtons.classList.add('hidden');
                 adminSection.classList.add('hidden');
@@ -644,7 +687,7 @@
             }
         }
     }
-        function setupAddReportPage() {
+    function setupAddReportPage() {
         clearAddReportForm();
         
         // Reset fields to default admin state first, then adjust for user
@@ -653,6 +696,7 @@
         publisherNameDropdown.disabled = false;
         searchPublisherReport.classList.remove('hidden');
 
+        // Populate publisher list for everyone
         publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
         publisherList.forEach(pub => {
             const opt = document.createElement("option");
@@ -666,14 +710,8 @@
         
         if (currentUser.role === 'user') {
             // --- LOGIC PARA SA USER ---
-            const userPublisher = publisherList.find(p => p.id === currentUser.uid);
-            if (userPublisher) {
-                publisherNameDropdown.value = userPublisher.id;
-            }
-            // User can still select other publishers if needed, but defaults to their name if found.
-            // Let's keep the dropdown enabled as requested. Search box can be used.
-            // publisherNameDropdown.disabled = true; // As per new request, this is NOT disabled.
-            // searchPublisherReport.classList.add('hidden'); // As per new request, this is NOT hidden.
+            publisherNameDropdown.disabled = false; // As per new request, this is enabled
+            searchPublisherReport.classList.remove('hidden'); // As per new request, this is visible
 
             const today = new Date();
             const currentMonth = today.getMonth(); // January is 0, December is 11
@@ -721,27 +759,10 @@
 
     function setupManagePublisherPage() {
         clearPublisherForm();
-        firstNameInput.addEventListener("input", updateFullName);
-        lastNameInput.addEventListener("input", updateFullName);
-        baptismStatusDropdown.addEventListener("change", toggleBaptismDate);
-        searchInputManage.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxManage.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach((pub) => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = "";
-                    suggestionBoxManage.innerHTML = "";
-                    currentIndex = publisherList.findIndex(p => p.id === pub.id);
-                    if (currentIndex !== -1) displayPublisher(currentIndex);
-                });
-                suggestionBoxManage.appendChild(div);
-            });
-        });
+        if (publisherList.length > 0) {
+            currentIndex = 0;
+            displayPublisher(currentIndex);
+        }
     }
 
     function setupUpdateReportPage() {
@@ -783,7 +804,6 @@
                 fieldGroupUpdate.value = '';
                 privilege2Update.value = '';
             }
-            updateReportFieldsVisibility_UpdatePage();
             fetchReportData();
         }
         publisherNameDropdownUpdate.addEventListener('change', handlePublisherSelection);
@@ -866,20 +886,22 @@
                     <h4>Request from: ${request.requestingUserEmail}</h4>
                     <p>
                         <strong>Publisher:</strong> ${request.publisherToUpdateName}<br>
-                        <strong>Period:</strong> ${request.month} ${request.serviceYear}
+                        <strong>Period:</strong> ${request.month}
                     </p>
                     <p>
-                        <strong>Changes:</strong><br>
+                        <strong>New Values:</strong><br>
                         Hours: ${changes.hours}, Studies: ${changes.bibleStudies}<br>
                         Shared in Ministry: ${changes.sharedInMinistry ? 'Yes' : 'No'}<br>
-                        Was Aux Pioneer: ${changes.wasAuxiliaryPioneer ? 'Yes' : 'No'}
+                        Was Aux Pioneer: ${changes.wasAuxiliaryPioneer ? 'Yes' : 'No'}<br>
+                        Comments: ${changes.comments || '<i>No comments</i>'}
                     </p>
                     <button class="approve-btn" data-id="${requestId}">Approve</button>
-                    <button class="delete-btn" data-id="${requestId}">Reject</button>
+                    <button class="reject-btn" data-id="${requestId}">Reject</button>
                 `;
                 pendingRequestsList.appendChild(requestDiv);
             });
 
+            // Use a single event listener on the parent container
             pendingRequestsList.addEventListener('click', async (e) => {
                 const target = e.target;
                 const requestId = target.dataset.id;
@@ -897,7 +919,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-        // --- Publisher Management ---
+    // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -1002,7 +1024,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-        // --- Report Management ---
+            // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1044,16 +1066,24 @@
         }
     }
     function clearAddReportForm() {
+        // Clear fields that are common to both roles first
+        suggestionBoxReport.innerHTML = "";
+        fieldGroupInput.value = "";
+        privilege2ReportInput.value = "";
+        isAuxiliaryPioneerThisMonth.value = "";
+        commentsAdd.value = "";
+        lastModifiedByAdd.textContent = "";
+
+        // Role-specific clearing
         if (currentUser.role === 'admin') {
             searchPublisherReportInput.value = "";
             publisherNameDropdown.value = "";
             serviceYearDropdown.value = "";
             monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        } else { // For 'user' role, we don't clear the auto-filled fields.
+            // But we should re-trigger the setup to ensure consistency if needed.
+            // For now, we just clear the inputs.
         }
-        suggestionBoxReport.innerHTML = "";
-        fieldGroupInput.value = "";
-        privilege2ReportInput.value = "";
-        isAuxiliaryPioneerThisMonth.value = "";
         updateReportFieldsVisibility();
     }
     
@@ -1064,6 +1094,7 @@
         elements.sharedMinistryContainer.classList.add("hidden");
         elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
         
+        // This check ensures we don't clear data on the Update/Request forms
         if(elements.privilegeInput.id.includes('Report')) {
             elements.fieldHoursInput.value = "";
             elements.bibleStudiesInput.value = "";
@@ -1169,14 +1200,17 @@
             const doc = await reportRef.get();
             if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
             const reportData = {
-                publisherId: publisherId, publisherFullName: publisherFullName, serviceYear: serviceYear, month: month, fieldServiceGroup: fieldGroupInput.value, privilege2AtTimeOfReport: privilege2ReportInput.value, hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0, bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0, sharedInMinistry: sharedMinistryCheckbox.checked, wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                publisherId: publisherId, publisherFullName: publisherFullName, serviceYear: serviceYear, month: month, fieldServiceGroup: fieldGroupInput.value, privilege2AtTimeOfReport: privilege2ReportInput.value, hours: fieldHoursInput.value ? parseInt(fieldHoursInput.value) : 0, bibleStudies: bibleStudiesInput.value ? parseInt(bibleStudiesInput.value) : 0, sharedInMinistry: sharedMinistryCheckbox.checked, wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked, 
+                comments: commentsAdd.value,
+                lastModifiedBy: currentUser.email,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             await reportRef.set(reportData);
             alert("Report saved successfully!");
             clearAddReportForm();
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-        // --- Update/Delete Report Logic ---
+            // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1192,16 +1226,22 @@
             if (doc.exists) {
                 const data = doc.data();
                 currentReportId = doc.id;
+                
                 if (privilege2Update.value === 'Publisher/Auxi') {
                     const auxPioneerAnswer = data.wasAuxiliaryPioneer ? 'Yes' : 'No';
                     isAuxiliaryPioneerThisMonthUpdate.value = auxPioneerAnswer;
                 }
-                updateReportFieldsVisibility_UpdatePage();
+                
+                updateReportFieldsVisibility_UpdatePage(); // Applys logic to show/hide fields
+                
                 updateReportFieldsDiv.style.display = 'block';
                 fieldHoursUpdate.value = data.hours || '';
                 bibleStudiesUpdate.value = data.bibleStudies || '';
                 sharedMinistryUpdate.checked = data.sharedInMinistry || false;
                 auxiliaryPioneerCheckboxUpdate.checked = data.wasAuxiliaryPioneer || false;
+                commentsUpdate.value = data.comments || '';
+                lastModifiedByUpdate.textContent = data.lastModifiedBy ? `Last modified by: ${data.lastModifiedBy}` : '';
+
             } else {
                 alert("No report found for the selected publisher and period.");
                 clearUpdateReportForm(false);
@@ -1224,12 +1264,16 @@
         if (!sharedMinistryContainerUpdate.classList.contains('hidden') && !sharedMinistryUpdate.checked) { alert("Validation Error: The 'Shared in Ministry' box must be checked."); return; }
         if (!auxiliaryPioneerCheckboxContainerUpdate.classList.contains('hidden') && !auxiliaryPioneerCheckboxUpdate.checked) { alert("Validation Error: The 'Auxiliary Pioneer' box must be checked."); return; }
         if (!confirm("Are you sure you want to update this record?")) return;
+        
         const wasAuxPioneerThisMonth = (!auxPioneerQuestionContainerUpdate.classList.contains('hidden') && isAuxiliaryPioneerThisMonthUpdate.value === 'Yes') || (!auxiliaryPioneerCheckboxContainerUpdate.classList.contains('hidden') && auxiliaryPioneerCheckboxUpdate.checked);
+
         const updatedData = {
             hours: parseInt(fieldHoursUpdate.value) || 0,
             bibleStudies: parseInt(bibleStudiesUpdate.value) || 0,
             sharedInMinistry: sharedMinistryUpdate.checked,
             wasAuxiliaryPioneer: wasAuxPioneerThisMonth,
+            comments: commentsUpdate.value,
+            lastModifiedBy: currentUser.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
         try {
@@ -1265,11 +1309,19 @@
             fieldGroupUpdate.value = "";
             privilege2Update.value = "";
         }
+        // Clear the data fields specifically
+        if(fieldHoursUpdate) fieldHoursUpdate.value = "";
+        if(bibleStudiesUpdate) bibleStudiesUpdate.value = "";
+        if(sharedMinistryUpdate) sharedMinistryUpdate.checked = false;
+        if(auxiliaryPioneerCheckboxUpdate) auxiliaryPioneerCheckboxUpdate.checked = false;
+        if(isAuxiliaryPioneerThisMonthUpdate) isAuxiliaryPioneerThisMonthUpdate.value = "";
+        if(commentsUpdate) commentsUpdate.value = "";
+        if(lastModifiedByUpdate) lastModifiedByUpdate.textContent = "";
+
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-
-    // --- Submit Request Logic ---
+            // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1299,7 +1351,8 @@
                 let fieldsHTML = `
                     <div id="auxPioneerQuestionContainerRequest" class="hidden">
                         <label for="isAuxiliaryPioneerThisMonthRequest">Is Auxiliary Pioneer this Month?</label>
-                        <select id="isAuxiliaryPioneerThisMonthRequest" disabled>
+                        <select id="isAuxiliaryPioneerThisMonthRequest">
+                            <option value="">-- Select --</option>
                             <option value="Yes">Yes</option>
                             <option value="No">No</option>
                         </select>
@@ -1320,6 +1373,9 @@
                         <input type="checkbox" id="auxiliaryPioneerRequest">
                         <label for="auxiliaryPioneerRequest">Auxiliary Pioneer</label>
                     </div>
+                    <label for="commentsRequest">Comments (Optional):</label>
+                    <textarea id="commentsRequest"></textarea>
+                    <div id="lastModifiedByRequest" class="last-modified"></div>
                 `;
                 requestFields.innerHTML = fieldsHTML;
 
@@ -1342,10 +1398,13 @@
                 if (privilege2Request.value === 'Publisher/Auxi') {
                     dynamicElements.isAuxiliaryPioneerThisMonth.value = data.wasAuxiliaryPioneer ? 'Yes' : 'No';
                 }
-
+                
                 // Apply field logic to show/hide the correct containers
                 handleReportFieldLogic(dynamicElements);
-                
+
+                // Add listener for the dynamic aux pioneer dropdown
+                dynamicElements.isAuxiliaryPioneerThisMonth.addEventListener('change', () => handleReportFieldLogic(dynamicElements));
+
                 // Populate the now-visible fields with the original report data
                 dynamicElements.fieldHoursInput.value = data.hours || '';
                 dynamicElements.bibleStudiesInput.value = data.bibleStudies || '';
@@ -1353,6 +1412,9 @@
                 if(dynamicElements.auxiliaryPioneerCheckbox) {
                     dynamicElements.auxiliaryPioneerCheckbox.checked = data.wasAuxiliaryPioneer || false;
                 }
+                document.getElementById('commentsRequest').value = data.comments || '';
+                document.getElementById('lastModifiedByRequest').textContent = data.lastModifiedBy ? `Last modified by: ${data.lastModifiedBy}` : '';
+
 
                 requestFields.style.display = 'block';
             } else {
@@ -1379,12 +1441,35 @@
         const studiesInput = document.getElementById('bibleStudiesRequest');
         const sharedMinistryInput = document.getElementById('sharedMinistryRequest');
         const auxPioneerInput = document.getElementById('auxiliaryPioneerRequest');
+        const commentsInput = document.getElementById('commentsRequest');
+        const auxPioneerQuestionInput = document.getElementById('isAuxiliaryPioneerThisMonthRequest');
+
+        // Validation for all visible fields
+        if(hoursInput.parentElement.classList.contains('hidden') === false && !hoursInput.value) {
+            alert("Validation Error: Please enter the number of hours."); return;
+        }
+        if(studiesInput.parentElement.classList.contains('hidden') === false && !studiesInput.value) {
+            alert("Validation Error: Please enter the number of bible studies."); return;
+        }
+        if(sharedMinistryInput.parentElement.classList.contains('hidden') === false && !sharedMinistryInput.checked) {
+            alert("Validation Error: The 'Shared in Ministry' box must be checked."); return;
+        }
+        if(auxPioneerInput && auxPioneerInput.parentElement.classList.contains('hidden') === false && !auxPioneerInput.checked) {
+             alert("Validation Error: The 'Auxiliary Pioneer' box must be checked."); return;
+        }
+        
+        const wasAuxPioneerThisMonth = (auxPioneerQuestionInput && !auxPioneerQuestionInput.parentElement.classList.contains('hidden') && auxPioneerQuestionInput.value === 'Yes') || (auxPioneerInput && !auxPioneerInput.parentElement.classList.contains('hidden') && auxPioneerInput.checked);
+
         const requestedChanges = {
             hours: parseInt(hoursInput.value) || 0,
             bibleStudies: parseInt(studiesInput.value) || 0,
             sharedInMinistry: sharedMinistryInput.checked,
-            wasAuxiliaryPioneer: auxPioneerInput ? auxPioneerInput.checked : false
+            wasAuxiliaryPioneer: wasAuxPioneerThisMonth,
+            comments: commentsInput.value,
+            lastModifiedBy: currentUser.email,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp() // Also update the timestamp on approval
         };
+
         const requestData = {
             requestingUserUid: currentUser.uid,
             requestingUserEmail: currentUser.email,
@@ -1406,22 +1491,23 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-
-    // --- Review Approvals Logic ---
+            // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
-        if(!confirm("Are you sure you want to approve these changes?")) return;
+        if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
             const requestRef = db.collection('updateRequests').doc(requestId);
             const requestDoc = await requestRef.get();
             if(!requestDoc.exists) {
-                alert("Error: Request not found.");
+                alert("Error: Request not found. It may have been processed already.");
+                setupReviewApprovalsPage(); // Refresh the list
                 return;
             }
             const requestData = requestDoc.data();
             const reportRef = db.collection('reports').doc(requestData.originalReportId);
 
+            // Use update instead of set to only change the specified fields
             await reportRef.update(requestData.requestedChanges);
-            await requestRef.update({ status: 'approved' });
+            await requestRef.update({ status: 'approved', processedBy: currentUser.email });
 
             alert("Request approved and report has been updated.");
             setupReviewApprovalsPage(); // Refresh the list
@@ -1435,7 +1521,7 @@
         if(!confirm("Are you sure you want to reject this request?")) return;
         try {
             const requestRef = db.collection('updateRequests').doc(requestId);
-            await requestRef.update({ status: 'rejected' });
+            await requestRef.update({ status: 'rejected', processedBy: currentUser.email });
             alert("Request has been rejected.");
             setupReviewApprovalsPage(); // Refresh the list
         } catch (error) {
