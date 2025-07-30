@@ -490,6 +490,24 @@
         firstNameInput?.addEventListener("input", updateFullName);
         lastNameInput?.addEventListener("input", updateFullName);
         baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
+        searchInputManage?.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxManage.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach((pub) => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = "";
+                    suggestionBoxManage.innerHTML = "";
+                    currentIndex = publisherList.findIndex(p => p.id === pub.id);
+                    if (currentIndex !== -1) displayPublisher(currentIndex);
+                });
+                suggestionBoxManage.appendChild(div);
+            });
+        });
 
         // Update Report Page Buttons
         updateReportBtn?.addEventListener("click", updateReport);
@@ -689,15 +707,18 @@
         function setupAddReportPage() {
         clearAddReportForm();
         
+        // Reset fields to default admin state first, then adjust for user
         serviceYearDropdown.disabled = false;
         monthYearDropdown.disabled = false;
         publisherNameDropdown.disabled = false;
         searchPublisherReport.classList.remove('hidden');
 
+        // Populate publisher list for everyone
         publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
         publisherList.forEach(pub => {
             const opt = document.createElement("option");
             opt.value = pub.id;
+            // Assuming publisher docs have firstName and lastName fields
             opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
             publisherNameDropdown.appendChild(opt);
         });
@@ -705,16 +726,13 @@
         populateServiceYears(serviceYearDropdown);
         
         if (currentUser.role === 'user') {
-            publisherNameDropdown.disabled = true;
-            searchPublisherReport.classList.add('hidden');
-
-            const userPublisher = publisherList.find(p => p.email === currentUser.email);
-            if (userPublisher) {
-                publisherNameDropdown.value = userPublisher.id;
-            }
+            // --- LOGIC PARA SA USER ---
+            // Re-enable publisher selection for User, as requested.
+            publisherNameDropdown.disabled = false;
+            searchPublisherReport.classList.remove('hidden');
 
             const today = new Date();
-            const currentMonth = today.getMonth();
+            const currentMonth = today.getMonth(); // January is 0, December is 11
             const currentYear = today.getFullYear();
             let serviceYear = (currentMonth >= 9 && currentMonth <= 11) ? currentYear + 1 : currentYear;
             
@@ -731,59 +749,19 @@
             
             autofillPublisherDetails(publisherNameDropdown.value);
 
-        } else {
-            searchPublisherReportInput.addEventListener("input", function () {
-                const query = this.value.toLowerCase();
-                suggestionBoxReport.innerHTML = "";
-                if (!query) return;
-                const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-                matches.forEach(pub => {
-                    const div = document.createElement("div");
-                    div.textContent = pub.fullName;
-                    div.classList.add("suggestion-item");
-                    div.addEventListener("click", () => {
-                        this.value = pub.fullName;
-                        suggestionBoxReport.innerHTML = "";
-                        publisherNameDropdown.value = pub.id;
-                        autofillPublisherDetails(pub.id);
-                    });
-                    suggestionBoxReport.appendChild(div);
-                });
-            });
-            publisherNameDropdown.addEventListener("change", () => autofillPublisherDetails(publisherNameDropdown.value));
-            serviceYearDropdown.addEventListener("change", () => populateMonths(monthYearDropdown, serviceYearDropdown.value));
-        }
+        } 
+        // Admin-specific listeners are attached globally, no need for an else block here.
+        // Common listeners for both roles
         isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
     }
 
     function setupManagePublisherPage() {
-        clearPublisherForm();
-        if (publisherList.length > 0) {
-            currentIndex = 0;
-            displayPublisher(currentIndex);
-        }
-        searchInputManage.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxManage.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach((pub) => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = "";
-                    suggestionBoxManage.innerHTML = "";
-                    currentIndex = publisherList.findIndex(p => p.id === pub.id);
-                    if (currentIndex !== -1) displayPublisher(currentIndex);
-                });
-                suggestionBoxManage.appendChild(div);
-            });
-        });
+        clearPublisherForm(); // Start with a blank form as requested
+        // Listeners for this page are attached in attachAllListeners
     }
 
     function setupUpdateReportPage() {
-        clearUpdateReportForm();
+        clearUpdateReportForm(); // Clear the form every time the page is opened
         publisherNameDropdownUpdate.innerHTML = '<option value="">-- Select Publisher --</option>';
         publisherList.forEach(pub => {
             const opt = document.createElement("option");
@@ -1092,9 +1070,10 @@
         commentsAdd.value = "";
         lastModifiedByAdd.textContent = "";
 
-        // Role-specific clearing. User's auto-filled fields are handled by setupAddReportPage.
+        // Role-specific clearing.
         searchPublisherReportInput.value = "";
         publisherNameDropdown.value = "";
+
         if (currentUser.role === 'admin') {
             serviceYearDropdown.value = "";
             monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
@@ -1365,6 +1344,7 @@
             if (doc.exists) {
                 const data = doc.data();
                 
+                // Dynamically create the report fields inside the 'requestFields' div
                 let fieldsHTML = `
                     <div id="auxPioneerQuestionContainerRequest" class="hidden">
                         <label for="isAuxiliaryPioneerThisMonthRequest">Is Auxiliary Pioneer this Month?</label>
@@ -1396,6 +1376,7 @@
                 `;
                 requestFields.innerHTML = fieldsHTML;
 
+                // Get references to the newly created elements
                 const dynamicElements = {
                     privilegeInput: privilege2Request,
                     auxPioneerQuestionContainer: document.getElementById('auxPioneerQuestionContainerRequest'),
@@ -1410,14 +1391,18 @@
                     auxiliaryPioneerCheckbox: document.getElementById('auxiliaryPioneerRequest')
                 };
                 
+                // Set the value for Publisher/Auxi before applying logic
                 if (privilege2Request.value === 'Publisher/Auxi') {
                     dynamicElements.isAuxiliaryPioneerThisMonth.value = data.wasAuxiliaryPioneer ? 'Yes' : 'No';
                 }
                 
+                // Apply field logic to show/hide the correct containers
                 handleReportFieldLogic(dynamicElements);
 
+                // Add listener for the dynamic aux pioneer dropdown
                 dynamicElements.isAuxiliaryPioneerThisMonth.addEventListener('change', () => handleReportFieldLogic(dynamicElements));
 
+                // Populate the now-visible fields with the original report data
                 dynamicElements.fieldHoursInput.value = data.hours || '';
                 dynamicElements.bibleStudiesInput.value = data.bibleStudies || '';
                 dynamicElements.sharedMinistryCheckbox.checked = data.sharedInMinistry || false;
@@ -1426,6 +1411,7 @@
                 }
                 document.getElementById('commentsRequest').value = data.comments || '';
                 document.getElementById('lastModifiedByRequest').textContent = data.lastModifiedBy ? `Last modified by: ${data.lastModifiedBy}` : '';
+
 
                 requestFields.style.display = 'block';
             } else {
