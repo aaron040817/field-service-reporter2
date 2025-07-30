@@ -38,7 +38,10 @@
         .request-item { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
         .request-item h4 { margin-top: 0; }
         .last-modified { font-style: italic; color: #888; font-size: 12px; margin-top: -5px; margin-bottom: 10px; }
+        #uploadStatus { margin-top: 15px; font-weight: bold; }
+        #uploadStatus pre { white-space: pre-wrap; word-wrap: break-word; background-color: #eee; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto; }
     </style>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div id="loginPage" class="page-container">
@@ -56,6 +59,7 @@
             <button id="updateReportPageBtn">Update Report</button>
             <button id="reviewApprovalsBtn">Review Approvals</button>
             <button id="exportExcelBtn">Export to Excel</button>
+            <button id="uploadReportsBtn">Upload Reports</button>
         </div>
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
@@ -284,11 +288,25 @@
         <button id="logoutBtnFromReview" class="logout-btn">Logout</button>
     </div>
 
+    <div id="uploadPage" class="page-container hidden">
+        <h2>Upload Field Service Reports</h2>
+        <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
+        <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls, .csv">
+        <button id="selectFileBtn">Select File</button>
+        <div id="uploadStatus">
+            <p>No file selected.</p>
+        </div>
+        <button id="processUploadBtn" disabled>Upload and Process Records</button>
+        <hr>
+        <button id="backHomeFromUploadBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-    <script>
+   <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -311,7 +329,7 @@
     let currentReportId = null; 
 
     // --- Global Element References ---
-    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage;
+    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage;
     let loggedInUser, adminButtons, userButtons, adminSection;
     let loginUsername, loginPassword;
     let serviceYearDropdown, monthYearDropdown, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth;
@@ -333,7 +351,8 @@
     let searchPublisherRequest, suggestionBoxRequest, publisherNameDropdownRequest, fieldGroupRequest, privilege2Request;
     let serviceYearRequest, monthYearRequest, requestFields, submitRequestApprovalBtn, clearRequestFormBtn, backHomeFromRequestBtn, logoutBtnFromRequest;
     let pendingRequestsList, noPendingRequestsLabel;
-
+    let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
+    
     // --- CORE APPLICATION LIFECYCLE ---
     document.addEventListener("DOMContentLoaded", initializeApp);
 
@@ -370,6 +389,7 @@
         updateReportPage = document.getElementById('updateReportPage');
         submitRequestPage = document.getElementById('submitRequestPage');
         reviewApprovalsPage = document.getElementById('reviewApprovalsPage');
+        uploadPage = document.getElementById('uploadPage');
         loggedInUser = document.getElementById('loggedInUser');
         adminButtons = document.getElementById('adminButtons');
         userButtons = document.getElementById('userButtons');
@@ -457,6 +477,12 @@
         logoutBtnFromRequest = document.getElementById('logoutBtnFromRequest');
         pendingRequestsList = document.getElementById('pendingRequestsList');
         noPendingRequestsLabel = document.getElementById('noPendingRequestsLabel');
+        selectFileBtn = document.getElementById('selectFileBtn');
+        excelFileInput = document.getElementById('excelFileInput');
+        uploadStatus = document.getElementById('uploadStatus');
+        processUploadBtn = document.getElementById('processUploadBtn');
+        backHomeFromUploadBtn = document.getElementById('backHomeFromUploadBtn');
+        logoutBtnFromUpload = document.getElementById('logoutBtnFromUpload');
     }
 
     function attachAllListeners() {
@@ -469,6 +495,7 @@
         document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
         document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => showPage('reviewApprovalsPage', '/review-approvals'));
         document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
+        document.getElementById("uploadReportsBtn")?.addEventListener("click", () => showPage('uploadPage', '/upload-reports'));
         document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
@@ -509,10 +536,17 @@
         document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage', '/home'));
         document.getElementById("logoutBtnFromReview")?.addEventListener("click", logout);
         
+        // Upload Page Listeners
+        selectFileBtn?.addEventListener('click', () => excelFileInput.click());
+        excelFileInput?.addEventListener('change', handleFileSelect);
+        processUploadBtn?.addEventListener('click', processAndUploadRecords);
+        backHomeFromUploadBtn?.addEventListener('click', () => showPage('homePage', '/home'));
+        logoutBtnFromUpload?.addEventListener('click', logout);
+
         // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
-        // --- Routing ---
+// --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -526,6 +560,7 @@
         else if (pageId === 'updateReportPage') { setupUpdateReportPage(); }
         else if (pageId === 'submitRequestPage') { setupSubmitRequestPage(); }
         else if (pageId === 'reviewApprovalsPage') { setupReviewApprovalsPage(); }
+        else if (pageId === 'uploadPage') { setupUploadPage(); }
     }
     function handleRouteChange() {
         const path = window.location.pathname;
@@ -570,12 +605,20 @@
                     showPage('homePage', '/home');
                 }
                 break;
+            case '/upload-reports':
+                if (currentUser?.role === 'admin') {
+                    showPage('uploadPage', '/upload-reports');
+                } else {
+                    alert("Access denied. Admin only.");
+                    showPage('homePage', '/home');
+                }
+                break;
             default: 
                 showPage(currentUser ? 'homePage' : 'loginPage', currentUser ? '/home' : '/'); 
                 break;
         }
     }
-        // --- Login/Logout & Data Management ---
+       // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -687,21 +730,18 @@
             }
         }
     }
-        function setupAddReportPage() {
+       function setupAddReportPage() {
         clearAddReportForm();
         
-        // Reset fields to default admin state first, then adjust for user
         serviceYearDropdown.disabled = false;
         monthYearDropdown.disabled = false;
         publisherNameDropdown.disabled = false;
         searchPublisherReport.classList.remove('hidden');
 
-        // Populate publisher list for everyone
         publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
         publisherList.forEach(pub => {
             const opt = document.createElement("option");
             opt.value = pub.id;
-            // Assuming publisher docs have firstName and lastName fields
             opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
             publisherNameDropdown.appendChild(opt);
         });
@@ -709,10 +749,8 @@
         populateServiceYears(serviceYearDropdown);
         
         if (currentUser.role === 'user') {
-            // --- LOGIC PARA SA USER ---
-            // Re-enable publisher selection for User, as requested.
-            publisherNameDropdown.disabled = false;
             searchPublisherReport.classList.remove('hidden');
+            publisherNameDropdown.disabled = false;
 
             const today = new Date();
             const currentMonth = today.getMonth(); // January is 0, December is 11
@@ -734,7 +772,6 @@
 
         } 
         
-        // Attach listeners that are common to both roles or specific to admin
         searchPublisherReportInput.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxReport.innerHTML = "";
@@ -759,7 +796,7 @@
     }
 
     function setupManagePublisherPage() {
-        clearPublisherForm(); // Start with a blank form as requested
+        clearPublisherForm();
         searchInputManage.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxManage.innerHTML = "";
@@ -880,6 +917,13 @@
         monthYearRequest.addEventListener('change', fetchReportDataForRequest);
     }
 
+    function setupUploadPage() {
+        uploadStatus.innerHTML = '<p>No file selected.</p>';
+        processUploadBtn.disabled = true;
+        excelFileInput.value = ''; // Clear any previously selected file
+        parsedExcelData = [];
+    }
+
     async function setupReviewApprovalsPage() {
         pendingRequestsList.innerHTML = '';
         noPendingRequestsLabel.classList.remove('hidden'); 
@@ -891,6 +935,12 @@
             }
 
             noPendingRequestsLabel.classList.add('hidden'); 
+            
+            // Clear previous listeners to avoid duplicates
+            const newPendingList = pendingRequestsList.cloneNode(false);
+            pendingRequestsList.parentNode.replaceChild(newPendingList, pendingRequestsList);
+            pendingRequestsList = newPendingList;
+
             snapshot.forEach(doc => {
                 const request = doc.data();
                 const requestId = doc.id;
@@ -934,7 +984,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-        // --- Publisher Management ---
+       // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -1039,7 +1089,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-        // --- Report Management ---
+       // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1226,7 +1276,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-        // --- Update/Delete Report Logic ---
+       // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1337,7 +1387,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-        // --- Submit Request Logic ---
+       // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1499,7 +1549,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-        // --- Review Approvals Logic ---
+       // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
