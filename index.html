@@ -288,7 +288,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-   <script>
+    <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -512,7 +512,7 @@
         // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
-       // --- Routing ---
+        // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -575,7 +575,7 @@
                 break;
         }
     }
-       // --- Login/Logout & Data Management ---
+        // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -687,7 +687,7 @@
             }
         }
     }
-       function setupAddReportPage() {
+        function setupAddReportPage() {
         clearAddReportForm();
         
         // Reset fields to default admin state first, then adjust for user
@@ -934,7 +934,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-       // --- Publisher Management ---
+        // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -1039,7 +1039,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-       // --- Report Management ---
+        // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1089,7 +1089,7 @@
         commentsAdd.value = "";
         lastModifiedByAdd.textContent = "";
 
-        // Role-specific clearing. User's auto-filled fields are handled by setupAddReportPage.
+        // Role-specific clearing.
         searchPublisherReportInput.value = "";
         publisherNameDropdown.value = "";
 
@@ -1226,7 +1226,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-       // --- Update/Delete Report Logic ---
+        // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1337,7 +1337,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-       // --- Submit Request Logic ---
+        // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1499,7 +1499,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-       // --- Review Approvals Logic ---
+        // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
