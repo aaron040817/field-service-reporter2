@@ -287,7 +287,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-    <script>
+   <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -490,24 +490,6 @@
         firstNameInput?.addEventListener("input", updateFullName);
         lastNameInput?.addEventListener("input", updateFullName);
         baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
-        searchInputManage?.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxManage.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach((pub) => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = "";
-                    suggestionBoxManage.innerHTML = "";
-                    currentIndex = publisherList.findIndex(p => p.id === pub.id);
-                    if (currentIndex !== -1) displayPublisher(currentIndex);
-                });
-                suggestionBoxManage.appendChild(div);
-            });
-        });
 
         // Update Report Page Buttons
         updateReportBtn?.addEventListener("click", updateReport);
@@ -529,7 +511,7 @@
         // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
-        // --- Routing ---
+       // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -592,7 +574,7 @@
                 break;
         }
     }
-        // --- Login/Logout & Data Management ---
+       // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -704,7 +686,7 @@
             }
         }
     }
-        function setupAddReportPage() {
+       function setupAddReportPage() {
         clearAddReportForm();
         
         // Reset fields to default admin state first, then adjust for user
@@ -750,18 +732,55 @@
             autofillPublisherDetails(publisherNameDropdown.value);
 
         } 
-        // Admin-specific listeners are attached globally, no need for an else block here.
-        // Common listeners for both roles
+        
+        // Attach listeners that are common to both roles or specific to admin
+        searchPublisherReportInput.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxReport.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach(pub => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = pub.fullName;
+                    suggestionBoxReport.innerHTML = "";
+                    publisherNameDropdown.value = pub.id;
+                    autofillPublisherDetails(pub.id);
+                });
+                suggestionBoxReport.appendChild(div);
+            });
+        });
+        publisherNameDropdown.addEventListener("change", () => autofillPublisherDetails(publisherNameDropdown.value));
+        serviceYearDropdown.addEventListener("change", () => populateMonths(monthYearDropdown, serviceYearDropdown.value));
         isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
     }
 
     function setupManagePublisherPage() {
         clearPublisherForm(); // Start with a blank form as requested
-        // Listeners for this page are attached in attachAllListeners
+        searchInputManage.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxManage.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach((pub) => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = "";
+                    suggestionBoxManage.innerHTML = "";
+                    currentIndex = publisherList.findIndex(p => p.id === pub.id);
+                    if (currentIndex !== -1) displayPublisher(currentIndex);
+                });
+                suggestionBoxManage.appendChild(div);
+            });
+        });
     }
 
     function setupUpdateReportPage() {
-        clearUpdateReportForm(); // Clear the form every time the page is opened
+        clearUpdateReportForm(); 
         publisherNameDropdownUpdate.innerHTML = '<option value="">-- Select Publisher --</option>';
         publisherList.forEach(pub => {
             const opt = document.createElement("option");
@@ -862,7 +881,7 @@
 
     async function setupReviewApprovalsPage() {
         pendingRequestsList.innerHTML = '';
-        noPendingRequestsLabel.classList.remove('hidden'); // Show by default, hide if requests found
+        noPendingRequestsLabel.classList.add('hidden');
         try {
             const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
             if (snapshot.empty) {
@@ -870,7 +889,7 @@
                 return;
             }
 
-            noPendingRequestsLabel.classList.add('hidden'); // Hide if requests are found
+            noPendingRequestsLabel.classList.add('hidden');
             snapshot.forEach(doc => {
                 const request = doc.data();
                 const requestId = doc.id;
@@ -897,7 +916,6 @@
                 pendingRequestsList.appendChild(requestDiv);
             });
 
-            // Use a single event listener on the parent container to handle clicks
             pendingRequestsList.addEventListener('click', async (e) => {
                 const target = e.target;
                 const requestId = target.dataset.id;
@@ -915,7 +933,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-        // --- Publisher Management ---
+       // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -1020,7 +1038,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-        // --- Report Management ---
+       // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1207,7 +1225,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-        // --- Update/Delete Report Logic ---
+       // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1318,7 +1336,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-        // --- Submit Request Logic ---
+       // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1344,7 +1362,6 @@
             if (doc.exists) {
                 const data = doc.data();
                 
-                // Dynamically create the report fields inside the 'requestFields' div
                 let fieldsHTML = `
                     <div id="auxPioneerQuestionContainerRequest" class="hidden">
                         <label for="isAuxiliaryPioneerThisMonthRequest">Is Auxiliary Pioneer this Month?</label>
@@ -1376,7 +1393,6 @@
                 `;
                 requestFields.innerHTML = fieldsHTML;
 
-                // Get references to the newly created elements
                 const dynamicElements = {
                     privilegeInput: privilege2Request,
                     auxPioneerQuestionContainer: document.getElementById('auxPioneerQuestionContainerRequest'),
@@ -1391,18 +1407,14 @@
                     auxiliaryPioneerCheckbox: document.getElementById('auxiliaryPioneerRequest')
                 };
                 
-                // Set the value for Publisher/Auxi before applying logic
                 if (privilege2Request.value === 'Publisher/Auxi') {
                     dynamicElements.isAuxiliaryPioneerThisMonth.value = data.wasAuxiliaryPioneer ? 'Yes' : 'No';
                 }
                 
-                // Apply field logic to show/hide the correct containers
                 handleReportFieldLogic(dynamicElements);
 
-                // Add listener for the dynamic aux pioneer dropdown
                 dynamicElements.isAuxiliaryPioneerThisMonth.addEventListener('change', () => handleReportFieldLogic(dynamicElements));
 
-                // Populate the now-visible fields with the original report data
                 dynamicElements.fieldHoursInput.value = data.hours || '';
                 dynamicElements.bibleStudiesInput.value = data.bibleStudies || '';
                 dynamicElements.sharedMinistryCheckbox.checked = data.sharedInMinistry || false;
@@ -1486,7 +1498,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-        // --- Review Approvals Logic ---
+       // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
