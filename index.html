@@ -662,47 +662,64 @@
 
     // --- Export to Excel ---
     async function exportToExcel() {
-        try {
-            const snapshot = await db.collection("reports").orderBy("publisherFullName", "asc").get();
-            if (snapshot.empty) {
-                alert("No reports found to export.");
-                return;
-            }
-            const reports = snapshot.docs.map(doc => doc.data());
-            const headers = [ "Publisher Name", "Service Year", "Month", "Field Service Group", "Privilege at Time of Report", "Hours", "Bible Studies", "Shared in Ministry", "Was Auxiliary Pioneer", "Comments", "Last Modified By" ];
-            let csvContent = headers.join(",") + "\n";
-            reports.forEach(report => {
-                const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
-                const row = [ 
-                    `"${report.publisherFullName || ''}"`, 
-                    `"${report.serviceYear || ''}"`, 
-                    `"${report.month || ''}"`, 
-                    `"${report.fieldServiceGroup || ''}"`, 
-                    `"${report.privilege2AtTimeOfReport || ''}"`, 
-                    report.hours || 0, 
-                    report.bibleStudies || 0, 
-                    report.sharedInMinistry ? 'Yes' : 'No', 
-                    report.wasAuxiliaryPioneer ? 'Yes' : 'No',
-                    `"${comments}"`,
-                    `"${report.lastModifiedBy || ''}"`
-                ];
-                csvContent += row.join(",") + "\n";
-            });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            const dateStr = new Date().toISOString().slice(0, 10);
-            link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (error) {
-            console.error("Error exporting to Excel:", error);
-            alert("An error occurred during export. Please check the console.");
+    try {
+        const snapshot = await db.collection("reports").orderBy("publisherFullName", "asc").get();
+        if (snapshot.empty) {
+            alert("No reports found to export.");
+            return;
         }
+
+        const reports = snapshot.docs.map(doc => doc.data());
+        
+        // Ang mga header ay mananatiling simple
+        const headers = [
+            "Publisher Name", "Service Year", "Month", "Field Service Group",
+            "Privilege at Time of Report", "Hours", "Bible Studies",
+            "Shared in Ministry", "Was Auxiliary Pioneer", "Comments", "Last Modified By"
+        ];
+        let csvContent = headers.join(",") + "\n";
+
+        reports.forEach(report => {
+            // Linisin ang comments para iwas-error
+            const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
+            
+            // --- MODIFIED: Force text format for Excel using ="VALUE" ---
+            const row = [
+                `"${report.publisherFullName || ''}"`,
+                `="
+${report.serviceYear || ''}
+"`, // Pinipilit na maging text ang taon
+                `="
+${report.month || ''}
+"`,       // Pinipilit na maging text ang buwan
+                `"${report.fieldServiceGroup || ''}"`,
+                `"${report.privilege2AtTimeOfReport || ''}"`,
+                report.hours || 0,
+                report.bibleStudies || 0,
+                report.sharedInMinistry ? 'Yes' : 'No',
+                report.wasAuxiliaryPioneer ? 'Yes' : 'No',
+                `"${comments}"`,
+                `"${report.lastModifiedBy || ''}"`
+            ];
+            csvContent += row.join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        const dateStr = new Date().toISOString().slice(0, 10);
+        link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+    } catch (error) {
+        console.error("Error exporting to Excel:", error);
+        alert("An error occurred during export. Please check the console.");
     }
+}
     
     // --- Page Setups ---
     async function updateHomePage() {
