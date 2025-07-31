@@ -287,7 +287,7 @@
         <button id="backHomeFromReviewBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromReview" class="logout-btn">Logout</button>
     </div>
-
+    
     <div id="uploadPage" class="page-container hidden">
         <h2>Upload Field Service Reports</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
@@ -302,11 +302,12 @@
         <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
     </div>
 
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-   <script>
+    <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -327,6 +328,7 @@
     let currentDocId = null;
     let currentUser = null;
     let currentReportId = null; 
+    let parsedExcelData = [];
 
     // --- Global Element References ---
     let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage;
@@ -546,7 +548,7 @@
         // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
-// --- Routing ---
+        // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -618,7 +620,7 @@
                 break;
         }
     }
-       // --- Login/Logout & Data Management ---
+        // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -730,7 +732,7 @@
             }
         }
     }
-       function setupAddReportPage() {
+        function setupAddReportPage() {
         clearAddReportForm();
         
         serviceYearDropdown.disabled = false;
@@ -770,7 +772,7 @@
             
             autofillPublisherDetails(publisherNameDropdown.value);
 
-        } 
+        }
         
         searchPublisherReportInput.addEventListener("input", function () {
             const query = this.value.toLowerCase();
@@ -916,7 +918,7 @@
         });
         monthYearRequest.addEventListener('change', fetchReportDataForRequest);
     }
-
+    
     function setupUploadPage() {
         uploadStatus.innerHTML = '<p>No file selected.</p>';
         processUploadBtn.disabled = true;
@@ -936,7 +938,6 @@
 
             noPendingRequestsLabel.classList.add('hidden'); 
             
-            // Clear previous listeners to avoid duplicates
             const newPendingList = pendingRequestsList.cloneNode(false);
             pendingRequestsList.parentNode.replaceChild(newPendingList, pendingRequestsList);
             pendingRequestsList = newPendingList;
@@ -984,7 +985,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-       // --- Publisher Management ---
+        // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -1089,7 +1090,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-       // --- Report Management ---
+        // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1276,7 +1277,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-       // --- Update/Delete Report Logic ---
+        // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1387,7 +1388,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-       // --- Submit Request Logic ---
+        // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1549,7 +1550,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-       // --- Review Approvals Logic ---
+        // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
@@ -1565,6 +1566,7 @@
 
             // Use update instead of set to only change the specified fields
             await reportRef.update(requestData.requestedChanges);
+            // Mark the request as approved
             await requestRef.update({ status: 'approved', processedBy: currentUser.email });
 
             alert("Request approved and report has been updated.");
@@ -1585,6 +1587,126 @@
         } catch (error) {
             console.error("Error rejecting request:", error);
             alert("Failed to reject request.");
+        }
+    }
+
+    // --- Upload Facility Logic ---
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
+
+        uploadStatus.innerHTML = `<p>Reading file: ${file.name}...</p>`;
+        processUploadBtn.disabled = true;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const json_data = XLSX.utils.sheet_to_json(worksheet);
+
+                if (json_data.length === 0) {
+                    uploadStatus.innerHTML = '<p style="color:red;">Error: The selected file is empty or in an incorrect format.</p>';
+                    return;
+                }
+                
+                parsedExcelData = json_data;
+                uploadStatus.innerHTML = `<p style="color:green;">Successfully read ${parsedExcelData.length} records from ${file.name}.</p><p>Click "Upload and Process" to continue.</p>`;
+                processUploadBtn.disabled = false;
+
+            } catch (error) {
+                console.error("Error reading or parsing Excel file:", error);
+                uploadStatus.innerHTML = '<p style="color:red;">Error: Failed to read or parse the file. Please ensure it is a valid Excel or CSV file.</p>';
+                parsedExcelData = [];
+            }
+        };
+        reader.onerror = (err) => {
+            console.error("FileReader error:", err);
+            uploadStatus.innerHTML = '<p style="color:red;">Error: Could not read the file.</p>';
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    async function processAndUploadRecords() {
+        if (parsedExcelData.length === 0) {
+            alert("No data to upload. Please select a valid file first.");
+            return;
+        }
+
+        processUploadBtn.disabled = true;
+        uploadStatus.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
+        const statusLog = uploadStatus.querySelector('pre');
+
+        const batch = db.batch();
+        let newRecordsCount = 0;
+        let skippedRecordsCount = 0;
+
+        for (const record of parsedExcelData) {
+            const publisherFullName = record["Publisher Name"];
+            const serviceYear = record["Service Year"];
+            const month = record["Month"];
+
+            if (!publisherFullName || !serviceYear || !month) {
+                statusLog.textContent += `Skipping row: Missing required data (Publisher Name, Service Year, or Month).\n`;
+                skippedRecordsCount++;
+                continue;
+            }
+
+            const publisher = publisherList.find(p => p.fullName === publisherFullName);
+            if (!publisher) {
+                statusLog.textContent += `Skipping record for "${publisherFullName}": Publisher not found in the database.\n`;
+                skippedRecordsCount++;
+                continue;
+            }
+
+            const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+            const reportRef = db.collection("reports").doc(reportId);
+            
+            const doc = await reportRef.get();
+            if (doc.exists) {
+                statusLog.textContent += `Skipping record for "${publisherFullName}" (${month}): Report already exists.\n`;
+                skippedRecordsCount++;
+                continue;
+            }
+            
+            const reportData = {
+                publisherId: publisher.id,
+                publisherFullName: publisher.fullName,
+                serviceYear: serviceYear,
+                month: month,
+                fieldServiceGroup: record["Field Service Group"] || publisher.fieldServiceGroup,
+                privilege2AtTimeOfReport: record["Privilege at Time of Report"] || publisher.privilege2,
+                hours: parseInt(record.Hours) || 0,
+                bibleStudies: parseInt(record["Bible Studies"]) || 0,
+                sharedInMinistry: (record["Shared in Ministry"] || '').toLowerCase() === 'yes',
+                wasAuxiliaryPioneer: (record["Was Auxiliary Pioneer"] || '').toLowerCase() === 'yes',
+                comments: record.Comments || '',
+                lastModifiedBy: currentUser.email,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            batch.set(reportRef, reportData);
+            newRecordsCount++;
+        }
+
+        try {
+            await batch.commit();
+            let summary = `Upload complete!\n\nNew Records Added: ${newRecordsCount}\nRecords Skipped: ${skippedRecordsCount}`;
+            statusLog.textContent += `\n${summary}`;
+            alert(summary);
+            processUploadBtn.disabled = true;
+            excelFileInput.value = '';
+            parsedExcelData = [];
+        } catch (error) {
+            console.error("Error committing batch upload:", error);
+            statusLog.textContent += "\nError: An error occurred while saving the records to the database.";
+            alert("An error occurred during the upload process. Please check the status log for details.");
+            processUploadBtn.disabled = false;
         }
     }
 </script>
