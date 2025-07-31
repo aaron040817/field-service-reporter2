@@ -681,15 +681,15 @@
         reports.forEach(report => {
             const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
             
-            // --- FIXED: Removed newlines from the formula and ensured correct quoting ---
+            // Ang ="VALUE" format ay nagfo-force sa Excel na i-treat ito as TEXT.
             const row = [
                 `"${report.publisherFullName || ''}"`,
-                `"=${report.serviceYear || ''}"`,       // Forces text format, no newlines
-                `"=${report.month || ''}"`,             // Forces text format, no newlines
+                `"=${report.serviceYear || ''}"`,       // Ito ay magiging TEXT sa Excel
+                `"=${report.month || ''}"`,             // Ito ay magiging TEXT sa Excel
                 `"${report.fieldServiceGroup || ''}"`,
                 `"${report.privilege2AtTimeOfReport || ''}"`,
-                report.hours || 0,                       // This will be a number
-                report.bibleStudies || 0,                // This will be a number
+                report.hours || 0,
+                report.bibleStudies || 0,
                 report.sharedInMinistry ? 'Yes' : 'No',
                 report.wasAuxiliaryPioneer ? 'Yes' : 'No',
                 `"${comments}"`,
