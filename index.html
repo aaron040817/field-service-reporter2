@@ -681,11 +681,11 @@
         reports.forEach(report => {
             const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
             
-            // --- FINAL FIX v3: Prepend an invisible Tab character (\t) to force text format ---
+            // --- FINAL FIX: Prepend an invisible "zero-width space" (\u200B) ---
             const row = [
                 `"${report.publisherFullName || ''}"`,
-                `"\t${report.serviceYear || ''}"`,       // Prepending a Tab character
-                `"\t${report.month || ''}"`,             // Prepending a Tab character
+                `"\u200B${report.serviceYear || ''}"`,   // Prepends an invisible character
+                `"\u200B${report.month || ''}"`,         // Prepends an invisible character
                 `"${report.fieldServiceGroup || ''}"`,
                 `"${report.privilege2AtTimeOfReport || ''}"`,
                 report.hours || 0,
