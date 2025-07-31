@@ -681,11 +681,11 @@
         reports.forEach(report => {
             const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
             
-            // Ang ="VALUE" format ay nagfo-force sa Excel na i-treat ito as TEXT.
+            // --- MODIFIED: Use single quote prefix to force text format for Excel ---
             const row = [
                 `"${report.publisherFullName || ''}"`,
-                `"=${report.serviceYear || ''}"`,       // Ito ay magiging TEXT sa Excel
-                `"=${report.month || ''}"`,             // Ito ay magiging TEXT sa Excel
+                `"'${report.serviceYear || ''}"`, // Prepending single quote
+                `"'${report.month || ''}"`,       // Prepending single quote
                 `"${report.fieldServiceGroup || ''}"`,
                 `"${report.privilege2AtTimeOfReport || ''}"`,
                 report.hours || 0,
