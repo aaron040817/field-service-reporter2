@@ -681,11 +681,11 @@
         reports.forEach(report => {
             const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
             
-            // --- MODIFIED: Use single quote prefix ONLY for Excel's text-forcing feature ---
+            // --- FINAL FIX: Use a formula to display the single quote as literal text ---
             const row = [
                 `"${report.publisherFullName || ''}"`,
-                `'${report.serviceYear || ''}`, // Prepends single quote. Excel will treat this as text.
-                `'${report.month || ''}`,       // Prepends single quote. Excel will treat this as text.
+                `"='${report.serviceYear || ''}"`, // Formula to display literal: '2025
+                `"='${report.month || ''}"`,       // Formula to display literal: 'June 2025
                 `"${report.fieldServiceGroup || ''}"`,
                 `"${report.privilege2AtTimeOfReport || ''}"`,
                 report.hours || 0,
@@ -701,8 +701,8 @@
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
         const dateStr = new Date().toISOString().slice(0, 10);
+        link.setAttribute("href", url);
         link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
