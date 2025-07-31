@@ -1648,16 +1648,38 @@
     let errorCount = 0;
 
     for (const record of parsedExcelData) {
-        // --- FIXED: Ensure all data from Excel are treated as strings and trimmed ---
         const publisherFullName = record["Publisher Name"]?.trim();
-        const serviceYear = String(record["Service Year"])?.trim(); // Convert to string
-        const month = record["Month"]?.trim();
+        const serviceYear = String(record["Service Year"])?.trim();
+        let monthValue = record["Month"];
 
-        if (!publisherFullName || !serviceYear || !month) {
+        if (!publisherFullName || !serviceYear || !monthValue) {
             statusLog.textContent += `Skipping row: Missing required data (Publisher Name, Service Year, or Month).\n`;
             skippedRecordsCount++;
             continue;
         }
+
+        // --- NEW LOGIC: Standardize the Month format ---
+        let formattedMonth;
+        // Check if Excel might have turned it into a number (serial date)
+        if (typeof monthValue === 'number') {
+            // This converts Excel's serial date number to a JS Date object
+            const jsDate = new Date(Math.round((monthValue - 25569) * 86400 * 1000));
+            const monthName = jsDate.toLocaleString('en-US', { month: 'long' });
+            const year = jsDate.getFullYear();
+            formattedMonth = `${monthName} ${year}`;
+        } else {
+            // If it's a string like "7/25/2025" or "July 2025", this handles it
+            const parsedDate = new Date(monthValue);
+            if (parsedDate.toString() !== 'Invalid Date') {
+                const monthName = parsedDate.toLocaleString('en-US', { month: 'long' });
+                const year = parsedDate.getFullYear();
+                formattedMonth = `${monthName} ${year}`;
+            } else {
+                formattedMonth = String(monthValue).trim(); // Use as is if it's not a recognizable date
+            }
+        }
+        // --- END OF NEW LOGIC ---
+
 
         const publisher = publisherList.find(p => p.fullName === publisherFullName);
         if (!publisher) {
@@ -1666,13 +1688,13 @@
             continue;
         }
 
-        const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const reportId = `${publisher.id}_${serviceYear}_${formattedMonth.replace(/\s+/g, '-')}`;
         const reportRef = db.collection("reports").doc(reportId);
         
         try {
             const doc = await reportRef.get();
             if (doc.exists) {
-                statusLog.textContent += `Skipping record for "${publisherFullName}" (${month}): Report already exists.\n`;
+                statusLog.textContent += `Skipping record for "${publisherFullName}" (${formattedMonth}): Report already exists.\n`;
                 skippedRecordsCount++;
                 continue;
             }
@@ -1681,7 +1703,7 @@
                 publisherId: publisher.id,
                 publisherFullName: publisher.fullName,
                 serviceYear: serviceYear,
-                month: month,
+                month: formattedMonth, // Use the standardized month format
                 fieldServiceGroup: record["Field Service Group"] || publisher.fieldServiceGroup,
                 privilege2AtTimeOfReport: record["Privilege at Time of Report"] || publisher.privilege2,
                 hours: parseInt(record.Hours) || 0,
