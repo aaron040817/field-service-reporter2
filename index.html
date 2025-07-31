@@ -661,7 +661,7 @@
     }
 
     // --- Export to Excel ---
-    async function exportToExcel() {
+   async function exportToExcel() {
     try {
         const snapshot = await db.collection("reports").orderBy("publisherFullName", "asc").get();
         if (snapshot.empty) {
@@ -681,11 +681,11 @@
         reports.forEach(report => {
             const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
             
-            // --- FINAL FIX: Use a formula to display the single quote as literal text ---
+            // --- FINAL FIX v3: Prepend an invisible Tab character (\t) to force text format ---
             const row = [
                 `"${report.publisherFullName || ''}"`,
-                `"='${report.serviceYear || ''}"`, // Formula to display literal: '2025
-                `"='${report.month || ''}"`,       // Formula to display literal: 'June 2025
+                `"\t${report.serviceYear || ''}"`,       // Prepending a Tab character
+                `"\t${report.month || ''}"`,             // Prepending a Tab character
                 `"${report.fieldServiceGroup || ''}"`,
                 `"${report.privilege2AtTimeOfReport || ''}"`,
                 report.hours || 0,
