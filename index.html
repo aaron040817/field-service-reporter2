@@ -1633,40 +1633,43 @@
     }
 
     async function processAndUploadRecords() {
-        if (parsedExcelData.length === 0) {
-            alert("No data to upload. Please select a valid file first.");
-            return;
+    if (parsedExcelData.length === 0) {
+        alert("No data to upload. Please select a valid file first.");
+        return;
+    }
+
+    processUploadBtn.disabled = true;
+    uploadStatus.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
+    const statusLog = uploadStatus.querySelector('pre');
+
+    const batch = db.batch();
+    let newRecordsCount = 0;
+    let skippedRecordsCount = 0;
+    let errorCount = 0;
+
+    for (const record of parsedExcelData) {
+        // --- FIXED: Ensure all data from Excel are treated as strings and trimmed ---
+        const publisherFullName = record["Publisher Name"]?.trim();
+        const serviceYear = String(record["Service Year"])?.trim(); // Convert to string
+        const month = record["Month"]?.trim();
+
+        if (!publisherFullName || !serviceYear || !month) {
+            statusLog.textContent += `Skipping row: Missing required data (Publisher Name, Service Year, or Month).\n`;
+            skippedRecordsCount++;
+            continue;
         }
 
-        processUploadBtn.disabled = true;
-        uploadStatus.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
-        const statusLog = uploadStatus.querySelector('pre');
+        const publisher = publisherList.find(p => p.fullName === publisherFullName);
+        if (!publisher) {
+            statusLog.textContent += `Skipping record for "${publisherFullName}": Publisher not found in the database.\n`;
+            skippedRecordsCount++;
+            continue;
+        }
 
-        const batch = db.batch();
-        let newRecordsCount = 0;
-        let skippedRecordsCount = 0;
-
-        for (const record of parsedExcelData) {
-            const publisherFullName = record["Publisher Name"];
-            const serviceYear = record["Service Year"];
-            const month = record["Month"];
-
-            if (!publisherFullName || !serviceYear || !month) {
-                statusLog.textContent += `Skipping row: Missing required data (Publisher Name, Service Year, or Month).\n`;
-                skippedRecordsCount++;
-                continue;
-            }
-
-            const publisher = publisherList.find(p => p.fullName === publisherFullName);
-            if (!publisher) {
-                statusLog.textContent += `Skipping record for "${publisherFullName}": Publisher not found in the database.\n`;
-                skippedRecordsCount++;
-                continue;
-            }
-
-            const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-            const reportRef = db.collection("reports").doc(reportId);
-            
+        const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const reportRef = db.collection("reports").doc(reportId);
+        
+        try {
             const doc = await reportRef.get();
             if (doc.exists) {
                 statusLog.textContent += `Skipping record for "${publisherFullName}" (${month}): Report already exists.\n`;
@@ -1683,8 +1686,8 @@
                 privilege2AtTimeOfReport: record["Privilege at Time of Report"] || publisher.privilege2,
                 hours: parseInt(record.Hours) || 0,
                 bibleStudies: parseInt(record["Bible Studies"]) || 0,
-                sharedInMinistry: (record["Shared in Ministry"] || '').toLowerCase() === 'yes',
-                wasAuxiliaryPioneer: (record["Was Auxiliary Pioneer"] || '').toLowerCase() === 'yes',
+                sharedInMinistry: String(record["Shared in Ministry"] || '').toLowerCase() === 'yes',
+                wasAuxiliaryPioneer: String(record["Was Auxiliary Pioneer"] || '').toLowerCase() === 'yes',
                 comments: record.Comments || '',
                 lastModifiedBy: currentUser.email,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -1692,23 +1695,33 @@
             
             batch.set(reportRef, reportData);
             newRecordsCount++;
-        }
 
-        try {
-            await batch.commit();
-            let summary = `Upload complete!\n\nNew Records Added: ${newRecordsCount}\nRecords Skipped: ${skippedRecordsCount}`;
-            statusLog.textContent += `\n${summary}`;
-            alert(summary);
-            processUploadBtn.disabled = true;
-            excelFileInput.value = '';
-            parsedExcelData = [];
         } catch (error) {
-            console.error("Error committing batch upload:", error);
-            statusLog.textContent += "\nError: An error occurred while saving the records to the database.";
-            alert("An error occurred during the upload process. Please check the status log for details.");
-            processUploadBtn.disabled = false;
+             console.error("Error processing record for " + publisherFullName, error);
+             statusLog.textContent += `Error processing record for "${publisherFullName}". Skipping.\n`;
+             errorCount++;
         }
     }
+
+    try {
+        await batch.commit();
+        let summary = `Upload complete!\n\n` +
+                      `New Records Added: ${newRecordsCount}\n` +
+                      `Records Skipped: ${skippedRecordsCount}\n` +
+                      `Errors: ${errorCount}`;
+
+        statusLog.textContent += `\n${summary}`;
+        alert(summary);
+        processUploadBtn.disabled = true;
+        excelFileInput.value = '';
+        parsedExcelData = [];
+    } catch (error) {
+        console.error("Error committing batch upload:", error);
+        statusLog.textContent += "\nFATAL ERROR: An error occurred while saving the records to the database.";
+        alert("A fatal error occurred during the upload process. Please check the status log for details.");
+        processUploadBtn.disabled = false;
+    }
+}
 </script>
 </body>
 </html>
