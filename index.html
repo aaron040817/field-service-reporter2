@@ -681,11 +681,11 @@
         reports.forEach(report => {
             const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
             
-            // --- MODIFIED: Use single quote prefix to force text format for Excel ---
+            // --- MODIFIED: Use single quote prefix ONLY for Excel's text-forcing feature ---
             const row = [
                 `"${report.publisherFullName || ''}"`,
-                `"'${report.serviceYear || ''}"`, // Prepending single quote
-                `"'${report.month || ''}"`,       // Prepending single quote
+                `'${report.serviceYear || ''}`, // Prepends single quote. Excel will treat this as text.
+                `'${report.month || ''}`,       // Prepends single quote. Excel will treat this as text.
                 `"${report.fieldServiceGroup || ''}"`,
                 `"${report.privilege2AtTimeOfReport || ''}"`,
                 report.hours || 0,
