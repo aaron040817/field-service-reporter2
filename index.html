@@ -671,7 +671,6 @@
 
         const reports = snapshot.docs.map(doc => doc.data());
         
-        // Ang mga header ay mananatiling simple
         const headers = [
             "Publisher Name", "Service Year", "Month", "Field Service Group",
             "Privilege at Time of Report", "Hours", "Bible Studies",
@@ -680,22 +679,17 @@
         let csvContent = headers.join(",") + "\n";
 
         reports.forEach(report => {
-            // Linisin ang comments para iwas-error
             const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
             
-            // --- MODIFIED: Force text format for Excel using ="VALUE" ---
+            // --- FIXED: Removed newlines from the formula and ensured correct quoting ---
             const row = [
                 `"${report.publisherFullName || ''}"`,
-                `="
-${report.serviceYear || ''}
-"`, // Pinipilit na maging text ang taon
-                `="
-${report.month || ''}
-"`,       // Pinipilit na maging text ang buwan
+                `"=${report.serviceYear || ''}"`,       // Forces text format, no newlines
+                `"=${report.month || ''}"`,             // Forces text format, no newlines
                 `"${report.fieldServiceGroup || ''}"`,
                 `"${report.privilege2AtTimeOfReport || ''}"`,
-                report.hours || 0,
-                report.bibleStudies || 0,
+                report.hours || 0,                       // This will be a number
+                report.bibleStudies || 0,                // This will be a number
                 report.sharedInMinistry ? 'Yes' : 'No',
                 report.wasAuxiliaryPioneer ? 'Yes' : 'No',
                 `"${comments}"`,
