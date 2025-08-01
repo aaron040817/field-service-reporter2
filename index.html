@@ -288,7 +288,7 @@
         <button id="backHomeFromReviewBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromReview" class="logout-btn">Logout</button>
     </div>
-    
+
     <div id="uploadPage" class="page-container hidden">
         <h2>Upload Field Service Reports</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
@@ -322,7 +322,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-   <script>
+    <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -382,7 +382,6 @@
                 const userDoc = await db.collection("users").doc(user.uid).get();
                 if (userDoc.exists) {
                     currentUser = { uid: user.uid, email: user.email, role: userDoc.data().role };
-                    localStorage.setItem('userRole', currentUser.role); 
                 } else {
                     console.error("User document not found in Firestore. Signing out.");
                     await auth.signOut();
@@ -392,7 +391,6 @@
                 handleRouteChange();
             } else {
                 currentUser = null;
-                localStorage.removeItem('userRole');
                 publisherList = [];
                 handleRouteChange();
             }
@@ -509,12 +507,11 @@
         backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
         logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
     }
-
-    function attachAllListeners() {
+        function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
         
-        // Home Page Buttons
+        // --- Home Page Buttons ---
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage', '/manage-publisher'));
         document.getElementById("addReportBtnAdmin")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
@@ -526,13 +523,13 @@
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
 
-        // Add Report Page Buttons
+        // --- Add Report Page ---
         document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
         document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
         document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromReport?.addEventListener("click", logout);
 
-        // Manage Publisher Buttons & Fields
+        // --- Manage Publisher Page ---
         addPublisherBtn?.addEventListener("click", addPublisher);
         updatePublisherBtn?.addEventListener("click", updatePublisher);
         deletePublisherBtn?.addEventListener("click", deletePublisher);
@@ -545,41 +542,41 @@
         lastNameInput?.addEventListener("input", updateFullName);
         baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
 
-        // Update Report Page Buttons
+        // --- Update Report Page ---
         updateReportBtn?.addEventListener("click", updateReport);
         deleteReportBtn?.addEventListener("click", deleteReport);
         clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
         backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromUpdate?.addEventListener("click", logout);
 
-        // Submit Request Page Buttons
+        // --- Submit Request Page ---
         submitRequestApprovalBtn?.addEventListener('click', submitRequestForApproval);
         clearRequestFormBtn?.addEventListener('click', clearSubmitRequestForm);
         backHomeFromRequestBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromRequest?.addEventListener('click', logout);
 
-        // Review Approvals Page Buttons
+        // --- Review Approvals Page ---
         document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage', '/home'));
         document.getElementById("logoutBtnFromReview")?.addEventListener("click", logout);
         
-        // Upload Reports Page Listeners
+        // --- Upload Reports Page ---
         selectFileBtn?.addEventListener('click', () => excelFileInput.click());
         excelFileInput?.addEventListener('change', handleFileSelect);
         processUploadBtn?.addEventListener('click', processAndUploadRecords);
         backHomeFromUploadBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromUpload?.addEventListener('click', logout);
 
-        // Upload Publishers Page Listeners
+        // --- Upload Publishers Page ---
         selectFileBtnPublishers?.addEventListener('click', () => excelFileInputPublishers.click());
         excelFileInputPublishers?.addEventListener('change', handlePublisherFileSelect);
         processUploadBtnPublishers?.addEventListener('click', processAndUploadPublishers);
         backHomeFromUploadPublishersBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromUploadPublishers?.addEventListener('click', logout);
         
-        // Routing
+        // --- Routing ---
         window.addEventListener('popstate', handleRouteChange);
     }
-       // --- Routing ---
+        // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -660,7 +657,7 @@
                 break;
         }
     }
-       // --- Login/Logout & Data Management ---
+        // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -772,16 +769,15 @@
             }
         }
     }
-       function setupAddReportPage() {
+
+        function setupAddReportPage() {
         clearAddReportForm();
         
-        // Reset fields to default admin state first, then adjust for user
         serviceYearDropdown.disabled = false;
         monthYearDropdown.disabled = false;
         publisherNameDropdown.disabled = false;
         searchPublisherReport.classList.remove('hidden');
 
-        // Populate publisher list for everyone
         publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
         publisherList.forEach(pub => {
             const opt = document.createElement("option");
@@ -793,7 +789,6 @@
         populateServiceYears(serviceYearDropdown);
         
         if (currentUser.role === 'user') {
-            // --- LOGIC PARA SA USER ---
             // Re-enable publisher selection for User, as requested.
             publisherNameDropdown.disabled = false;
             searchPublisherReport.classList.remove('hidden');
@@ -1037,112 +1032,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-       // --- Publisher Management ---
-    async function loadPublishers() {
-        try {
-            const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
-            publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) { console.error("Error loading publishers:", error); }
-    }
-    function updateFullName() { 
-        if (!firstNameInput || !lastNameInput || !fullNameInput) return;
-        fullNameInput.value = (lastNameInput.value.trim() && firstNameInput.value.trim()) ? `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}` : ""; 
-    }
-    function toggleBaptismDate() { 
-        if (!baptismStatusDropdown || !baptismDateContainer || !baptismDateInput) return;
-        baptismDateContainer.classList.toggle("hidden", baptismStatusDropdown.value !== "Baptized"); 
-        if (baptismStatusDropdown.value !== "Baptized") baptismDateInput.value = ""; 
-    }
-    async function addPublisher() {
-        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before adding."); return;
-        }
-        const docId = `${lastNameInput.value.trim()}_${firstNameInput.value.trim()}_${birthdateInput.value}`.replace(/\s+/g, "_");
-        try {
-            const existingDoc = await db.collection("publishers").doc(docId).get();
-            if (existingDoc.exists) { alert("A publisher with the same last name, first name, and birthdate already exists."); return; }
-            const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
-            await db.collection("publishers").doc(docId).set({
-                firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert("Publisher record successfully added!");
-            await loadPublishers();
-            clearPublisherForm();
-        } catch (error) { console.error("Error adding publisher:", error); alert("Failed to add publisher record."); }
-    }
-    async function updatePublisher() {
-        if (!currentDocId) { alert("Please select a publisher to update."); return; }
-        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before updating."); return;
-        }
-        const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
-        const updatedData = {
-            firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        try {
-            await db.collection("publishers").doc(currentDocId).update(updatedData);
-            alert("Publisher record updated successfully!");
-            await loadPublishers();
-            clearPublisherForm();
-        } catch (error) { console.error("Error updating publisher:", error); alert("Failed to update publisher record."); }
-    }
-    async function deletePublisher() {
-        if (!currentDocId) { alert("Please select a publisher to delete."); return; }
-        if (!confirm("Are you sure you want to permanently delete this publisher record? This action cannot be undone.")) return;
-        try {
-            await db.collection("publishers").doc(currentDocId).delete();
-            alert("Publisher record deleted successfully!");
-            await loadPublishers();
-            clearPublisherForm();
-        } catch (error) { console.error("Error deleting publisher:", error); alert("Failed to delete publisher record."); }
-    }
-    function previousPublisher() { 
-        if (publisherList.length === 0) return;
-        if (currentIndex > 0) { 
-            currentIndex--; 
-            displayPublisher(currentIndex); 
-        } else { 
-            alert("This is the first record."); 
-        } 
-    }
-    function nextPublisher() { 
-        if (publisherList.length === 0) return;
-        if (currentIndex < publisherList.length - 1) { 
-            currentIndex++; 
-            displayPublisher(currentIndex); 
-        } else { 
-            alert("This is the last record."); 
-        } 
-    }
-    function clearPublisherForm() {
-        const inputs = [firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismDateInput, searchInputManage];
-        const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown];
-        inputs.forEach(i => i && (i.value = ''));
-        selects.forEach(s => s && (s.value = ''));
-        baptismDateContainer?.classList.add("hidden");
-        suggestionBoxManage && (suggestionBoxManage.innerHTML = "");
-        currentIndex = -1;
-        currentDocId = null;
-    }
-    function displayPublisher(index) {
-        const pub = publisherList[index];
-        if (!pub) { clearPublisherForm(); return; }
-        currentIndex = index;
-        currentDocId = pub.id;
-        firstNameInput.value = pub.firstName || "";
-        lastNameInput.value = pub.lastName || "";
-        fullNameInput.value = pub.fullName || "";
-        birthdateInput.value = pub.birthdate || "";
-        baptismStatusDropdown.value = pub.baptismStatus || "";
-        toggleBaptismDate();
-        if (pub.baptismStatus === "Baptized") { baptismDateInput.value = pub.baptismDate || ""; }
-        genderDropdown.value = pub.gender || "";
-        hopeDropdown.value = pub.hope || "";
-        privilegeDropdown.value = pub.privilege || "";
-        privilege2Dropdown.value = pub.privilege2 || "";
-        fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
-    }
-       // --- Report Management ---
+        // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1329,7 +1219,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-       // --- Update/Delete Report Logic ---
+        // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1440,7 +1330,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-       // --- Submit Request Logic ---
+        // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1602,7 +1492,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-       // --- Review Approvals Logic ---
+        // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
