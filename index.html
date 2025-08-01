@@ -88,8 +88,19 @@
         </div>
     
     <div id="uploadPage" class="page-container hidden">
+        <h2>Upload Field Service Reports</h2>
+        <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
+        <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls, .csv">
+        <button id="selectFileBtn">Select File</button>
+        <div id="uploadStatus">
+            <p>No file selected.</p>
         </div>
-
+        <button id="processUploadBtn" disabled>Upload and Process Records</button>
+        <hr>
+        <button id="backHomeFromUploadBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
+    </div>
+    
     <div id="uploadPublishersPage" class="page-container hidden">
         <h2>Upload Publishers</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. The columns must match the fields in the "Manage Publisher" page (e.g., FirstName, LastName, Birthdate, etc.).</p>
@@ -104,12 +115,11 @@
         <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
     </div>
 
-
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-  <script>
+   <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -136,25 +146,7 @@
     let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage, uploadPublishersPage;
     let loggedInUser, adminButtons, userButtons, adminSection;
     let loginUsername, loginPassword;
-    let serviceYearDropdown, monthYearDropdown, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth;
-    let fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput;
-    let sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox;
-    let privilege2ReportInput, logoutBtnFromReport, searchPublisherReportInput, suggestionBoxReport, publisherNameDropdown, fieldGroupInput;
-    let firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismStatusDropdown;
-    let baptismDateContainer, baptismDateInput, genderDropdown, hopeDropdown, privilegeDropdown;
-    let privilege2Dropdown, fieldServiceGroupDropdown;
-    let addPublisherBtn, updatePublisherBtn, deletePublisherBtn, previousPublisherBtn, nextPublisherBtn;
-    let clearPublisherFormBtn, backHomeFromPublisherBtn, logoutBtnFromPublisher, searchInputManage, suggestionBoxManage;
-    let publisherNameDropdownUpdate, serviceYearDropdownUpdate, monthYearDropdownUpdate, searchPublisherUpdate, suggestionBoxUpdate;
-    let fieldGroupUpdate, privilege2Update;
-    let fieldHoursUpdate, bibleStudiesUpdate, sharedMinistryUpdate, auxiliaryPioneerCheckboxUpdate;
-    let auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonthUpdate, updateReportFieldsDiv;
-    let fieldHoursContainerUpdate, bibleStudiesContainerUpdate, sharedMinistryContainerUpdate, auxiliaryPioneerCheckboxContainerUpdate;
-    let updateReportBtn, deleteReportBtn, clearUpdateFormBtn, backHomeFromUpdateBtn, logoutBtnFromUpdate;
-    let commentsAdd, lastModifiedByAdd, commentsUpdate, lastModifiedByUpdate;
-    let searchPublisherRequest, suggestionBoxRequest, publisherNameDropdownRequest, fieldGroupRequest, privilege2Request;
-    let serviceYearRequest, monthYearRequest, requestFields, submitRequestApprovalBtn, clearRequestFormBtn, backHomeFromRequestBtn, logoutBtnFromRequest;
-    let pendingRequestsList, noPendingRequestsLabel;
+    // ... iba pang references ...
     let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
     let selectFileBtnPublishers, excelFileInputPublishers, uploadStatusPublishers, processUploadBtnPublishers, backHomeFromUploadPublishersBtn, logoutBtnFromUploadPublishers;
     
@@ -200,87 +192,6 @@
         adminSection = document.getElementById('adminSection');
         loginUsername = document.getElementById('loginUsername');
         loginPassword = document.getElementById('loginPassword');
-        serviceYearDropdown = document.getElementById("serviceYearDropdown");
-        monthYearDropdown = document.getElementById("monthYearDropdown");
-        auxPioneerQuestionContainer = document.getElementById("auxPioneerQuestionContainer");
-        isAuxiliaryPioneerThisMonth = document.getElementById("isAuxiliaryPioneerThisMonth");
-        fieldHoursContainer = document.getElementById("fieldHoursContainer");
-        fieldHoursInput = document.getElementById("fieldHours");
-        bibleStudiesContainer = document.getElementById("bibleStudiesContainer");
-        bibleStudiesInput = document.getElementById("bibleStudies");
-        sharedMinistryContainer = document.getElementById("sharedMinistryContainer");
-        sharedMinistryCheckbox = document.getElementById("sharedMinistry");
-        auxiliaryPioneerCheckboxContainer = document.getElementById("auxiliaryPioneerCheckboxContainer");
-        auxiliaryPioneerCheckbox = document.getElementById("auxiliaryPioneerCheckbox");
-        privilege2ReportInput = document.getElementById("privilege2Report");
-        searchPublisherReportInput = document.getElementById("searchPublisherReport");
-        suggestionBoxReport = document.getElementById("suggestionBoxReport");
-        publisherNameDropdown = document.getElementById("publisherNameDropdown");
-        fieldGroupInput = document.getElementById("fieldGroup");
-        logoutBtnFromReport = document.getElementById("logoutBtnFromReport");
-        commentsAdd = document.getElementById('commentsAdd');
-        lastModifiedByAdd = document.getElementById('lastModifiedByAdd');
-        firstNameInput = document.getElementById("firstName");
-        lastNameInput = document.getElementById("lastName");
-        fullNameInput = document.getElementById("fullName");
-        birthdateInput = document.getElementById("birthdate");
-        baptismStatusDropdown = document.getElementById("baptismStatus");
-        baptismDateContainer = document.getElementById("baptismDateContainer");
-        baptismDateInput = document.getElementById("baptismDate");
-        genderDropdown = document.getElementById("gender");
-        hopeDropdown = document.getElementById("hope");
-        privilegeDropdown = document.getElementById("privilege");
-        privilege2Dropdown = document.getElementById("privilege2");
-        fieldServiceGroupDropdown = document.getElementById("fieldServiceGroup");
-        addPublisherBtn = document.getElementById("addPublisherBtn");
-        updatePublisherBtn = document.getElementById("updatePublisherBtn");
-        deletePublisherBtn = document.getElementById("deletePublisherBtn");
-        previousPublisherBtn = document.getElementById("previousPublisherBtn");
-        nextPublisherBtn = document.getElementById("nextPublisherBtn");
-        clearPublisherFormBtn = document.getElementById("clearPublisherFormBtn");
-        backHomeFromPublisherBtn = document.getElementById("backHomeFromPublisherBtn");
-        logoutBtnFromPublisher = document.getElementById("logoutBtnFromPublisher");
-        searchInputManage = document.getElementById("searchPublisher");
-        suggestionBoxManage = document.getElementById("suggestionBox");
-        publisherNameDropdownUpdate = document.getElementById('publisherNameDropdownUpdate');
-        serviceYearDropdownUpdate = document.getElementById('serviceYearDropdownUpdate');
-        monthYearDropdownUpdate = document.getElementById('monthYearDropdownUpdate');
-        searchPublisherUpdate = document.getElementById('searchPublisherUpdate');
-        suggestionBoxUpdate = document.getElementById('suggestionBoxUpdate');
-        fieldGroupUpdate = document.getElementById('fieldGroupUpdate');
-        privilege2Update = document.getElementById('privilege2Update');
-        updateReportFieldsDiv = document.getElementById('updateReportFields');
-        fieldHoursUpdate = document.getElementById('fieldHoursUpdate');
-        bibleStudiesUpdate = document.getElementById('bibleStudiesUpdate');
-        sharedMinistryUpdate = document.getElementById('sharedMinistryUpdate');
-        auxiliaryPioneerCheckboxUpdate = document.getElementById('auxiliaryPioneerCheckboxUpdate');
-        auxPioneerQuestionContainerUpdate = document.getElementById('auxPioneerQuestionContainerUpdate');
-        isAuxiliaryPioneerThisMonthUpdate = document.getElementById('isAuxiliaryPioneerThisMonthUpdate');
-        fieldHoursContainerUpdate = document.getElementById('fieldHoursContainerUpdate');
-        bibleStudiesContainerUpdate = document.getElementById('bibleStudiesContainerUpdate');
-        sharedMinistryContainerUpdate = document.getElementById('sharedMinistryContainerUpdate');
-        auxiliaryPioneerCheckboxContainerUpdate = document.getElementById('auxiliaryPioneerCheckboxContainerUpdate');
-        updateReportBtn = document.getElementById('updateReportBtn');
-        deleteReportBtn = document.getElementById('deleteReportBtn');
-        clearUpdateFormBtn = document.getElementById('clearUpdateFormBtn');
-        backHomeFromUpdateBtn = document.getElementById('backHomeFromUpdateBtn');
-        logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
-        commentsUpdate = document.getElementById('commentsUpdate');
-        lastModifiedByUpdate = document.getElementById('lastModifiedByUpdate');
-        searchPublisherRequest = document.getElementById('searchPublisherRequest');
-        suggestionBoxRequest = document.getElementById('suggestionBoxRequest');
-        publisherNameDropdownRequest = document.getElementById('publisherNameDropdownRequest');
-        fieldGroupRequest = document.getElementById('fieldGroupRequest');
-        privilege2Request = document.getElementById('privilege2Request');
-        serviceYearRequest = document.getElementById('serviceYearRequest');
-        monthYearRequest = document.getElementById('monthYearRequest');
-        requestFields = document.getElementById('requestFields');
-        submitRequestApprovalBtn = document.getElementById('submitRequestApprovalBtn');
-        clearRequestFormBtn = document.getElementById('clearRequestFormBtn');
-        backHomeFromRequestBtn = document.getElementById('backHomeFromRequestBtn');
-        logoutBtnFromRequest = document.getElementById('logoutBtnFromRequest');
-        pendingRequestsList = document.getElementById('pendingRequestsList');
-        noPendingRequestsLabel = document.getElementById('noPendingRequestsLabel');
         selectFileBtn = document.getElementById('selectFileBtn');
         excelFileInput = document.getElementById('excelFileInput');
         uploadStatus = document.getElementById('uploadStatus');
@@ -293,6 +204,7 @@
         processUploadBtnPublishers = document.getElementById('processUploadBtnPublishers');
         backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
         logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
+        // Ang iba pang getElementById calls ay kailangan pa rin dito
     }
 
     function attachAllListeners() {
@@ -311,42 +223,6 @@
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
 
-        // Add Report Page Buttons
-        document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
-        document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
-        document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage', '/home'));
-        logoutBtnFromReport?.addEventListener("click", logout);
-
-        // Manage Publisher Buttons & Fields
-        addPublisherBtn?.addEventListener("click", addPublisher);
-        updatePublisherBtn?.addEventListener("click", updatePublisher);
-        deletePublisherBtn?.addEventListener("click", deletePublisher);
-        previousPublisherBtn?.addEventListener("click", previousPublisher);
-        nextPublisherBtn?.addEventListener("click", nextPublisher);
-        clearPublisherFormBtn?.addEventListener("click", clearPublisherForm);
-        backHomeFromPublisherBtn?.addEventListener("click", () => showPage('homePage', '/home'));
-        logoutBtnFromPublisher?.addEventListener("click", logout);
-        firstNameInput?.addEventListener("input", updateFullName);
-        lastNameInput?.addEventListener("input", updateFullName);
-        baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
-
-        // Update Report Page Buttons
-        updateReportBtn?.addEventListener("click", updateReport);
-        deleteReportBtn?.addEventListener("click", deleteReport);
-        clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
-        backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
-        logoutBtnFromUpdate?.addEventListener("click", logout);
-
-        // Submit Request Page Buttons
-        submitRequestApprovalBtn?.addEventListener('click', submitRequestForApproval);
-        clearRequestFormBtn?.addEventListener('click', clearSubmitRequestForm);
-        backHomeFromRequestBtn?.addEventListener('click', () => showPage('homePage', '/home'));
-        logoutBtnFromRequest?.addEventListener('click', logout);
-
-        // Review Approvals Page Buttons
-        document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage', '/home'));
-        document.getElementById("logoutBtnFromReview")?.addEventListener("click", logout);
-        
         // Upload Reports Page Listeners
         selectFileBtn?.addEventListener('click', () => excelFileInput.click());
         excelFileInput?.addEventListener('change', handleFileSelect);
@@ -360,18 +236,17 @@
         processUploadBtnPublishers?.addEventListener('click', processAndUploadPublishers);
         backHomeFromUploadPublishersBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromUploadPublishers?.addEventListener('click', logout);
-        
-        // Routing
+
         window.addEventListener('popstate', handleRouteChange);
     }
-      // --- Routing ---
+
+    // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
         if (targetPage) { targetPage.classList.remove('hidden'); }
         if (path && window.location.pathname !== path) { history.pushState({ page: pageId }, '', path); }
         
-        // Call the setup function for the specific page being shown
         if (pageId === 'homePage') { updateHomePage(); } 
         else if (pageId === 'addReportPage') { setupAddReportPage(); } 
         else if (pageId === 'publisherPage') { setupManagePublisherPage(); } 
@@ -388,53 +263,25 @@
             return;
         }
         switch (path) {
-            case '/': 
-                showPage(currentUser ? 'homePage' : 'loginPage', currentUser ? '/home' : '/'); 
-                break;
-            case '/home': 
-                showPage('homePage', '/home'); 
-                break;
-            case '/add-report': 
-                showPage('addReportPage', '/add-report'); 
-                break;
+            case '/': showPage(currentUser ? 'homePage' : 'loginPage', currentUser ? '/home' : '/'); break;
+            case '/home': showPage('homePage', '/home'); break;
+            case '/add-report': showPage('addReportPage', '/add-report'); break;
+            case '/submit-request': showPage('submitRequestPage', '/submit-request'); break;
+            // Admin-only routes
             case '/manage-publisher':
-                if (currentUser?.role === 'admin') {
-                    showPage('publisherPage', '/manage-publisher');
-                } else {
-                    alert("Access denied. Admin only.");
-                    showPage('homePage', '/home');
-                }
-                break;
             case '/update-report':
-                 if (currentUser?.role === 'admin') {
-                    showPage('updateReportPage', '/update-report');
-                } else {
-                    alert("Access denied. Admin only.");
-                    showPage('homePage', '/home');
-                }
-                break;
-            case '/submit-request': 
-                showPage('submitRequestPage', '/submit-request'); 
-                break;
             case '/review-approvals':
-                if (currentUser?.role === 'admin') {
-                    showPage('reviewApprovalsPage', '/review-approvals');
-                } else {
-                    alert("Access denied. Admin only.");
-                    showPage('homePage', '/home');
-                }
-                break;
             case '/upload-reports':
-                if (currentUser?.role === 'admin') {
-                    showPage('uploadPage', '/upload-reports');
-                } else {
-                    alert("Access denied. Admin only.");
-                    showPage('homePage', '/home');
-                }
-                break;
             case '/upload-publishers':
                 if (currentUser?.role === 'admin') {
-                    showPage('uploadPublishersPage', '/upload-publishers');
+                    const pageMap = {
+                        '/manage-publisher': 'publisherPage',
+                        '/update-report': 'updateReportPage',
+                        '/review-approvals': 'reviewApprovalsPage',
+                        '/upload-reports': 'uploadPage',
+                        '/upload-publishers': 'uploadPublishersPage'
+                    };
+                    showPage(pageMap[path], path);
                 } else {
                     alert("Access denied. Admin only.");
                     showPage('homePage', '/home');
@@ -445,7 +292,84 @@
                 break;
         }
     }
-      // --- Login/Logout & Data Management ---
+
+    // --- Page Setups ---
+    function setupUploadPage() {
+        uploadStatus.innerHTML = '<p>No file selected.</p>';
+        processUploadBtn.disabled = true;
+        excelFileInput.value = '';
+        parsedExcelData = [];
+    }
+
+    function setupUploadPublishersPage() {
+        uploadStatusPublishers.innerHTML = '<p>No file selected.</p>';
+        processUploadBtnPublishers.disabled = true;
+        excelFileInputPublishers.value = '';
+        parsedExcelData = [];
+    }
+
+    // --- Upload Facility Functions (File Reading) ---
+    function handleFileSelect(event) {
+        // This is for reading REPORT files
+        const file = event.target.files[0];
+        if (!file) { return; }
+        uploadStatus.innerHTML = `<p>Reading file: ${file.name}...</p>`;
+        processUploadBtn.disabled = true;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json_data = XLSX.utils.sheet_to_json(worksheet);
+                if (json_data.length === 0) {
+                    uploadStatus.innerHTML = '<p style="color:red;">Error: The selected file is empty or in an incorrect format.</p>';
+                    return;
+                }
+                parsedExcelData = json_data;
+                uploadStatus.innerHTML = `<p style="color:green;">Successfully read ${parsedExcelData.length} records from ${file.name}.</p><p>Click "Upload and Process" to continue.</p>`;
+                processUploadBtn.disabled = false;
+            } catch (error) {
+                console.error("Error reading or parsing Excel file:", error);
+                uploadStatus.innerHTML = '<p style="color:red;">Error: Failed to read or parse the file.</p>';
+                parsedExcelData = [];
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function handlePublisherFileSelect(event) {
+        // This is for reading PUBLISHER files
+        const file = event.target.files[0];
+        if (!file) { return; }
+        uploadStatusPublishers.innerHTML = `<p>Reading file: ${file.name}...</p>`;
+        processUploadBtnPublishers.disabled = true;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                // Adding cellDates:true helps in parsing dates from Excel correctly
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json_data = XLSX.utils.sheet_to_json(worksheet);
+                if (json_data.length === 0) {
+                    uploadStatusPublishers.innerHTML = '<p style="color:red;">Error: The selected file is empty.</p>';
+                    return;
+                }
+                parsedExcelData = json_data;
+                uploadStatusPublishers.innerHTML = `<p style="color:green;">Successfully read ${parsedExcelData.length} records from ${file.name}.</p><p>Click "Upload and Process" to continue.</p>`;
+                processUploadBtnPublishers.disabled = false;
+            } catch (error) {
+                console.error("Error reading publisher Excel file:", error);
+                uploadStatusPublishers.innerHTML = '<p style="color:red;">Error: Failed to read or parse the file.</p>';
+                parsedExcelData = [];
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+// --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -499,17 +423,17 @@
             reports.forEach(report => {
                 const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
                 const row = [ 
-                    `"\u200B${report.publisherFullName || ''}"`, 
-                    `"\u200B${report.serviceYear || ''}"`, 
-                    `"\u200B${report.month || ''}"`, 
-                    `"\u200B${report.fieldServiceGroup || ''}"`, 
-                    `"\u200B${report.privilege2AtTimeOfReport || ''}"`, 
+                    `"${report.publisherFullName || ''}"`, 
+                    `"${report.serviceYear || ''}"`, 
+                    `"${report.month || ''}"`, 
+                    `"${report.fieldServiceGroup || ''}"`, 
+                    `"${report.privilege2AtTimeOfReport || ''}"`, 
                     report.hours || 0, 
                     report.bibleStudies || 0, 
                     report.sharedInMinistry ? 'Yes' : 'No', 
                     report.wasAuxiliaryPioneer ? 'Yes' : 'No',
                     `"${comments}"`,
-                    `"\u200B${report.lastModifiedBy || ''}"`
+                    `"${report.lastModifiedBy || ''}"`
                 ];
                 csvContent += row.join(",") + "\n";
             });
@@ -557,18 +481,21 @@
             }
         }
     }
-      function setupAddReportPage() {
+       function setupAddReportPage() {
         clearAddReportForm();
         
+        // Reset fields to default admin state first, then adjust for user
         serviceYearDropdown.disabled = false;
         monthYearDropdown.disabled = false;
         publisherNameDropdown.disabled = false;
         searchPublisherReport.classList.remove('hidden');
 
+        // Populate publisher list for everyone
         publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
         publisherList.forEach(pub => {
             const opt = document.createElement("option");
             opt.value = pub.id;
+            // Assuming publisher docs have firstName and lastName fields
             opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
             publisherNameDropdown.appendChild(opt);
         });
@@ -576,8 +503,10 @@
         populateServiceYears(serviceYearDropdown);
         
         if (currentUser.role === 'user') {
-            searchPublisherReport.classList.remove('hidden');
+            // --- LOGIC PARA SA USER ---
+            // Re-enable publisher selection for User, as requested.
             publisherNameDropdown.disabled = false;
+            searchPublisherReport.classList.remove('hidden');
 
             const today = new Date();
             const currentMonth = today.getMonth(); // January is 0, December is 11
@@ -599,6 +528,7 @@
 
         } 
         
+        // Attach listeners that are common to both roles or specific to admin
         searchPublisherReportInput.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxReport.innerHTML = "";
@@ -623,7 +553,7 @@
     }
 
     function setupManagePublisherPage() {
-        clearPublisherForm();
+        clearPublisherForm(); // Start with a blank form as requested
         searchInputManage.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxManage.innerHTML = "";
@@ -743,24 +673,10 @@
         });
         monthYearRequest.addEventListener('change', fetchReportDataForRequest);
     }
-    
-    function setupUploadPage() {
-        uploadStatus.innerHTML = '<p>No file selected.</p>';
-        processUploadBtn.disabled = true;
-        excelFileInput.value = ''; 
-        parsedExcelData = [];
-    }
-
-    function setupUploadPublishersPage() {
-        uploadStatusPublishers.innerHTML = '<p>No file selected.</p>';
-        processUploadBtnPublishers.disabled = true;
-        excelFileInputPublishers.value = ''; 
-        parsedExcelData = [];
-    }
 
     async function setupReviewApprovalsPage() {
         pendingRequestsList.innerHTML = '';
-        noPendingRequestsLabel.classList.remove('hidden'); 
+        noPendingRequestsLabel.classList.add('hidden');
         try {
             const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
             if (snapshot.empty) {
@@ -768,12 +684,7 @@
                 return;
             }
 
-            noPendingRequestsLabel.classList.add('hidden'); 
-            
-            const newPendingList = pendingRequestsList.cloneNode(false);
-            pendingRequestsList.parentNode.replaceChild(newPendingList, pendingRequestsList);
-            pendingRequestsList = newPendingList;
-
+            noPendingRequestsLabel.classList.add('hidden');
             snapshot.forEach(doc => {
                 const request = doc.data();
                 const requestId = doc.id;
@@ -799,7 +710,7 @@
                 `;
                 pendingRequestsList.appendChild(requestDiv);
             });
-            
+
             pendingRequestsList.addEventListener('click', async (e) => {
                 const target = e.target;
                 const requestId = target.dataset.id;
@@ -817,7 +728,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-      // --- Publisher Management ---
+       // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -922,7 +833,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-      // --- Report Management ---
+       // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1109,7 +1020,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-      // --- Update/Delete Report Logic ---
+       // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1220,7 +1131,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-      // --- Submit Request Logic ---
+       // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1382,7 +1293,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-      // --- Review Approvals Logic ---
+       // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
@@ -1398,7 +1309,6 @@
 
             // Use update instead of set to only change the specified fields
             await reportRef.update(requestData.requestedChanges);
-            // Mark the request as approved
             await requestRef.update({ status: 'approved', processedBy: currentUser.email });
 
             alert("Request approved and report has been updated.");
@@ -1422,57 +1332,16 @@
         }
     }
 
-    // --- Upload Facility Logic ---
-    function handleFileSelect(event) {
-        const file = event.target.files[0];
-        if (!file) {
-            return;
-        }
-
-        uploadStatus.innerHTML = `<p>Reading file: ${file.name}...</p>`;
-        processUploadBtn.disabled = true;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                const json_data = XLSX.utils.sheet_to_json(worksheet);
-
-                if (json_data.length === 0) {
-                    uploadStatus.innerHTML = '<p style="color:red;">Error: The selected file is empty or in an incorrect format.</p>';
-                    return;
-                }
-                
-                parsedExcelData = json_data;
-                uploadStatus.innerHTML = `<p style="color:green;">Successfully read ${parsedExcelData.length} records from ${file.name}.</p><p>Click "Upload and Process" to continue.</p>`;
-                processUploadBtn.disabled = false;
-
-            } catch (error) {
-                console.error("Error reading or parsing Excel file:", error);
-                uploadStatus.innerHTML = '<p style="color:red;">Error: Failed to read or parse the file. Please ensure it is a valid Excel or CSV file.</p>';
-                parsedExcelData = [];
-            }
-        };
-        reader.onerror = (err) => {
-            console.error("FileReader error:", err);
-            uploadStatus.innerHTML = '<p style="color:red;">Error: Could not read the file.</p>';
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    async function processAndUploadRecords() {
+    // --- NEW: Upload Publishers Logic (The processing part) ---
+    async function processAndUploadPublishers() {
         if (parsedExcelData.length === 0) {
             alert("No data to upload. Please select a valid file first.");
             return;
         }
 
-        processUploadBtn.disabled = true;
-        uploadStatus.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
-        const statusLog = uploadStatus.querySelector('pre');
+        processUploadBtnPublishers.disabled = true;
+        uploadStatusPublishers.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
+        const statusLog = uploadStatusPublishers.querySelector('pre');
 
         const batch = db.batch();
         let newRecordsCount = 0;
@@ -1480,56 +1349,60 @@
         let errorCount = 0;
 
         for (const record of parsedExcelData) {
-            const publisherFullName = record["Publisher Name"]?.trim();
-            const serviceYear = String(record["Service Year"])?.trim();
-            const month = String(record["Month"])?.trim();
-
-            if (!publisherFullName || !serviceYear || !month) {
-                statusLog.textContent += `Skipping row: Missing required data (Publisher Name, Service Year, or Month).\n`;
-                skippedRecordsCount++;
-                continue;
-            }
-
-            const publisher = publisherList.find(p => p.fullName === publisherFullName);
-            if (!publisher) {
-                statusLog.textContent += `Skipping record for "${publisherFullName}": Publisher not found in the database.\n`;
-                skippedRecordsCount++;
-                continue;
-            }
-
-            const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-            const reportRef = db.collection("reports").doc(reportId);
-            
             try {
-                const doc = await reportRef.get();
-                if (doc.exists) {
-                    statusLog.textContent += `Skipping record for "${publisherFullName}" (${month}): Report already exists.\n`;
+                const firstName = record.FirstName?.trim();
+                const lastName = record.LastName?.trim();
+                const birthdateRaw = record.Birthdate;
+
+                if (!firstName || !lastName || !birthdateRaw) {
+                    statusLog.textContent += `Skipping row: Missing required data (FirstName, LastName, or Birthdate).\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+
+                // --- Date Conversion Logic ---
+                if (!(birthdateRaw instanceof Date)) {
+                     statusLog.textContent += `Skipping ${lastName}, ${firstName}: 'Birthdate' column is not in a valid date format.\n`;
+                     skippedRecordsCount++;
+                     continue;
+                }
+                
+                // Adjust for timezone offset to prevent off-by-one day errors when converting to string
+                const tzOffset = birthdateRaw.getTimezoneOffset() * 60000;
+                const localDate = new Date(birthdateRaw.getTime() - tzOffset);
+                const birthdate = localDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
+
+                const docId = `${lastName}_${firstName}_${birthdate}`.replace(/\s+/g, "_");
+                const publisherRef = db.collection("publishers").doc(docId);
+                
+                const docSnap = await publisherRef.get();
+                if (docSnap.exists) {
+                    statusLog.textContent += `Skipping "${lastName}, ${firstName}": Publisher with the same name and birthdate already exists.\n`;
                     skippedRecordsCount++;
                     continue;
                 }
                 
-                const reportData = {
-                    publisherId: publisher.id,
-                    publisherFullName: publisher.fullName,
-                    serviceYear: serviceYear,
-                    month: month,
-                    fieldServiceGroup: record["Field Service Group"] || publisher.fieldServiceGroup,
-                    privilege2AtTimeOfReport: record["Privilege at Time of Report"] || publisher.privilege2,
-                    hours: parseInt(record.Hours) || 0,
-                    bibleStudies: parseInt(record["Bible Studies"]) || 0,
-                    sharedInMinistry: String(record["Shared in Ministry"] || '').toLowerCase() === 'yes',
-                    wasAuxiliaryPioneer: String(record["Was Auxiliary Pioneer"] || '').toLowerCase() === 'yes',
-                    comments: record.Comments || '',
-                    lastModifiedBy: currentUser.email,
+                const publisherData = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    fullName: `${lastName}, ${firstName}`,
+                    birthdate: birthdate,
+                    baptismStatus: record.BaptismStatus || "Unbaptized",
+                    baptismDate: record.BaptismDate instanceof Date ? new Date(record.BaptismDate.getTime() - (record.BaptismDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 10) : "",
+                    gender: record.Gender || "",
+                    hope: record.Hope || "Earthly",
+                    privilege: record.Privilege || "Not Applicable",
+                    privilege2: record.Privilege2 || "Publisher/Auxi",
+                    fieldServiceGroup: record.FieldServiceGroup || "",
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 
-                batch.set(reportRef, reportData);
+                batch.set(publisherRef, publisherData);
                 newRecordsCount++;
 
             } catch (error) {
-                 console.error("Error processing record for " + publisherFullName, error);
-                 statusLog.textContent += `Error processing record for "${publisherFullName}". Skipping.\n`;
+                 console.error("Error processing record:", record, error);
+                 statusLog.textContent += `Error processing record for "${record.LastName}, ${record.FirstName}". Skipping.\n`;
                  errorCount++;
             }
         }
@@ -1537,25 +1410,27 @@
         try {
             await batch.commit();
             let summary = `Upload complete!\n\n` +
-                          `New Records Added: ${newRecordsCount}\n` +
-                          `Records Skipped: ${skippedRecordsCount}\n` +
+                          `New Publishers Added: ${newRecordsCount}\n` +
+                          `Publishers Skipped: ${skippedRecordsCount}\n` +
                           `Errors: ${errorCount}`;
 
             statusLog.textContent += `\n${summary}`;
             alert(summary);
             
+            // CRITICAL: Refresh the global publisher list after upload
             await loadPublishers();
 
-            processUploadBtn.disabled = true;
-            excelFileInput.value = '';
+            processUploadBtnPublishers.disabled = true;
+            excelFileInputPublishers.value = '';
             parsedExcelData = [];
         } catch (error) {
             console.error("Error committing batch upload:", error);
-            statusLog.textContent += "\nFATAL ERROR: An error occurred while saving the records to the database.";
+            statusLog.textContent += "\nFATAL ERROR: An error occurred while saving records to the database.";
             alert("A fatal error occurred during the upload process. Please check the status log for details.");
-            processUploadBtn.disabled = false;
+            processUploadBtnPublishers.disabled = false;
         }
     }
-</script>
+
+ </script>
 </body>
 </html>
