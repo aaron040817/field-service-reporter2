@@ -60,7 +60,7 @@
             <button id="reviewApprovalsBtn">Review Approvals</button>
             <button id="exportExcelBtn">Export to Excel</button>
             <button id="uploadReportsBtn">Upload Reports</button>
-        </div>
+            <button id="uploadPublishersBtn">Upload Publishers</button> </div>
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
             <button id="submitRequestPageBtn">Submit Request to Update</button>
@@ -73,240 +73,43 @@
     </div>
 
     <div id="addReportPage" class="page-container hidden">
-        <h2>Add Field Service Report</h2>
-        <label for="searchPublisherReport">Search Publisher:</label>
-        <input type="text" id="searchPublisherReport" placeholder="Search by Last Name, First Name...">
-        <div id="suggestionBoxReport" class="suggestion-box"></div>
-        <label for="publisherNameDropdown">Publisher Name:</label>
-        <select id="publisherNameDropdown"></select>
-        <label for="fieldGroup">Field Service Group:</label>
-        <input type="text" id="fieldGroup" disabled>
-        <label for="privilege2Report">Privilege 2:</label>
-        <input type="text" id="privilege2Report" disabled>
-        <label for="serviceYearDropdown">Service Year:</label>
-        <select id="serviceYearDropdown"></select>
-        <label for="monthYearDropdown">Month:</label>
-        <select id="monthYearDropdown"></select>
-        <div id="auxPioneerQuestionContainer" class="hidden">
-            <label for="isAuxiliaryPioneerThisMonth">Is Auxiliary Pioneer this Month?</label>
-            <select id="isAuxiliaryPioneerThisMonth">
-                <option value="">-- Select --</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-            </select>
         </div>
-        <div id="fieldHoursContainer" class="hidden">
-            <label for="fieldHours">Field Hours:</label>
-            <input type="number" id="fieldHours" min="1">
-        </div>
-        <div id="bibleStudiesContainer" class="hidden">
-            <label for="bibleStudies">Bible Studies:</label>
-            <input type="number" id="bibleStudies" min="0">
-        </div>
-        <div id="sharedMinistryContainer" class="hidden">
-            <div class="checkbox-container">
-                <input type="checkbox" id="sharedMinistry">
-                <label for="sharedMinistry">Shared in Ministry</label>
-            </div>
-        </div>
-        <div id="auxiliaryPioneerCheckboxContainer" class="hidden">
-            <div class="checkbox-container">
-                <input type="checkbox" id="auxiliaryPioneerCheckbox">
-                <label for="auxiliaryPioneerCheckbox">Auxiliary Pioneer</label>
-            </div>
-        </div>
-        <label for="commentsAdd">Comments (Optional):</label>
-        <textarea id="commentsAdd"></textarea>
-        <div id="lastModifiedByAdd" class="last-modified"></div>
-        <button id="saveReportBtn">Save Report</button>
-        <button id="clearReportBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromReportBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromReport" class="logout-btn">Logout</button>
-    </div>
 
     <div id="updateReportPage" class="page-container hidden">
-        <h2>Update Field Service Report</h2>
-        <label for="searchPublisherUpdate">Search Publisher:</label>
-        <input type="text" id="searchPublisherUpdate" placeholder="Search by Last Name, First Name...">
-        <div id="suggestionBoxUpdate" class="suggestion-box"></div>
-        <label for="publisherNameDropdownUpdate">Publisher Name:</label>
-        <select id="publisherNameDropdownUpdate"></select>
-        <label for="fieldGroupUpdate">Field Service Group:</label>
-        <input type="text" id="fieldGroupUpdate" disabled>
-        <label for="privilege2Update">Privilege 2:</label>
-        <input type="text" id="privilege2Update" disabled>
-        <label for="serviceYearDropdownUpdate">Service Year:</label>
-        <select id="serviceYearDropdownUpdate"></select>
-        <label for="monthYearDropdownUpdate">Month:</label>
-        <select id="monthYearDropdownUpdate"></select>
-        <hr style="margin: 20px 0;">
-        <div id="updateReportFields" style="display: none;">
-            <div id="auxPioneerQuestionContainerUpdate" class="hidden">
-                <label for="isAuxiliaryPioneerThisMonthUpdate">Is Auxiliary Pioneer this Month?</label>
-                <select id="isAuxiliaryPioneerThisMonthUpdate">
-                    <option value="">-- Select --</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                </select>
-            </div>
-            <div id="fieldHoursContainerUpdate" class="hidden">
-                <label for="fieldHoursUpdate">Field Hours:</label>
-                <input type="number" id="fieldHoursUpdate" min="1">
-            </div>
-            <div id="bibleStudiesContainerUpdate" class="hidden">
-                <label for="bibleStudiesUpdate">Bible Studies:</label>
-                <input type="number" id="bibleStudiesUpdate" min="0">
-            </div>
-            <div id="sharedMinistryContainerUpdate" class="hidden">
-                <div class="checkbox-container">
-                    <input type="checkbox" id="sharedMinistryUpdate">
-                    <label for="sharedMinistryUpdate">Shared in Ministry</label>
-                </div>
-            </div>
-            <div id="auxiliaryPioneerCheckboxContainerUpdate" class="hidden">
-                <div class="checkbox-container">
-                    <input type="checkbox" id="auxiliaryPioneerCheckboxUpdate">
-                    <label for="auxiliaryPioneerCheckboxUpdate">Auxiliary Pioneer</label>
-                </div>
-            </div>
-            <label for="commentsUpdate">Comments (Optional):</label>
-            <textarea id="commentsUpdate"></textarea>
-            <div id="lastModifiedByUpdate" class="last-modified"></div>
         </div>
-        <button id="updateReportBtn">Update</button>
-        <button id="deleteReportBtn" class="delete-btn">Delete</button>
-        <button id="clearUpdateFormBtn" class="clear-btn">Clear</button>
-        <button id="backHomeFromUpdateBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromUpdate" class="logout-btn">Logout</button>
-    </div>
 
     <div id="publisherPage" class="page-container hidden">
-        <h2>Manage Publisher Records</h2>
-        <input type="text" id="searchPublisher" placeholder="Search Publisher...">
-        <div id="suggestionBox" class="suggestion-box"></div>
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName">
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName">
-        <label for="fullName">Full Name:</label>
-        <input type="text" id="fullName" disabled>
-        <label for="birthdate">Birthdate:</label>
-        <input type="date" id="birthdate">
-        <label for="baptismStatus">Baptism Status:</label>
-        <select id="baptismStatus">
-            <option value="">-- Select --</option>
-            <option value="Baptized">Baptized</option>
-            <option value="Baptized but can't remember the date">Baptized but can't remember the date</option>
-            <option value="Unbaptized">Unbaptized</option>
-        </select>
-        <div id="baptismDateContainer" class="hidden">
-            <label for="baptismDate">Baptism Date:</label>
-            <input type="date" id="baptismDate">
         </div>
-        <label for="gender">Gender:</label>
-        <select id="gender">
-            <option value="">-- Select --</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-        </select>
-        <label for="hope">Hope:</label>
-        <select id="hope">
-            <option value="">-- Select --</option>
-            <option value="Anointed">Anointed</option>
-            <option value="Other Sheep">Other Sheep</option>
-        </select>
-        <label for="privilege">Privilege:</label>
-        <select id="privilege">
-            <option value="">-- Select --</option>
-            <option value="Not Applicable">Not Applicable</option>
-            <option value="Ministerial Servant">Ministerial Servant</option>
-            <option value="Elder">Elder</option>
-        </select>
-        <label for="privilege2">Privilege 2:</label>
-        <select id="privilege2">
-            <option value="">-- Select --</option>
-            <option value="Regular Pioneer">Regular Pioneer</option>
-            <option value="Special Pioneer">Special Pioneer</option>
-            <option value="Field Missionary">Field Missionary</option>
-            <option value="Continuous Auxiliary Pioneer">Continuous Auxiliary Pioneer</option>
-            <option value="Publisher/Auxi">Publisher/Auxi</option>
-        </select>
-        <label for="fieldServiceGroup">Field Service Group:</label>
-        <select id="fieldServiceGroup">
-            <option value="">-- Select --</option>
-            <option value="Field Service Group 1">Field Service Group 1</option>
-            <option value="Field Service Group 2">Field Service Group 2</option>
-            <option value="Field Service Group 3">Field Service Group 3</option>
-            <option value="Field Service Group 4">Field Service Group 4</option>
-            <option value="Field Service Group 5">Field Service Group 5</option>
-            <option value="Field Service Group 6">Field Service Group 6</option>
-            <option value="Field Service Group 7">Field Service Group 7</option>
-            <option value="Field Service Group 8">Field Service Group 8</option>
-        </select>
-        <button id="addPublisherBtn">Add</button>
-        <button id="updatePublisherBtn">Update</button>
-        <button id="deletePublisherBtn" class="delete-btn">Delete</button>
-        <button id="previousPublisherBtn">Previous</button>
-        <button id="nextPublisherBtn">Next</button>
-        <button id="clearPublisherFormBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromPublisherBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromPublisher" class="logout-btn">Logout</button>
-    </div>
 
     <div id="submitRequestPage" class="page-container hidden">
-        <h2>Submit Request to Update Report</h2>
-        <h4>Who do you want to update?</h4>
-        <label for="searchPublisherRequest">Search Publisher:</label>
-        <input type="text" id="searchPublisherRequest" placeholder="Search by Last Name, First Name...">
-        <div id="suggestionBoxRequest" class="suggestion-box"></div>
-        <label for="publisherNameDropdownRequest">Publisher Name:</label>
-        <select id="publisherNameDropdownRequest"></select>
-        <label for="fieldGroupRequest">Field Service Group:</label>
-        <input type="text" id="fieldGroupRequest" disabled>
-        <label for="privilege2Request">Privilege 2:</label>
-        <input type="text" id="privilege2Request" disabled>
-        <hr style="margin: 20px 0;">
-        <h4>What Service Year and Month do you want to update?</h4>
-        <label for="serviceYearRequest">Service Year:</label>
-        <select id="serviceYearRequest"></select>
-        <label for="monthYearRequest">Month:</label>
-        <select id="monthYearRequest"></select>
-        <div id="requestFields" style="display: none;">
-            </div>
-        <button id="submitRequestApprovalBtn">Submit Request for Admin Approval</button>
-        <button id="clearRequestFormBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromRequestBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromRequest" class="logout-btn">Logout</button>
-    </div>
+        </div>
 
     <div id="reviewApprovalsPage" class="page-container hidden">
-        <h2>Review Approvals</h2>
-        <div id="pendingRequestsList">
-            <p id="noPendingRequestsLabel" class="hidden">Walang naka-pending na request sa ngayon.</p>
         </div>
-        <button id="backHomeFromReviewBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromReview" class="logout-btn">Logout</button>
-    </div>
-
+    
     <div id="uploadPage" class="page-container hidden">
-        <h2>Upload Field Service Reports</h2>
-        <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
-        <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls, .csv">
-        <button id="selectFileBtn">Select File</button>
-        <div id="uploadStatus">
+        </div>
+
+    <div id="uploadPublishersPage" class="page-container hidden">
+        <h2>Upload Publishers</h2>
+        <p>Please select an Excel (.xlsx, .xls) or .csv file. The columns must match the fields in the "Manage Publisher" page (e.g., FirstName, LastName, Birthdate, etc.).</p>
+        <input type="file" id="excelFileInputPublishers" class="hidden" accept=".xlsx, .xls, .csv">
+        <button id="selectFileBtnPublishers">Select File</button>
+        <div id="uploadStatusPublishers">
             <p>No file selected.</p>
         </div>
-        <button id="processUploadBtn" disabled>Upload and Process Records</button>
+        <button id="processUploadBtnPublishers" disabled>Upload and Process Publishers</button>
         <hr>
-        <button id="backHomeFromUploadBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
+        <button id="backHomeFromUploadPublishersBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
     </div>
+
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-   <script>
+  <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -366,7 +169,6 @@
                 const userDoc = await db.collection("users").doc(user.uid).get();
                 if (userDoc.exists) {
                     currentUser = { uid: user.uid, email: user.email, role: userDoc.data().role };
-                    localStorage.setItem('userRole', currentUser.role); 
                 } else {
                     console.error("User document not found in Firestore. Signing out.");
                     await auth.signOut();
@@ -376,7 +178,6 @@
                 handleRouteChange();
             } else {
                 currentUser = null;
-                localStorage.removeItem('userRole');
                 publisherList = [];
                 handleRouteChange();
             }
@@ -532,7 +333,7 @@
         // Update Report Page Buttons
         updateReportBtn?.addEventListener("click", updateReport);
         deleteReportBtn?.addEventListener("click", deleteReport);
-        clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
+        clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
         backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromUpdate?.addEventListener("click", logout);
 
@@ -563,7 +364,7 @@
         // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
-       // --- Routing ---
+      // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -644,7 +445,7 @@
                 break;
         }
     }
-       // --- Login/Logout & Data Management ---
+      // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -756,7 +557,7 @@
             }
         }
     }
-       function setupAddReportPage() {
+      function setupAddReportPage() {
         clearAddReportForm();
         
         serviceYearDropdown.disabled = false;
@@ -1016,7 +817,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-       // --- Publisher Management ---
+      // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -1121,7 +922,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-       // --- Report Management ---
+      // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1308,7 +1109,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-       // --- Update/Delete Report Logic ---
+      // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1419,7 +1220,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-       // --- Submit Request Logic ---
+      // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1581,7 +1382,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-       // --- Review Approvals Logic ---
+      // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
