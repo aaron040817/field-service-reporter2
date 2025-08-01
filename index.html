@@ -60,7 +60,6 @@
             <button id="reviewApprovalsBtn">Review Approvals</button>
             <button id="exportExcelBtn">Export to Excel</button>
             <button id="uploadReportsBtn">Upload Reports</button>
-            <button id="uploadPublishersBtn">Upload Publishers</button>
         </div>
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
@@ -302,27 +301,12 @@
         <button id="backHomeFromUploadBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
     </div>
-    
-    <div id="uploadPublishersPage" class="page-container hidden">
-        <h2>Upload Publishers</h2>
-        <p>Please select an Excel (.xlsx, .xls) or .csv file. The columns must match the fields in the "Manage Publisher" page.</p>
-        <input type="file" id="excelFileInputPublishers" class="hidden" accept=".xlsx, .xls, .csv">
-        <button id="selectFileBtnPublishers">Select File</button>
-        <div id="uploadStatusPublishers">
-            <p>No file selected.</p>
-        </div>
-        <button id="processUploadBtnPublishers" disabled>Upload and Process Publishers</button>
-        <hr>
-        <button id="backHomeFromUploadPublishersBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
-    </div>
-
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
-    <script>
+   <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -509,11 +493,12 @@
         backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
         logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
     }
-        function attachAllListeners() {
+
+    function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
         
-        // --- Home Page Buttons ---
+        // Home Page Buttons
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage', '/manage-publisher'));
         document.getElementById("addReportBtnAdmin")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
@@ -525,13 +510,13 @@
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
 
-        // --- Add Report Page ---
+        // Add Report Page Buttons
         document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
         document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
         document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromReport?.addEventListener("click", logout);
 
-        // --- Manage Publisher Page ---
+        // Manage Publisher Buttons & Fields
         addPublisherBtn?.addEventListener("click", addPublisher);
         updatePublisherBtn?.addEventListener("click", updatePublisher);
         deletePublisherBtn?.addEventListener("click", deletePublisher);
@@ -544,41 +529,41 @@
         lastNameInput?.addEventListener("input", updateFullName);
         baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
 
-        // --- Update Report Page ---
+        // Update Report Page Buttons
         updateReportBtn?.addEventListener("click", updateReport);
         deleteReportBtn?.addEventListener("click", deleteReport);
-        clearUpdateFormBtn?.addEventListener("click", clearUpdateReportForm);
+        clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
         backHomeFromUpdateBtn?.addEventListener("click", () => showPage('homePage', '/home'));
         logoutBtnFromUpdate?.addEventListener("click", logout);
 
-        // --- Submit Request Page ---
+        // Submit Request Page Buttons
         submitRequestApprovalBtn?.addEventListener('click', submitRequestForApproval);
         clearRequestFormBtn?.addEventListener('click', clearSubmitRequestForm);
         backHomeFromRequestBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromRequest?.addEventListener('click', logout);
 
-        // --- Review Approvals Page ---
+        // Review Approvals Page Buttons
         document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage', '/home'));
         document.getElementById("logoutBtnFromReview")?.addEventListener("click", logout);
         
-        // --- Upload Reports Page ---
+        // Upload Reports Page Listeners
         selectFileBtn?.addEventListener('click', () => excelFileInput.click());
         excelFileInput?.addEventListener('change', handleFileSelect);
         processUploadBtn?.addEventListener('click', processAndUploadRecords);
         backHomeFromUploadBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromUpload?.addEventListener('click', logout);
-        
-        // --- Upload Publishers Page ---
+
+        // Upload Publishers Page Listeners
         selectFileBtnPublishers?.addEventListener('click', () => excelFileInputPublishers.click());
         excelFileInputPublishers?.addEventListener('change', handlePublisherFileSelect);
         processUploadBtnPublishers?.addEventListener('click', processAndUploadPublishers);
         backHomeFromUploadPublishersBtn?.addEventListener('click', () => showPage('homePage', '/home'));
         logoutBtnFromUploadPublishers?.addEventListener('click', logout);
-
-        // --- Routing ---
+        
+        // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
-        // --- Routing ---
+       // --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -659,7 +644,7 @@
                 break;
         }
     }
-        // --- Login/Logout & Data Management ---
+       // --- Login/Logout & Data Management ---
     async function login() {
         const email = loginUsername.value;
         const password = loginPassword.value;
@@ -771,7 +756,7 @@
             }
         }
     }
-        function setupAddReportPage() {
+       function setupAddReportPage() {
         clearAddReportForm();
         
         serviceYearDropdown.disabled = false;
@@ -1031,7 +1016,7 @@
             pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
         }
     }
-        // --- Publisher Management ---
+       // --- Publisher Management ---
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
@@ -1136,7 +1121,7 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
-        // --- Report Management ---
+       // --- Report Management ---
     function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1323,7 +1308,7 @@
             setupAddReportPage(); // This will properly clear and reset the form for both roles
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-        // --- Update/Delete Report Logic ---
+       // --- Update/Delete Report Logic ---
     async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
@@ -1434,7 +1419,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-        // --- Submit Request Logic ---
+       // --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1596,7 +1581,7 @@
             alert("Failed to submit request. Please check security rules and console.");
         }
     }
-        // --- Review Approvals Logic ---
+       // --- Review Approvals Logic ---
     async function approveRequest(requestId) {
         if(!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
         try {
