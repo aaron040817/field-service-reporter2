@@ -38,8 +38,8 @@
         .request-item { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
         .request-item h4 { margin-top: 0; }
         .last-modified { font-style: italic; color: #888; font-size: 12px; margin-top: -5px; margin-bottom: 10px; }
-        #uploadStatus { margin-top: 15px; font-weight: bold; }
-        #uploadStatus pre { white-space: pre-wrap; word-wrap: break-word; background-color: #eee; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto; }
+        #uploadStatus, #uploadStatusPublishers { margin-top: 15px; font-weight: bold; }
+        #uploadStatus pre, #uploadStatusPublishers pre { white-space: pre-wrap; word-wrap: break-word; background-color: #eee; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto; }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -60,7 +60,7 @@
             <button id="reviewApprovalsBtn">Review Approvals</button>
             <button id="exportExcelBtn">Export to Excel</button>
             <button id="uploadReportsBtn">Upload Reports</button>
-        </div>
+            <button id="uploadPublishersBtn">Upload Publishers</button> </div>
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
             <button id="submitRequestPageBtn">Submit Request to Update</button>
@@ -72,222 +72,12 @@
         </div>
     </div>
 
-    <div id="addReportPage" class="page-container hidden">
-        <h2>Add Field Service Report</h2>
-        <label for="searchPublisherReport">Search Publisher:</label>
-        <input type="text" id="searchPublisherReport" placeholder="Search by Last Name, First Name...">
-        <div id="suggestionBoxReport" class="suggestion-box"></div>
-        <label for="publisherNameDropdown">Publisher Name:</label>
-        <select id="publisherNameDropdown"></select>
-        <label for="fieldGroup">Field Service Group:</label>
-        <input type="text" id="fieldGroup" disabled>
-        <label for="privilege2Report">Privilege 2:</label>
-        <input type="text" id="privilege2Report" disabled>
-        <label for="serviceYearDropdown">Service Year:</label>
-        <select id="serviceYearDropdown"></select>
-        <label for="monthYearDropdown">Month:</label>
-        <select id="monthYearDropdown"></select>
-        <div id="auxPioneerQuestionContainer" class="hidden">
-            <label for="isAuxiliaryPioneerThisMonth">Is Auxiliary Pioneer this Month?</label>
-            <select id="isAuxiliaryPioneerThisMonth">
-                <option value="">-- Select --</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-            </select>
-        </div>
-        <div id="fieldHoursContainer" class="hidden">
-            <label for="fieldHours">Field Hours:</label>
-            <input type="number" id="fieldHours" min="1">
-        </div>
-        <div id="bibleStudiesContainer" class="hidden">
-            <label for="bibleStudies">Bible Studies:</label>
-            <input type="number" id="bibleStudies" min="0">
-        </div>
-        <div id="sharedMinistryContainer" class="hidden">
-            <div class="checkbox-container">
-                <input type="checkbox" id="sharedMinistry">
-                <label for="sharedMinistry">Shared in Ministry</label>
-            </div>
-        </div>
-        <div id="auxiliaryPioneerCheckboxContainer" class="hidden">
-            <div class="checkbox-container">
-                <input type="checkbox" id="auxiliaryPioneerCheckbox">
-                <label for="auxiliaryPioneerCheckbox">Auxiliary Pioneer</label>
-            </div>
-        </div>
-        <label for="commentsAdd">Comments (Optional):</label>
-        <textarea id="commentsAdd"></textarea>
-        <div id="lastModifiedByAdd" class="last-modified"></div>
-        <button id="saveReportBtn">Save Report</button>
-        <button id="clearReportBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromReportBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromReport" class="logout-btn">Logout</button>
-    </div>
+    <div id="addReportPage" class="page-container hidden">...</div>
+    <div id="updateReportPage" class="page-container hidden">...</div>
+    <div id="publisherPage" class="page-container hidden">...</div>
+    <div id="submitRequestPage" class="page-container hidden">...</div>
+    <div id="reviewApprovalsPage" class="page-container hidden">...</div>
 
-    <div id="updateReportPage" class="page-container hidden">
-        <h2>Update Field Service Report</h2>
-        <label for="searchPublisherUpdate">Search Publisher:</label>
-        <input type="text" id="searchPublisherUpdate" placeholder="Search by Last Name, First Name...">
-        <div id="suggestionBoxUpdate" class="suggestion-box"></div>
-        <label for="publisherNameDropdownUpdate">Publisher Name:</label>
-        <select id="publisherNameDropdownUpdate"></select>
-        <label for="fieldGroupUpdate">Field Service Group:</label>
-        <input type="text" id="fieldGroupUpdate" disabled>
-        <label for="privilege2Update">Privilege 2:</label>
-        <input type="text" id="privilege2Update" disabled>
-        <label for="serviceYearDropdownUpdate">Service Year:</label>
-        <select id="serviceYearDropdownUpdate"></select>
-        <label for="monthYearDropdownUpdate">Month:</label>
-        <select id="monthYearDropdownUpdate"></select>
-        <hr style="margin: 20px 0;">
-        <div id="updateReportFields" style="display: none;">
-            <div id="auxPioneerQuestionContainerUpdate" class="hidden">
-                <label for="isAuxiliaryPioneerThisMonthUpdate">Is Auxiliary Pioneer this Month?</label>
-                <select id="isAuxiliaryPioneerThisMonthUpdate">
-                    <option value="">-- Select --</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                </select>
-            </div>
-            <div id="fieldHoursContainerUpdate" class="hidden">
-                <label for="fieldHoursUpdate">Field Hours:</label>
-                <input type="number" id="fieldHoursUpdate" min="1">
-            </div>
-            <div id="bibleStudiesContainerUpdate" class="hidden">
-                <label for="bibleStudiesUpdate">Bible Studies:</label>
-                <input type="number" id="bibleStudiesUpdate" min="0">
-            </div>
-            <div id="sharedMinistryContainerUpdate" class="hidden">
-                <div class="checkbox-container">
-                    <input type="checkbox" id="sharedMinistryUpdate">
-                    <label for="sharedMinistryUpdate">Shared in Ministry</label>
-                </div>
-            </div>
-            <div id="auxiliaryPioneerCheckboxContainerUpdate" class="hidden">
-                <div class="checkbox-container">
-                    <input type="checkbox" id="auxiliaryPioneerCheckboxUpdate">
-                    <label for="auxiliaryPioneerCheckboxUpdate">Auxiliary Pioneer</label>
-                </div>
-            </div>
-            <label for="commentsUpdate">Comments (Optional):</label>
-            <textarea id="commentsUpdate"></textarea>
-            <div id="lastModifiedByUpdate" class="last-modified"></div>
-        </div>
-        <button id="updateReportBtn">Update</button>
-        <button id="deleteReportBtn" class="delete-btn">Delete</button>
-        <button id="clearUpdateFormBtn" class="clear-btn">Clear</button>
-        <button id="backHomeFromUpdateBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromUpdate" class="logout-btn">Logout</button>
-    </div>
-
-    <div id="publisherPage" class="page-container hidden">
-        <h2>Manage Publisher Records</h2>
-        <input type="text" id="searchPublisher" placeholder="Search Publisher...">
-        <div id="suggestionBox" class="suggestion-box"></div>
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName">
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName">
-        <label for="fullName">Full Name:</label>
-        <input type="text" id="fullName" disabled>
-        <label for="birthdate">Birthdate:</label>
-        <input type="date" id="birthdate">
-        <label for="baptismStatus">Baptism Status:</label>
-        <select id="baptismStatus">
-            <option value="">-- Select --</option>
-            <option value="Baptized">Baptized</option>
-            <option value="Baptized but can't remember the date">Baptized but can't remember the date</option>
-            <option value="Unbaptized">Unbaptized</option>
-        </select>
-        <div id="baptismDateContainer" class="hidden">
-            <label for="baptismDate">Baptism Date:</label>
-            <input type="date" id="baptismDate">
-        </div>
-        <label for="gender">Gender:</label>
-        <select id="gender">
-            <option value="">-- Select --</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-        </select>
-        <label for="hope">Hope:</label>
-        <select id="hope">
-            <option value="">-- Select --</option>
-            <option value="Anointed">Anointed</option>
-            <option value="Other Sheep">Other Sheep</option>
-        </select>
-        <label for="privilege">Privilege:</label>
-        <select id="privilege">
-            <option value="">-- Select --</option>
-            <option value="Not Applicable">Not Applicable</option>
-            <option value="Ministerial Servant">Ministerial Servant</option>
-            <option value="Elder">Elder</option>
-        </select>
-        <label for="privilege2">Privilege 2:</label>
-        <select id="privilege2">
-            <option value="">-- Select --</option>
-            <option value="Regular Pioneer">Regular Pioneer</option>
-            <option value="Special Pioneer">Special Pioneer</option>
-            <option value="Field Missionary">Field Missionary</option>
-            <option value="Continuous Auxiliary Pioneer">Continuous Auxiliary Pioneer</option>
-            <option value="Publisher/Auxi">Publisher/Auxi</option>
-        </select>
-        <label for="fieldServiceGroup">Field Service Group:</label>
-        <select id="fieldServiceGroup">
-            <option value="">-- Select --</option>
-            <option value="Field Service Group 1">Field Service Group 1</option>
-            <option value="Field Service Group 2">Field Service Group 2</option>
-            <option value="Field Service Group 3">Field Service Group 3</option>
-            <option value="Field Service Group 4">Field Service Group 4</option>
-            <option value="Field Service Group 5">Field Service Group 5</option>
-            <option value="Field Service Group 6">Field Service Group 6</option>
-            <option value="Field Service Group 7">Field Service Group 7</option>
-            <option value="Field Service Group 8">Field Service Group 8</option>
-        </select>
-        <button id="addPublisherBtn">Add</button>
-        <button id="updatePublisherBtn">Update</button>
-        <button id="deletePublisherBtn" class="delete-btn">Delete</button>
-        <button id="previousPublisherBtn">Previous</button>
-        <button id="nextPublisherBtn">Next</button>
-        <button id="clearPublisherFormBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromPublisherBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromPublisher" class="logout-btn">Logout</button>
-    </div>
-
-    <div id="submitRequestPage" class="page-container hidden">
-        <h2>Submit Request to Update Report</h2>
-        <h4>Who do you want to update?</h4>
-        <label for="searchPublisherRequest">Search Publisher:</label>
-        <input type="text" id="searchPublisherRequest" placeholder="Search by Last Name, First Name...">
-        <div id="suggestionBoxRequest" class="suggestion-box"></div>
-        <label for="publisherNameDropdownRequest">Publisher Name:</label>
-        <select id="publisherNameDropdownRequest"></select>
-        <label for="fieldGroupRequest">Field Service Group:</label>
-        <input type="text" id="fieldGroupRequest" disabled>
-        <label for="privilege2Request">Privilege 2:</label>
-        <input type="text" id="privilege2Request" disabled>
-        <hr style="margin: 20px 0;">
-        <h4>What Service Year and Month do you want to update?</h4>
-        <label for="serviceYearRequest">Service Year:</label>
-        <select id="serviceYearRequest"></select>
-        <label for="monthYearRequest">Month:</label>
-        <select id="monthYearRequest"></select>
-        <div id="requestFields" style="display: none;">
-            </div>
-        <button id="submitRequestApprovalBtn">Submit Request for Admin Approval</button>
-        <button id="clearRequestFormBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromRequestBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromRequest" class="logout-btn">Logout</button>
-    </div>
-
-    <div id="reviewApprovalsPage" class="page-container hidden">
-        <h2>Review Approvals</h2>
-        <div id="pendingRequestsList">
-            <p id="noPendingRequestsLabel" class="hidden">Walang naka-pending na request sa ngayon.</p>
-        </div>
-        <button id="backHomeFromReviewBtn" class="back-btn">Back to Home</button>
-        <button id="logoutBtnFromReview" class="logout-btn">Logout</button>
-    </div>
-    
     <div id="uploadPage" class="page-container hidden">
         <h2>Upload Field Service Reports</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
@@ -302,6 +92,19 @@
         <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
     </div>
 
+    <div id="uploadPublishersPage" class="page-container hidden">
+        <h2>Upload Publishers</h2>
+        <p>Please select an Excel (.xlsx, .xls) or .csv file. The columns must match the fields in the "Manage Publisher" page.</p>
+        <input type="file" id="excelFileInputPublishers" class="hidden" accept=".xlsx, .xls, .csv">
+        <button id="selectFileBtnPublishers">Select File</button>
+        <div id="uploadStatusPublishers">
+            <p>No file selected.</p>
+        </div>
+        <button id="processUploadBtnPublishers" disabled>Upload and Process Publishers</button>
+        <hr>
+        <button id="backHomeFromUploadPublishersBtn" class="back-btn">Back to Home</button>
+        <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -328,10 +131,9 @@
     let currentDocId = null;
     let currentUser = null;
     let currentReportId = null; 
-    let parsedExcelData = [];
 
     // --- Global Element References ---
-    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage;
+    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage;
     let loggedInUser, adminButtons, userButtons, adminSection;
     let loginUsername, loginPassword;
     let serviceYearDropdown, monthYearDropdown, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth;
@@ -353,8 +155,7 @@
     let searchPublisherRequest, suggestionBoxRequest, publisherNameDropdownRequest, fieldGroupRequest, privilege2Request;
     let serviceYearRequest, monthYearRequest, requestFields, submitRequestApprovalBtn, clearRequestFormBtn, backHomeFromRequestBtn, logoutBtnFromRequest;
     let pendingRequestsList, noPendingRequestsLabel;
-    let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
-    
+
     // --- CORE APPLICATION LIFECYCLE ---
     document.addEventListener("DOMContentLoaded", initializeApp);
 
@@ -391,7 +192,6 @@
         updateReportPage = document.getElementById('updateReportPage');
         submitRequestPage = document.getElementById('submitRequestPage');
         reviewApprovalsPage = document.getElementById('reviewApprovalsPage');
-        uploadPage = document.getElementById('uploadPage');
         loggedInUser = document.getElementById('loggedInUser');
         adminButtons = document.getElementById('adminButtons');
         userButtons = document.getElementById('userButtons');
@@ -479,12 +279,6 @@
         logoutBtnFromRequest = document.getElementById('logoutBtnFromRequest');
         pendingRequestsList = document.getElementById('pendingRequestsList');
         noPendingRequestsLabel = document.getElementById('noPendingRequestsLabel');
-        selectFileBtn = document.getElementById('selectFileBtn');
-        excelFileInput = document.getElementById('excelFileInput');
-        uploadStatus = document.getElementById('uploadStatus');
-        processUploadBtn = document.getElementById('processUploadBtn');
-        backHomeFromUploadBtn = document.getElementById('backHomeFromUploadBtn');
-        logoutBtnFromUpload = document.getElementById('logoutBtnFromUpload');
     }
 
     function attachAllListeners() {
@@ -497,7 +291,6 @@
         document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
         document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => showPage('reviewApprovalsPage', '/review-approvals'));
         document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
-        document.getElementById("uploadReportsBtn")?.addEventListener("click", () => showPage('uploadPage', '/upload-reports'));
         document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
         document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
@@ -538,17 +331,10 @@
         document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage', '/home'));
         document.getElementById("logoutBtnFromReview")?.addEventListener("click", logout);
         
-        // Upload Page Listeners
-        selectFileBtn?.addEventListener('click', () => excelFileInput.click());
-        excelFileInput?.addEventListener('change', handleFileSelect);
-        processUploadBtn?.addEventListener('click', processAndUploadRecords);
-        backHomeFromUploadBtn?.addEventListener('click', () => showPage('homePage', '/home'));
-        logoutBtnFromUpload?.addEventListener('click', logout);
-
         // Routing
         window.addEventListener('popstate', handleRouteChange);
     }
-        // --- Routing ---
+// --- Routing ---
     function showPage(pageId, path) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
@@ -661,59 +447,48 @@
     }
 
     // --- Export to Excel ---
-   async function exportToExcel() {
-    try {
-        const snapshot = await db.collection("reports").orderBy("publisherFullName", "asc").get();
-        if (snapshot.empty) {
-            alert("No reports found to export.");
-            return;
+    async function exportToExcel() {
+        try {
+            const snapshot = await db.collection("reports").orderBy("publisherFullName", "asc").get();
+            if (snapshot.empty) {
+                alert("No reports found to export.");
+                return;
+            }
+            const reports = snapshot.docs.map(doc => doc.data());
+            const headers = [ "Publisher Name", "Service Year", "Month", "Field Service Group", "Privilege at Time of Report", "Hours", "Bible Studies", "Shared in Ministry", "Was Auxiliary Pioneer", "Comments", "Last Modified By" ];
+            let csvContent = headers.join(",") + "\n";
+            reports.forEach(report => {
+                const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
+                const row = [ 
+                    `"${report.publisherFullName || ''}"`, 
+                    `"${report.serviceYear || ''}"`, 
+                    `"${report.month || ''}"`, 
+                    `"${report.fieldServiceGroup || ''}"`, 
+                    `"${report.privilege2AtTimeOfReport || ''}"`, 
+                    report.hours || 0, 
+                    report.bibleStudies || 0, 
+                    report.sharedInMinistry ? 'Yes' : 'No', 
+                    report.wasAuxiliaryPioneer ? 'Yes' : 'No',
+                    `"${comments}"`,
+                    `"${report.lastModifiedBy || ''}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Error exporting to Excel:", error);
+            alert("An error occurred during export. Please check the console.");
         }
-
-        const reports = snapshot.docs.map(doc => doc.data());
-        
-        const headers = [
-            "Publisher Name", "Service Year", "Month", "Field Service Group",
-            "Privilege at Time of Report", "Hours", "Bible Studies",
-            "Shared in Ministry", "Was Auxiliary Pioneer", "Comments", "Last Modified By"
-        ];
-        let csvContent = headers.join(",") + "\n";
-
-        reports.forEach(report => {
-            const comments = report.comments ? report.comments.replace(/"/g, '""') : '';
-            
-            // Ang ="VALUE" format ay nagfo-force sa Excel na i-treat ito as TEXT.
-            const row = [
-                `"${report.publisherFullName || ''}"`,
-                `"=${report.serviceYear || ''}"`,       // Ito ay magiging TEXT sa Excel
-                `"=${report.month || ''}"`,             // Ito ay magiging TEXT sa Excel
-                `"${report.fieldServiceGroup || ''}"`,
-                `"${report.privilege2AtTimeOfReport || ''}"`,
-                report.hours || 0,
-                report.bibleStudies || 0,
-                report.sharedInMinistry ? 'Yes' : 'No',
-                report.wasAuxiliaryPioneer ? 'Yes' : 'No',
-                `"${comments}"`,
-                `"${report.lastModifiedBy || ''}"`
-            ];
-            csvContent += row.join(",") + "\n";
-        });
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        const dateStr = new Date().toISOString().slice(0, 10);
-        link.setAttribute("download", `Field_Service_Reports_${dateStr}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-    } catch (error) {
-        console.error("Error exporting to Excel:", error);
-        alert("An error occurred during export. Please check the console.");
     }
-}
     
     // --- Page Setups ---
     async function updateHomePage() {
@@ -762,8 +537,9 @@
         populateServiceYears(serviceYearDropdown);
         
         if (currentUser.role === 'user') {
-            searchPublisherReport.classList.remove('hidden');
+            // Re-enable publisher selection for User, as requested.
             publisherNameDropdown.disabled = false;
+            searchPublisherReport.classList.remove('hidden');
 
             const today = new Date();
             const currentMonth = today.getMonth(); // January is 0, December is 11
@@ -783,8 +559,9 @@
             
             autofillPublisherDetails(publisherNameDropdown.value);
 
-        }
+        } 
         
+        // Attach listeners that are common to both roles or specific to admin
         searchPublisherReportInput.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxReport.innerHTML = "";
@@ -809,7 +586,7 @@
     }
 
     function setupManagePublisherPage() {
-        clearPublisherForm();
+        clearPublisherForm(); // Start with a blank form as requested
         searchInputManage.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxManage.innerHTML = "";
@@ -1399,7 +1176,7 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-        // --- Submit Request Logic ---
+// --- Submit Request Logic ---
     function clearSubmitRequestForm() {
         publisherNameDropdownRequest.value = "";
         serviceYearRequest.value = "";
@@ -1644,98 +1421,98 @@
     }
 
     async function processAndUploadRecords() {
-    if (parsedExcelData.length === 0) {
-        alert("No data to upload. Please select a valid file first.");
-        return;
-    }
-
-    processUploadBtn.disabled = true;
-    uploadStatus.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
-    const statusLog = uploadStatus.querySelector('pre');
-
-    const batch = db.batch();
-    let newRecordsCount = 0;
-    let skippedRecordsCount = 0;
-    let errorCount = 0;
-
-    for (const record of parsedExcelData) {
-        // --- SIMPLIFIED AND FIXED LOGIC ---
-        const publisherFullName = record["Publisher Name"]?.trim();
-        const serviceYear = String(record["Service Year"])?.trim();
-        // Simply read the month as a string and trim it.
-        // This relies on the Excel column being formatted as Text.
-        const month = String(record["Month"])?.trim();
-
-        if (!publisherFullName || !serviceYear || !month) {
-            statusLog.textContent += `Skipping row: Missing required data (Publisher Name, Service Year, or Month).\n`;
-            skippedRecordsCount++;
-            continue;
+        if (parsedExcelData.length === 0) {
+            alert("No data to upload. Please select a valid file first.");
+            return;
         }
 
-        const publisher = publisherList.find(p => p.fullName === publisherFullName);
-        if (!publisher) {
-            statusLog.textContent += `Skipping record for "${publisherFullName}": Publisher not found in the database.\n`;
-            skippedRecordsCount++;
-            continue;
-        }
+        processUploadBtn.disabled = true;
+        uploadStatus.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
+        const statusLog = uploadStatus.querySelector('pre');
 
-        // Use the cleaned, string-only data to create a consistent ID
-        const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-        const reportRef = db.collection("reports").doc(reportId);
-        
-        try {
-            const doc = await reportRef.get();
-            if (doc.exists) {
-                statusLog.textContent += `Skipping record for "${publisherFullName}" (${month}): Report already exists.\n`;
+        const batch = db.batch();
+        let newRecordsCount = 0;
+        let skippedRecordsCount = 0;
+        let errorCount = 0;
+
+        for (const record of parsedExcelData) {
+            const publisherFullName = record["Publisher Name"]?.trim();
+            const serviceYear = String(record["Service Year"])?.trim();
+            const month = String(record["Month"])?.trim();
+
+            if (!publisherFullName || !serviceYear || !month) {
+                statusLog.textContent += `Skipping row: Missing required data (Publisher Name, Service Year, or Month).\n`;
                 skippedRecordsCount++;
                 continue;
             }
-            
-            const reportData = {
-                publisherId: publisher.id,
-                publisherFullName: publisher.fullName,
-                serviceYear: serviceYear,
-                month: month, // Use the direct string value
-                fieldServiceGroup: record["Field Service Group"] || publisher.fieldServiceGroup,
-                privilege2AtTimeOfReport: record["Privilege at Time of Report"] || publisher.privilege2,
-                hours: parseInt(record.Hours) || 0,
-                bibleStudies: parseInt(record["Bible Studies"]) || 0,
-                sharedInMinistry: String(record["Shared in Ministry"] || '').toLowerCase() === 'yes',
-                wasAuxiliaryPioneer: String(record["Was Auxiliary Pioneer"] || '').toLowerCase() === 'yes',
-                comments: record.Comments || '',
-                lastModifiedBy: currentUser.email,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            batch.set(reportRef, reportData);
-            newRecordsCount++;
 
+            const publisher = publisherList.find(p => p.fullName === publisherFullName);
+            if (!publisher) {
+                statusLog.textContent += `Skipping record for "${publisherFullName}": Publisher not found in the database.\n`;
+                skippedRecordsCount++;
+                continue;
+            }
+
+            const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+            const reportRef = db.collection("reports").doc(reportId);
+            
+            try {
+                const doc = await reportRef.get();
+                if (doc.exists) {
+                    statusLog.textContent += `Skipping record for "${publisherFullName}" (${month}): Report already exists.\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+                
+                const reportData = {
+                    publisherId: publisher.id,
+                    publisherFullName: publisher.fullName,
+                    serviceYear: serviceYear,
+                    month: month,
+                    fieldServiceGroup: record["Field Service Group"] || publisher.fieldServiceGroup,
+                    privilege2AtTimeOfReport: record["Privilege at Time of Report"] || publisher.privilege2,
+                    hours: parseInt(record.Hours) || 0,
+                    bibleStudies: parseInt(record["Bible Studies"]) || 0,
+                    sharedInMinistry: String(record["Shared in Ministry"] || '').toLowerCase() === 'yes',
+                    wasAuxiliaryPioneer: String(record["Was Auxiliary Pioneer"] || '').toLowerCase() === 'yes',
+                    comments: record.Comments || '',
+                    lastModifiedBy: currentUser.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                batch.set(reportRef, reportData);
+                newRecordsCount++;
+
+            } catch (error) {
+                 console.error("Error processing record for " + publisherFullName, error);
+                 statusLog.textContent += `Error processing record for "${publisherFullName}". Skipping.\n`;
+                 errorCount++;
+            }
+        }
+
+        try {
+            await batch.commit();
+            let summary = `Upload complete!\n\n` +
+                          `New Records Added: ${newRecordsCount}\n` +
+                          `Records Skipped: ${skippedRecordsCount}\n` +
+                          `Errors: ${errorCount}`;
+
+            statusLog.textContent += `\n${summary}`;
+            alert(summary);
+            
+            // After successful upload, refresh the main publisher list to reflect new data
+            await loadPublishers();
+
+            processUploadBtn.disabled = true;
+            excelFileInput.value = '';
+            parsedExcelData = [];
         } catch (error) {
-             console.error("Error processing record for " + publisherFullName, error);
-             statusLog.textContent += `Error processing record for "${publisherFullName}". Skipping.\n`;
-             errorCount++;
+            console.error("Error committing batch upload:", error);
+            statusLog.textContent += "\nFATAL ERROR: An error occurred while saving the records to the database.";
+            alert("A fatal error occurred during the upload process. Please check the status log for details.");
+            processUploadBtn.disabled = false;
         }
     }
-
-    try {
-        await batch.commit();
-        let summary = `Upload complete!\n\n` +
-                      `New Records Added: ${newRecordsCount}\n` +
-                      `Records Skipped: ${skippedRecordsCount}\n` +
-                      `Errors: ${errorCount}`;
-
-        statusLog.textContent += `\n${summary}`;
-        alert(summary);
-        processUploadBtn.disabled = true;
-        excelFileInput.value = '';
-        parsedExcelData = [];
-    } catch (error) {
-        console.error("Error committing batch upload:", error);
-        statusLog.textContent += "\nFATAL ERROR: An error occurred while saving the records to the database.";
-        alert("A fatal error occurred during the upload process. Please check the status log for details.");
-        processUploadBtn.disabled = false;
-    }
-}
 </script>
 </body>
 </html>
