@@ -324,10 +324,10 @@
     <script>
     // --- Firebase Config and Initialization ---
     const firebaseConfig = {
-        apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
+        apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY", // NOTE: Replace with your actual config
         authDomain: "field-service-reporter.firebaseapp.com",
         projectId: "field-service-reporter",
-        storageBucket: "field-service-reporter.firebasestorage.app",
+        storageBucket: "field-service-reporter.appspot.com",
         messagingSenderId: "434729902657",
         appId: "1:434729902657:web:c1b06d2695a47924f89cc0",
         measurementId: "G-9N52K2CGDD"
@@ -343,6 +343,7 @@
     let currentUser = null;
     let currentReportId = null; 
     let parsedExcelData = [];
+    let adminPassword = null; // *** BAGONG DAGDAG: Para sa admin password ***
 
     // --- Global Element References ---
     let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage, uploadPublishersPage;
@@ -505,7 +506,7 @@
         backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
         logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
     }
-       function attachAllListeners() {
+        function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
         
@@ -515,11 +516,20 @@
         document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
         document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => showPage('reviewApprovalsPage', '/review-approvals'));
         document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
-        document.getElementById("uploadReportsBtn")?.addEventListener("click", () => showPage('uploadPage', '/upload-reports'));
-        document.getElementById("uploadPublishersBtn")?.addEventListener("click", () => showPage('uploadPublishersPage', '/upload-publishers'));
+        
+        // *** BINAGO: Mga buttons na may password prompt ***
+        document.getElementById("uploadReportsBtn")?.addEventListener("click", () => {
+            promptForAdminPassword(() => showPage('uploadPage', '/upload-reports'));
+        });
+        document.getElementById("uploadPublishersBtn")?.addEventListener("click", () => {
+            promptForAdminPassword(() => showPage('uploadPublishersPage', '/upload-publishers'));
+        });
+         document.getElementById("clearAllDataBtn")?.addEventListener("click", () => {
+            promptForAdminPassword(clearAllData);
+        });
+        
         document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
-        document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
 
         // --- Add Report Page ---
         document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
@@ -677,6 +687,49 @@
             console.error("Logout failed:", error);
         }
     }
+
+    // *** BAGONG DAGDAG: Function para kunin ang password sa Firebase ***
+    async function fetchAdminPassword() {
+        if (adminPassword) return; // Kung nakuha na, 'wag na ulitin
+        try {
+            const doc = await db.collection("config").doc("admin_settings").get();
+            if (doc.exists) {
+                adminPassword = doc.data().adminPassword;
+            } else {
+                console.warn("IMPORTANT: Admin password is not set in Firestore collection 'config', document 'admin_settings'.");
+            }
+        } catch (error) {
+            console.error("Error fetching admin password:", error);
+        }
+    }
+
+    // *** BAGONG DAGDAG: Function para mag-prompt ng password ***
+    async function promptForAdminPassword(callbackFunction) {
+        if (currentUser?.role !== 'admin') {
+             alert("This action is for admins only.");
+             return;
+        }
+        
+        await fetchAdminPassword();
+
+        if (!adminPassword) {
+             alert("Admin password configuration is missing. Please set it up in Firebase Firestore.");
+             return;
+        }
+
+        const input = prompt("This is a sensitive action. Please enter the admin password to proceed:");
+        
+        if (input === null) { // User clicked "Cancel"
+            return;
+        }
+
+        if (input === adminPassword) {
+            callbackFunction(); // Kung tama ang password, ituloy ang original na function
+        } else {
+            alert("Incorrect password. Action cancelled.");
+        }
+    }
+
     async function clearAllData() {
         if (confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
             try {
@@ -749,6 +802,9 @@
                 adminButtons.classList.remove('hidden');
                 adminSection.classList.remove('hidden');
                 userButtons.classList.add('hidden');
+
+                // *** BAGONG DAGDAG: Kunin ang password kapag admin ang nag-login ***
+                fetchAdminPassword();
 
                 // Fetch pending request count for admin
                 try {
