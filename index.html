@@ -100,7 +100,6 @@
         <button id="clearAuxFormBtn" class="clear-btn">Clear Form</button>
         <button id="backHomeFromAuxBtn" class="back-btn">Back to Home</button>
     </div>
-
     <div id="addReportPage" class="page-container hidden">
         <h2>Add Field Service Report</h2>
         <label for="searchPublisherReport">Search Publisher:</label>
@@ -191,7 +190,6 @@
         <button id="backHomeFromUpdateBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUpdate" class="logout-btn">Logout</button>
     </div>
-
     <div id="publisherPage" class="page-container hidden">
         <h2>Manage Publisher Records</h2>
         <input type="text" id="searchPublisher" placeholder="Search Publisher...">
@@ -289,7 +287,6 @@
         <button id="backHomeFromRequestBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromRequest" class="logout-btn">Logout</button>
     </div>
-
     <div id="reviewApprovalsPage" class="page-container hidden">
         <h2>Review Approvals</h2>
         <div id="pendingRequestsList">
@@ -298,7 +295,6 @@
         <button id="backHomeFromReviewBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromReview" class="logout-btn">Logout</button>
     </div>
-
     <div id="uploadPage" class="page-container hidden">
         <h2>Upload Field Service Reports</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
@@ -312,7 +308,6 @@
         <button id="backHomeFromUploadBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
     </div>
-    
     <div id="uploadPublishersPage" class="page-container hidden">
         <h2>Upload Publishers</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. All columns are required.</p>
@@ -329,7 +324,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    
     <script>
     const firebaseConfig = {
         apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
@@ -343,7 +337,6 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.firestore();
     const auth = firebase.auth(); 
-
     let publisherList = [];
     let currentIndex = -1;
     let currentDocId = null;
@@ -351,7 +344,6 @@
     let currentReportId = null; 
     let parsedExcelData = [];
     let adminPassword = null;
-
     let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage, uploadPublishersPage, manageAuxiliaryPage;
     let loggedInUser, adminButtons, userButtons, adminSection;
     let loginUsername, loginPassword;
@@ -377,13 +369,10 @@
     let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
     let selectFileBtnPublishers, excelFileInputPublishers, uploadStatusPublishers, processUploadBtnPublishers, backHomeFromUploadPublishersBtn, logoutBtnFromUploadPublishers;
     let searchPublisherAux, suggestionBoxAux, publisherNameDropdownAux, fieldGroupAux, privilege2Aux, serviceYearDropdownAux, monthYearDropdownAux, isAuxiliaryPioneerThisMonthAux, saveAuxStatusBtn, clearAuxFormBtn, backHomeFromAuxBtn, lastModifiedByAux;
-
     document.addEventListener("DOMContentLoaded", initializeApp);
-
     async function initializeApp() {
         getAllElements();
         attachAllListeners();
-        
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 const userDoc = await db.collection("users").doc(user.uid).get();
@@ -522,11 +511,9 @@
         backHomeFromAuxBtn = document.getElementById('backHomeFromAuxBtn');
         lastModifiedByAux = document.getElementById('lastModifiedByAux');
     }
-
     function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
-        
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage'));
         document.getElementById("manageAuxiliaryPioneerBtn")?.addEventListener("click", () => showPage('manageAuxiliaryPage'));
         document.getElementById("addReportBtnAdmin")?.addEventListener("click", () => showPage('addReportPage'));
@@ -538,7 +525,6 @@
         document.getElementById("clearAllDataBtn")?.addEventListener("click", () => promptForAdminPassword(clearAllData));
         document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage'));
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage'));
-
         document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage'));
         document.getElementById("backHomeFromPublisherBtn")?.addEventListener("click", () => showPage('homePage'));
         document.getElementById("backHomeFromUpdateBtn")?.addEventListener("click", () => showPage('homePage'));
@@ -547,7 +533,6 @@
         document.getElementById("backHomeFromUploadBtn")?.addEventListener('click', () => showPage('homePage'));
         document.getElementById("backHomeFromUploadPublishersBtn")?.addEventListener('click', () => showPage('homePage'));
         backHomeFromAuxBtn?.addEventListener("click", () => showPage('homePage'));
-        
         document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
         document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
         logoutBtnFromReport?.addEventListener("click", logout);
@@ -586,7 +571,6 @@
         if (targetPage) {
             targetPage.classList.remove('hidden');
         }
-        
         if (pageId === 'homePage') { updateHomePage(); } 
         else if (pageId === 'addReportPage') { setupAddReportPage(); } 
         else if (pageId === 'publisherPage') { setupManagePublisherPage(); } 
@@ -597,7 +581,6 @@
         else if (pageId === 'uploadPublishersPage') { setupUploadPublishersPage(); }
         else if (pageId === 'manageAuxiliaryPage') { setupManageAuxiliaryPage(); }
     }
-
     function handleRouteChange() {
         if (currentUser) {
             showPage('homePage');
@@ -605,7 +588,6 @@
             showPage('loginPage');
         }
     }
-    
     async function login() {
         const email = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
@@ -620,7 +602,6 @@
             alert("Invalid email or password.");
         }
     }
-
     async function logout() {
         try {
             await auth.signOut();
@@ -631,7 +612,6 @@
             console.error("Logout failed:", error);
         }
     }
-
     async function fetchAdminPassword() {
         if (adminPassword) return;
         try {
@@ -645,7 +625,6 @@
             console.error("Error fetching admin password:", error);
         }
     }
-
     async function promptForAdminPassword(callbackFunction) {
         if (currentUser?.role !== 'admin') {
             alert("This action is for admins only.");
@@ -664,7 +643,6 @@
             alert("Incorrect password. Action cancelled.");
         }
     }
-    
     async function clearAllData() {
         if (confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
             try {
@@ -682,7 +660,7 @@
             } catch (error) { console.error("Error clearing data:", error); alert("Failed to clear data."); }
         }
     }
-async function exportToExcel() {
+        async function exportToExcel() {
         try {
             const snapshot = await db.collection("reports").orderBy("publisherFullName", "asc").get();
             if (snapshot.empty) {
@@ -724,7 +702,6 @@ async function exportToExcel() {
             alert("An error occurred during export. Please check the console.");
         }
     }
-    
     async function updateHomePage() {
         if (currentUser) {
             document.getElementById('loggedInUser').textContent = currentUser.email;
@@ -748,17 +725,14 @@ async function exportToExcel() {
             }
         }
     }
-    
     async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
             publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error) { console.error("Error loading publishers:", error); }
     }
-
     function setupManageAuxiliaryPage() {
         clearManageAuxiliaryForm();
-        
         publisherNameDropdownAux.innerHTML = '<option value="">-- Select Publisher --</option>';
         const auxiPublishers = publisherList.filter(p => p.privilege2 === 'Publisher/Auxi');
         auxiPublishers.forEach(pub => {
@@ -767,19 +741,14 @@ async function exportToExcel() {
             opt.textContent = pub.fullName;
             publisherNameDropdownAux.appendChild(opt);
         });
-
         populateServiceYears(serviceYearDropdownAux);
-
         const fetchAndDisplayCurrentStatus = async () => {
             const publisherId = publisherNameDropdownAux.value;
             const serviceYear = serviceYearDropdownAux.value;
             const month = monthYearDropdownAux.value;
-
             isAuxiliaryPioneerThisMonthAux.value = "";
             lastModifiedByAux.textContent = "";
-
             if (!publisherId || !serviceYear || !month) return;
-
             const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
             try {
                 const docSnap = await db.collection("auxiliary_status").doc(docId).get();
@@ -790,7 +759,6 @@ async function exportToExcel() {
                 }
             } catch (e) { console.error("Error fetching status", e); }
         };
-
         const handlePublisherSelection = () => {
             const selected = publisherList.find(p => p.id === publisherNameDropdownAux.value);
             if(selected) {
@@ -802,14 +770,12 @@ async function exportToExcel() {
             }
             fetchAndDisplayCurrentStatus();
         };
-
         publisherNameDropdownAux.addEventListener('change', handlePublisherSelection);
         serviceYearDropdownAux.addEventListener('change', () => {
             populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
             fetchAndDisplayCurrentStatus();
         });
         monthYearDropdownAux.addEventListener('change', fetchAndDisplayCurrentStatus);
-        
         searchPublisherAux.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxAux.innerHTML = "";
@@ -829,8 +795,7 @@ async function exportToExcel() {
             });
         });
     }
-
-    function clearManageAuxiliaryForm() {
+        function clearManageAuxiliaryForm() {
         publisherNameDropdownAux.value = "";
         serviceYearDropdownAux.value = "";
         monthYearDropdownAux.innerHTML = '<option value="">-- Select Month --</option>';
@@ -841,20 +806,17 @@ async function exportToExcel() {
         lastModifiedByAux.textContent = "";
         suggestionBoxAux.innerHTML = "";
     }
-        async function saveAuxiliaryStatus() {
+    async function saveAuxiliaryStatus() {
         const publisherId = publisherNameDropdownAux.value;
         const serviceYear = serviceYearDropdownAux.value;
         const month = monthYearDropdownAux.value;
         const status = isAuxiliaryPioneerThisMonthAux.value;
-
         if (!publisherId || !serviceYear || !month || !status) {
             alert("Please complete all fields before saving.");
             return;
         }
-
         const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
         const publisherFullName = publisherNameDropdownAux.options[publisherNameDropdownAux.selectedIndex].text;
-
         const statusData = {
             publisherId: publisherId,
             publisherFullName: publisherFullName,
@@ -864,7 +826,6 @@ async function exportToExcel() {
             lastModifiedBy: currentUser.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
         try {
             await db.collection("auxiliary_status").doc(docId).set(statusData, { merge: true });
             alert(`Status for ${publisherFullName} for ${month} has been saved as '${status}'.`);
@@ -874,20 +835,17 @@ async function exportToExcel() {
             alert("An error occurred while saving the status.");
         }
     }
-
     async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
         elements.fieldHoursContainer.classList.add("hidden");
         elements.bibleStudiesContainer.classList.add("hidden");
         elements.sharedMinistryContainer.classList.add("hidden");
         elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-        
         elements.fieldHoursInput.value = "";
         elements.bibleStudiesInput.value = "";
         elements.sharedMinistryCheckbox.checked = false;
         elements.auxiliaryPioneerCheckbox.checked = false;
         elements.sharedMinistryCheckbox.disabled = false;
         elements.auxiliaryPioneerCheckbox.disabled = false;
-
         const handleHoursInput_Standard = () => {
             let value = elements.fieldHoursInput.value.replace(/\D/g, '');
             if (value && parseInt(value, 10) === 0) { value = ''; }
@@ -903,10 +861,8 @@ async function exportToExcel() {
             elements.auxiliaryPioneerCheckbox.checked = hasHours;
         };
         const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
-        
         elements.fieldHoursInput.oninput = null;
         elements.bibleStudiesInput.oninput = null;
-        
         const privilege2 = elements.privilegeInput.value;
         switch (privilege2) {
             case "Regular Pioneer": case "Special Pioneer": case "Field Missionary":
@@ -929,7 +885,6 @@ async function exportToExcel() {
                 break;
             case "Publisher/Auxi":
                 if (!publisherId || !serviceYear || !month) break;
-                
                 const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
                 const auxStatusRef = db.collection("auxiliary_status").doc(docId);
                 let isAux = false;
@@ -939,7 +894,6 @@ async function exportToExcel() {
                         isAux = true;
                     }
                 } catch (e) { console.error("Error fetching aux status", e); }
-
                 if (isAux) {
                     elements.fieldHoursContainer.classList.remove("hidden");
                     elements.bibleStudiesContainer.classList.remove("hidden");
@@ -962,18 +916,15 @@ async function exportToExcel() {
         if (!publisherNameDropdown.value) { alert("Validation Error: Please select a publisher."); return; }
         if (!serviceYearDropdown.value) { alert("Validation Error: Please select a service year."); return; }
         if (!monthYearDropdown.value) { alert("Validation Error: Please select a month."); return; }
-        
         const privilege = privilege2ReportInput.value;
         const isPioneerType = ["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"].includes(privilege);
         const isAuxiThisMonth = auxiliaryPioneerCheckbox.checked;
-
         if ((isPioneerType || isAuxiThisMonth) && !fieldHoursInput.value) {
             alert("Validation Error: Please enter the number of hours."); return;
         }
         if (!bibleStudiesContainer.classList.contains('hidden') && !bibleStudiesInput.value) {
              alert("Validation Error: Please enter the number of bible studies."); return;
         }
-
         const publisherId = publisherNameDropdown.value;
         const serviceYear = serviceYearDropdown.value;
         const month = monthYearDropdown.value;
@@ -994,11 +945,9 @@ async function exportToExcel() {
             setupAddReportPage();
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
-    
     async function updateReport() {
         if (!currentReportId) { alert("Error: No report is loaded to update."); return; }
         if (!confirm("Are you sure you want to update this record?")) return;
-        
         const updatedData = {
             hours: parseInt(fieldHoursUpdate.value) || 0,
             bibleStudies: parseInt(bibleStudiesUpdate.value) || 0,
@@ -1017,7 +966,6 @@ async function exportToExcel() {
             alert("Failed to update report.");
         }
     }
-
     async function deleteReport() {
         if (!currentReportId) { alert("Error: No report is loaded to delete."); return; }
         if (!confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) return;
@@ -1030,7 +978,6 @@ async function exportToExcel() {
             alert("Failed to delete report.");
         }
     }
-
     function clearUpdateReportForm(clearAll = true) {
         if (clearAll) {
             publisherNameDropdownUpdate.value = "";
@@ -1046,14 +993,136 @@ async function exportToExcel() {
         if(auxiliaryPioneerCheckboxUpdate) auxiliaryPioneerCheckboxUpdate.checked = false;
         if(commentsUpdate) commentsUpdate.value = "";
         if(lastModifiedByUpdate) lastModifiedByUpdate.textContent = "";
-
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
-
-    // Dito magtatapos ang lahat ng iyong JavaScript code
-    // Siguraduhing ang mga susunod na linya ay ang pinakahuli sa iyong file.
-
+    function updateFullName() { 
+        if (!firstNameInput || !lastNameInput || !fullNameInput) return;
+        fullNameInput.value = (lastNameInput.value.trim() && firstNameInput.value.trim()) ? `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}` : ""; 
+    }
+    function toggleBaptismDate() { 
+        if (!baptismStatusDropdown || !baptismDateContainer || !baptismDateInput) return;
+        baptismDateContainer.classList.toggle("hidden", baptismStatusDropdown.value !== "Baptized"); 
+        if (baptismStatusDropdown.value !== "Baptized") baptismDateInput.value = ""; 
+    }
+    async function addPublisher() {
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
+            alert("Please complete all fields before adding."); return;
+        }
+        const docId = `${lastNameInput.value.trim()}_${firstNameInput.value.trim()}_${birthdateInput.value}`.replace(/\s+/g, "_");
+        try {
+            const existingDoc = await db.collection("publishers").doc(docId).get();
+            if (existingDoc.exists) { alert("A publisher with the same last name, first name, and birthdate already exists."); return; }
+            const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
+            await db.collection("publishers").doc(docId).set({
+                firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("Publisher record successfully added!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) { console.error("Error adding publisher:", error); alert("Failed to add publisher record."); }
+    }
+    async function updatePublisher() {
+        if (!currentDocId) { alert("Please select a publisher to update."); return; }
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
+            alert("Please complete all fields before updating."); return;
+        }
+        const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
+        const updatedData = {
+            firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+            await db.collection("publishers").doc(currentDocId).update(updatedData);
+            alert("Publisher record updated successfully!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) { console.error("Error updating publisher:", error); alert("Failed to update publisher record."); }
+    }
+    async function deletePublisher() {
+        if (!currentDocId) { alert("Please select a publisher to delete."); return; }
+        if (!confirm("Are you sure you want to permanently delete this publisher record? This action cannot be undone.")) return;
+        try {
+            await db.collection("publishers").doc(currentDocId).delete();
+            alert("Publisher record deleted successfully!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) { console.error("Error deleting publisher:", error); alert("Failed to delete publisher record."); }
+    }
+    function previousPublisher() { 
+        if (publisherList.length === 0) return;
+        if (currentIndex > 0) { 
+            currentIndex--; 
+            displayPublisher(currentIndex); 
+        } else { 
+            alert("This is the first record."); 
+        } 
+    }
+    function nextPublisher() { 
+        if (publisherList.length === 0) return;
+        if (currentIndex < publisherList.length - 1) { 
+            currentIndex++; 
+            displayPublisher(currentIndex); 
+        } else { 
+            alert("This is the last record."); 
+        } 
+    }
+    function clearPublisherForm() {
+        const inputs = [firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismDateInput, searchInputManage];
+        const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown];
+        inputs.forEach(i => i && (i.value = ''));
+        selects.forEach(s => s && (s.value = ''));
+        baptismDateContainer?.classList.add("hidden");
+        suggestionBoxManage && (suggestionBoxManage.innerHTML = "");
+        currentIndex = -1;
+        currentDocId = null;
+    }
+    function displayPublisher(index) {
+        const pub = publisherList[index];
+        if (!pub) { clearPublisherForm(); return; }
+        currentIndex = index;
+        currentDocId = pub.id;
+        firstNameInput.value = pub.firstName || "";
+        lastNameInput.value = pub.lastName || "";
+        fullNameInput.value = pub.fullName || "";
+        birthdateInput.value = pub.birthdate || "";
+        baptismStatusDropdown.value = pub.baptismStatus || "";
+        toggleBaptismDate();
+        if (pub.baptismStatus === "Baptized") { baptismDateInput.value = pub.baptismDate || ""; }
+        genderDropdown.value = pub.gender || "";
+        hopeDropdown.value = pub.hope || "";
+        privilegeDropdown.value = pub.privilege || "";
+        privilege2Dropdown.value = pub.privilege2 || "";
+        fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
+    }
+    function populateServiceYears(dropdownElement) {
+        if (!dropdownElement) return;
+        dropdownElement.innerHTML = '<option value="">-- Select Year --</option>';
+        const startYear = 2015;
+        const endYear = new Date().getFullYear() + 5;
+        for (let year = startYear; year <= endYear; year++) {
+            const option = document.createElement("option");
+            option.value = year;
+            option.textContent = year;
+            dropdownElement.appendChild(option);
+        }
+    }
+    function populateMonths(monthDropdown, serviceYear) {
+        if (!monthDropdown || !serviceYear) { monthDropdown.innerHTML = '<option value="">-- Select Month --</option>'; return; };
+        monthDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        const selectedServiceYear = parseInt(serviceYear);
+        const startMonthYear = new Date(selectedServiceYear - 1, 8);
+        const endMonthYear = new Date(selectedServiceYear, 7);
+        let currentMonth = new Date(startMonthYear);
+        while (currentMonth <= endMonthYear) {
+            const option = document.createElement("option");
+            const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
+            const year = currentMonth.getFullYear();
+            option.value = `${monthName} ${year}`;
+            option.textContent = `${monthName} ${year}`;
+            monthDropdown.appendChild(option);
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+        }
+    }
     </script>
 </body>
 </html>
