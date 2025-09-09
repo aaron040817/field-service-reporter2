@@ -751,54 +751,65 @@
             auxStatusList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error) { console.error("Error loading auxiliary statuses:", error); }
     }
-        function setupManageAuxiliaryPage() {
-        clearManageAuxiliaryForm();
-        publisherNameDropdownAux.innerHTML = '<option value="">-- Select Publisher --</option>';
-        const auxiPublishers = publisherList.filter(p => p.privilege2 === 'Publisher/Auxi');
-        auxiPublishers.forEach(pub => {
-            const opt = document.createElement("option");
-            opt.value = pub.id;
-            opt.textContent = pub.fullName;
-            publisherNameDropdownAux.appendChild(opt);
-        });
-        populateServiceYears(serviceYearDropdownAux);
-        const handlePublisherSelection = () => {
-            const selected = publisherList.find(p => p.id === publisherNameDropdownAux.value);
-            if(selected) {
-                fieldGroupAux.value = selected.fieldServiceGroup || '';
-                privilege2Aux.value = selected.privilege2 || '';
-            } else {
-                fieldGroupAux.value = '';
-                privilege2Aux.value = '';
-            }
-        };
-        publisherNameDropdownAux.addEventListener('change', handlePublisherSelection);
-        serviceYearDropdownAux.addEventListener('change', () => {
-            populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
-        });
-        searchPublisherAux.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxAux.innerHTML = "";
-            if (!query) return;
-            const matches = auxiPublishers.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach(pub => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = pub.fullName;
-                    suggestionBoxAux.innerHTML = "";
-                    publisherNameDropdownAux.value = pub.id;
-                    publisherNameDropdownAux.dispatchEvent(new Event('change'));
-                });
-                suggestionBoxAux.appendChild(div);
-            });
-        });
-        if (auxStatusList.length > 0) {
-            currentAuxStatusIndex = 0;
-            displayAuxStatus(currentAuxStatusIndex);
+        // IPALIT ITONG BAGONG VERSION:
+function setupManageAuxiliaryPage() {
+    clearManageAuxiliaryForm();
+    publisherNameDropdownAux.innerHTML = '<option value="">-- Select Publisher --</option>';
+    const auxiPublishers = publisherList.filter(p => p.privilege2 === 'Publisher/Auxi');
+    auxiPublishers.forEach(pub => {
+        const opt = document.createElement("option");
+        opt.value = pub.id;
+        opt.textContent = pub.fullName;
+        publisherNameDropdownAux.appendChild(opt);
+    });
+
+    populateServiceYears(serviceYearDropdownAux);
+    populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
+
+    const handlePublisherSelection = () => {
+        const selected = publisherList.find(p => p.id === publisherNameDropdownAux.value);
+        if (selected) {
+            fieldGroupAux.value = selected.fieldServiceGroup || '';
+            privilege2Aux.value = selected.privilege2 || '';
+        } else {
+            fieldGroupAux.value = '';
+            privilege2Aux.value = '';
         }
+    };
+
+    publisherNameDropdownAux.addEventListener('change', handlePublisherSelection);
+    serviceYearDropdownAux.addEventListener('change', () => {
+        populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
+    });
+    
+    searchPublisherAux.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        suggestionBoxAux.innerHTML = "";
+        if (!query) return;
+        const matches = auxiPublishers.filter(pub => pub.fullName.toLowerCase().includes(query));
+        matches.forEach(pub => {
+            const div = document.createElement("div");
+            div.textContent = pub.fullName;
+            div.classList.add("suggestion-item");
+            div.addEventListener("click", () => {
+                this.value = pub.fullName;
+                suggestionBoxAux.innerHTML = "";
+                publisherNameDropdownAux.value = pub.id;
+                publisherNameDropdownAux.dispatchEvent(new Event('change'));
+            });
+            suggestionBoxAux.appendChild(div);
+        });
+    });
+
+    if (auxStatusList.length > 0) {
+        currentAuxStatusIndex = 0;
+        displayAuxStatus(currentAuxStatusIndex);
+    } else {
+        updateAuxStatusBtn.disabled = true;
+        previousAuxStatusBtn.disabled = true;
+        nextAuxStatusBtn.disabled = true;
     }
+}
     function clearManageAuxiliaryForm() {
         publisherNameDropdownAux.value = "";
         serviceYearDropdownAux.value = "";
