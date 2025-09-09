@@ -50,11 +50,11 @@
         <input type="password" id="loginPassword" placeholder="Password">
         <button id="loginBtn">Login</button>
     </div>
+
     <div id="homePage" class="page-container hidden">
         <h2>Welcome, <span id="loggedInUser"></span>!</h2>
         <div id="adminButtons">
             <button id="managePublisherBtn">Manage Publisher</button>
-            <button id="manageAuxiliaryPioneerBtn">Manage Auxiliary Pioneer</button>
             <button id="addReportBtnAdmin">Add Report</button>
             <button id="updateReportPageBtn">Update Report</button>
             <button id="reviewApprovalsBtn">Review Approvals</button>
@@ -72,34 +72,7 @@
              <p style="color: red; font-size: 12px; margin-top: 5px;">Warning: This will delete all publisher and report data.</p>
         </div>
     </div>
-    <div id="manageAuxiliaryPage" class="page-container hidden">
-        <h2>Manage Auxiliary Pioneer Status</h2>
-        <p>Select a "Publisher/Auxi" and the month to set their pioneer status.</p>
-        <label for="searchPublisherAux">Search Publisher (Publisher/Auxi only):</label>
-        <input type="text" id="searchPublisherAux" placeholder="Search by Last Name, First Name...">
-        <div id="suggestionBoxAux" class="suggestion-box"></div>
-        <label for="publisherNameDropdownAux">Publisher Name:</label>
-        <select id="publisherNameDropdownAux"></select>
-        <label for="fieldGroupAux">Field Service Group:</label>
-        <input type="text" id="fieldGroupAux" disabled>
-        <label for="privilege2Aux">Privilege 2:</label>
-        <input type="text" id="privilege2Aux" disabled>
-        <label for="serviceYearDropdownAux">Service Year:</label>
-        <select id="serviceYearDropdownAux"></select>
-        <label for="monthYearDropdownAux">Month:</label>
-        <select id="monthYearDropdownAux"></select>
-        <hr style="margin: 20px 0;">
-        <label for="isAuxiliaryPioneerThisMonthAux">Is this publisher an Auxiliary Pioneer for the selected month?</label>
-        <select id="isAuxiliaryPioneerThisMonthAux">
-            <option value="">-- Select --</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select>
-        <div id="lastModifiedByAux" class="last-modified"></div>
-        <button id="saveAuxStatusBtn">Save Status</button>
-        <button id="clearAuxFormBtn" class="clear-btn">Clear Form</button>
-        <button id="backHomeFromAuxBtn" class="back-btn">Back to Home</button>
-    </div>
+
     <div id="addReportPage" class="page-container hidden">
         <h2>Add Field Service Report</h2>
         <label for="searchPublisherReport">Search Publisher:</label>
@@ -115,6 +88,14 @@
         <select id="serviceYearDropdown"></select>
         <label for="monthYearDropdown">Month:</label>
         <select id="monthYearDropdown"></select>
+        <div id="auxPioneerQuestionContainer" class="hidden">
+            <label for="isAuxiliaryPioneerThisMonth">Is Auxiliary Pioneer this Month?</label>
+            <select id="isAuxiliaryPioneerThisMonth">
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
         <div id="fieldHoursContainer" class="hidden">
             <label for="fieldHours">Field Hours:</label>
             <input type="number" id="fieldHours" min="1">
@@ -143,6 +124,7 @@
         <button id="backHomeFromReportBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromReport" class="logout-btn">Logout</button>
     </div>
+
     <div id="updateReportPage" class="page-container hidden">
         <h2>Update Field Service Report</h2>
         <label for="searchPublisherUpdate">Search Publisher:</label>
@@ -160,6 +142,14 @@
         <select id="monthYearDropdownUpdate"></select>
         <hr style="margin: 20px 0;">
         <div id="updateReportFields" style="display: none;">
+            <div id="auxPioneerQuestionContainerUpdate" class="hidden">
+                <label for="isAuxiliaryPioneerThisMonthUpdate">Is Auxiliary Pioneer this Month?</label>
+                <select id="isAuxiliaryPioneerThisMonthUpdate">
+                    <option value="">-- Select --</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
             <div id="fieldHoursContainerUpdate" class="hidden">
                 <label for="fieldHoursUpdate">Field Hours:</label>
                 <input type="number" id="fieldHoursUpdate" min="1">
@@ -190,6 +180,7 @@
         <button id="backHomeFromUpdateBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUpdate" class="logout-btn">Logout</button>
     </div>
+
     <div id="publisherPage" class="page-container hidden">
         <h2>Manage Publisher Records</h2>
         <input type="text" id="searchPublisher" placeholder="Search Publisher...">
@@ -262,6 +253,7 @@
         <button id="backHomeFromPublisherBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromPublisher" class="logout-btn">Logout</button>
     </div>
+
     <div id="submitRequestPage" class="page-container hidden">
         <h2>Submit Request to Update Report</h2>
         <h4>Who do you want to update?</h4>
@@ -287,6 +279,7 @@
         <button id="backHomeFromRequestBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromRequest" class="logout-btn">Logout</button>
     </div>
+
     <div id="reviewApprovalsPage" class="page-container hidden">
         <h2>Review Approvals</h2>
         <div id="pendingRequestsList">
@@ -295,6 +288,7 @@
         <button id="backHomeFromReviewBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromReview" class="logout-btn">Logout</button>
     </div>
+
     <div id="uploadPage" class="page-container hidden">
         <h2>Upload Field Service Reports</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. The format must match the one from "Export to Excel".</p>
@@ -308,6 +302,7 @@
         <button id="backHomeFromUploadBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUpload" class="logout-btn">Logout</button>
     </div>
+    
     <div id="uploadPublishersPage" class="page-container hidden">
         <h2>Upload Publishers</h2>
         <p>Please select an Excel (.xlsx, .xls) or .csv file. All columns are required.</p>
@@ -321,12 +316,15 @@
         <button id="backHomeFromUploadPublishersBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
     </div>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
     <script>
+    // --- Firebase Config and Initialization ---
     const firebaseConfig = {
-        apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY",
+        apiKey: "AIzaSyDbKyWaYclW4jZ2eQ0qrK_PIfrh-7sahwY", // NOTE: Replace with your actual config
         authDomain: "field-service-reporter.firebaseapp.com",
         projectId: "field-service-reporter",
         storageBucket: "field-service-reporter.appspot.com",
@@ -337,17 +335,21 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.firestore();
     const auth = firebase.auth(); 
+
+    // --- Global State Variables ---
     let publisherList = [];
     let currentIndex = -1;
     let currentDocId = null;
     let currentUser = null;
     let currentReportId = null; 
     let parsedExcelData = [];
-    let adminPassword = null;
-    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage, uploadPublishersPage, manageAuxiliaryPage;
+    let adminPassword = null; // *** BAGONG DAGDAG: Para sa admin password ***
+
+    // --- Global Element References ---
+    let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage, uploadPublishersPage;
     let loggedInUser, adminButtons, userButtons, adminSection;
     let loginUsername, loginPassword;
-    let serviceYearDropdown, monthYearDropdown;
+    let serviceYearDropdown, monthYearDropdown, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth;
     let fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput;
     let sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox;
     let privilege2ReportInput, logoutBtnFromReport, searchPublisherReportInput, suggestionBoxReport, publisherNameDropdown, fieldGroupInput;
@@ -359,7 +361,7 @@
     let publisherNameDropdownUpdate, serviceYearDropdownUpdate, monthYearDropdownUpdate, searchPublisherUpdate, suggestionBoxUpdate;
     let fieldGroupUpdate, privilege2Update;
     let fieldHoursUpdate, bibleStudiesUpdate, sharedMinistryUpdate, auxiliaryPioneerCheckboxUpdate;
-    let updateReportFieldsDiv;
+    let auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonthUpdate, updateReportFieldsDiv;
     let fieldHoursContainerUpdate, bibleStudiesContainerUpdate, sharedMinistryContainerUpdate, auxiliaryPioneerCheckboxContainerUpdate;
     let updateReportBtn, deleteReportBtn, clearUpdateFormBtn, backHomeFromUpdateBtn, logoutBtnFromUpdate;
     let commentsAdd, lastModifiedByAdd, commentsUpdate, lastModifiedByUpdate;
@@ -368,10 +370,10 @@
     let pendingRequestsList, noPendingRequestsLabel;
     let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
     let selectFileBtnPublishers, excelFileInputPublishers, uploadStatusPublishers, processUploadBtnPublishers, backHomeFromUploadPublishersBtn, logoutBtnFromUploadPublishers;
-    let searchPublisherAux, suggestionBoxAux, publisherNameDropdownAux, fieldGroupAux, privilege2Aux, serviceYearDropdownAux, monthYearDropdownAux, isAuxiliaryPioneerThisMonthAux, saveAuxStatusBtn, clearAuxFormBtn, backHomeFromAuxBtn, lastModifiedByAux;
-        document.addEventListener("DOMContentLoaded", initializeApp);
+// --- CORE APPLICATION LIFECYCLE ---
+    document.addEventListener("DOMContentLoaded", initializeApp);
 
-        async function initializeApp() {
+    async function initializeApp() {
         getAllElements();
         attachAllListeners();
         auth.onAuthStateChanged(async (user) => {
@@ -504,7 +506,7 @@
         backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
         logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
     }
-       function attachAllListeners() {
+        function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
         
@@ -514,11 +516,20 @@
         document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage', '/update-report'));
         document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => showPage('reviewApprovalsPage', '/review-approvals'));
         document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
-        document.getElementById("uploadReportsBtn")?.addEventListener("click", () => showPage('uploadPage', '/upload-reports'));
-        document.getElementById("uploadPublishersBtn")?.addEventListener("click", () => showPage('uploadPublishersPage', '/upload-publishers'));
+        
+        // *** BINAGO: Mga buttons na may password prompt ***
+        document.getElementById("uploadReportsBtn")?.addEventListener("click", () => {
+            promptForAdminPassword(() => showPage('uploadPage', '/upload-reports'));
+        });
+        document.getElementById("uploadPublishersBtn")?.addEventListener("click", () => {
+            promptForAdminPassword(() => showPage('uploadPublishersPage', '/upload-publishers'));
+        });
+         document.getElementById("clearAllDataBtn")?.addEventListener("click", () => {
+            promptForAdminPassword(clearAllData);
+        });
+        
         document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage', '/add-report'));
         document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage', '/submit-request'));
-        document.getElementById("clearAllDataBtn")?.addEventListener("click", clearAllData);
 
         // --- Add Report Page ---
         document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
@@ -676,6 +687,49 @@
             console.error("Logout failed:", error);
         }
     }
+
+    // *** BAGONG DAGDAG: Function para kunin ang password sa Firebase ***
+    async function fetchAdminPassword() {
+        if (adminPassword) return; // Kung nakuha na, 'wag na ulitin
+        try {
+            const doc = await db.collection("config").doc("admin_settings").get();
+            if (doc.exists) {
+                adminPassword = doc.data().adminPassword;
+            } else {
+                console.warn("IMPORTANT: Admin password is not set in Firestore collection 'config', document 'admin_settings'.");
+            }
+        } catch (error) {
+            console.error("Error fetching admin password:", error);
+        }
+    }
+
+    // *** BAGONG DAGDAG: Function para mag-prompt ng password ***
+    async function promptForAdminPassword(callbackFunction) {
+        if (currentUser?.role !== 'admin') {
+             alert("This action is for admins only.");
+             return;
+        }
+        
+        await fetchAdminPassword();
+
+        if (!adminPassword) {
+             alert("Admin password configuration is missing. Please set it up in Firebase Firestore.");
+             return;
+        }
+
+        const input = prompt("This is a sensitive action. Please enter the admin password to proceed:");
+        
+        if (input === null) { // User clicked "Cancel"
+            return;
+        }
+
+        if (input === adminPassword) {
+            callbackFunction(); // Kung tama ang password, ituloy ang original na function
+        } else {
+            alert("Incorrect password. Action cancelled.");
+        }
+    }
+
     async function clearAllData() {
         if (confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
             try {
@@ -748,6 +802,9 @@
                 adminButtons.classList.remove('hidden');
                 adminSection.classList.remove('hidden');
                 userButtons.classList.add('hidden');
+
+                // *** BAGONG DAGDAG: Kunin ang password kapag admin ang nag-login ***
+                fetchAdminPassword();
 
                 // Fetch pending request count for admin
                 try {
