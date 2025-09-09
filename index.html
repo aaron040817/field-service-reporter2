@@ -1144,6 +1144,79 @@
             clearPublisherForm();
         } catch (error) { console.error("Error adding publisher:", error); alert("Failed to add publisher record."); }
     }
+        async function updatePublisher() {
+        if (!currentDocId) { alert("Please select a publisher to update."); return; }
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
+            alert("Please complete all fields before updating."); return;
+        }
+        const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
+        const updatedData = {
+            firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+            await db.collection("publishers").doc(currentDocId).update(updatedData);
+            alert("Publisher record updated successfully!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) { console.error("Error updating publisher:", error); alert("Failed to update publisher record."); }
+    }
+    async function deletePublisher() {
+        if (!currentDocId) { alert("Please select a publisher to delete."); return; }
+        if (!confirm("Are you sure you want to permanently delete this publisher record? This action cannot be undone.")) return;
+        try {
+            await db.collection("publishers").doc(currentDocId).delete();
+            alert("Publisher record deleted successfully!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) { console.error("Error deleting publisher:", error); alert("Failed to delete publisher record."); }
+    }
+    function previousPublisher() { 
+        if (publisherList.length === 0) return;
+        if (currentIndex > 0) { 
+            currentIndex--; 
+            displayPublisher(currentIndex); 
+        } else { 
+            alert("This is the first record."); 
+        } 
+    }
+    function nextPublisher() { 
+        if (publisherList.length === 0) return;
+        if (currentIndex < publisherList.length - 1) { 
+            currentIndex++; 
+            displayPublisher(currentIndex); 
+        } else { 
+            alert("This is the last record."); 
+        } 
+    }
+    function clearPublisherForm() {
+        const inputs = [firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismDateInput, searchInputManage];
+        const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown];
+        inputs.forEach(i => i && (i.value = ''));
+        selects.forEach(s => s && (s.value = ''));
+        baptismDateContainer?.classList.add("hidden");
+        suggestionBoxManage && (suggestionBoxManage.innerHTML = "");
+        currentIndex = -1;
+        currentDocId = null;
+    }
+    function displayPublisher(index) {
+        const pub = publisherList[index];
+        if (!pub) { clearPublisherForm(); return; }
+        currentIndex = index;
+        currentDocId = pub.id;
+        firstNameInput.value = pub.firstName || "";
+        lastNameInput.value = pub.lastName || "";
+        fullNameInput.value = pub.fullName || "";
+        birthdateInput.value = pub.birthdate || "";
+        baptismStatusDropdown.value = pub.baptismStatus || "";
+        toggleBaptismDate();
+        if (pub.baptismStatus === "Baptized") { baptismDateInput.value = pub.baptismDate || ""; }
+        genderDropdown.value = pub.gender || "";
+        hopeDropdown.value = pub.hope || "";
+        privilegeDropdown.value = pub.privilege || "";
+        privilege2Dropdown.value = pub.privilege2 || "";
+        fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
+    }
+
     // Ang mga natitirang function ay kumpleto at buo na.
     // DITO NA TALAGA NAGATATAPOS ANG LAHAT.
     
