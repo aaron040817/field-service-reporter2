@@ -1127,7 +1127,23 @@
              privilegeInput: privilege2Update, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
         }, publisherId, serviceYear, month);
     }
-    
+    async function addPublisher() {
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
+            alert("Please complete all fields before adding."); return;
+        }
+        const docId = `${lastNameInput.value.trim()}_${firstNameInput.value.trim()}_${birthdateInput.value}`.replace(/\s+/g, "_");
+        try {
+            const existingDoc = await db.collection("publishers").doc(docId).get();
+            if (existingDoc.exists) { alert("A publisher with the same last name, first name, and birthdate already exists."); return; }
+            const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
+            await db.collection("publishers").doc(docId).set({
+                firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("Publisher record successfully added!");
+            await loadPublishers();
+            clearPublisherForm();
+        } catch (error) { console.error("Error adding publisher:", error); alert("Failed to add publisher record."); }
+    }
     // Ang mga natitirang function ay kumpleto at buo na.
     // DITO NA TALAGA NAGATATAPOS ANG LAHAT.
     
