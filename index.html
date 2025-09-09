@@ -522,7 +522,7 @@
         backHomeFromAuxBtn = document.getElementById('backHomeFromAuxBtn');
         lastModifiedByAux = document.getElementById('lastModifiedByAux');
     }
-        function attachAllListeners() {
+     function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage'));
@@ -626,7 +626,7 @@
             console.error("Logout failed:", error);
         }
     }
-        async function fetchAdminPassword() {
+    async function fetchAdminPassword() {
         if (adminPassword) return;
         try {
             const doc = await db.collection("config").doc("admin_settings").get();
@@ -657,7 +657,7 @@
             alert("Incorrect password. Action cancelled.");
         }
     }
-    async function clearAllData() {
+        async function clearAllData() {
         if (confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
             try {
                 const publishers = await db.collection("publishers").get();
@@ -716,14 +716,14 @@
             alert("An error occurred during export. Please check the console.");
         }
     }
-        async function updateHomePage() {
+    async function updateHomePage() {
         if (currentUser) {
-            document.getElementById('loggedInUser').textContent = currentUser.email;
+            loggedInUser.textContent = currentUser.email;
             const reviewApprovalsBtn = document.getElementById('reviewApprovalsBtn');
             if (currentUser.role === 'admin') {
-                document.getElementById('adminButtons').classList.remove('hidden');
-                document.getElementById('adminSection').classList.remove('hidden');
-                document.getElementById('userButtons').classList.add('hidden');
+                adminButtons.classList.remove('hidden');
+                adminSection.classList.remove('hidden');
+                userButtons.classList.add('hidden');
                 fetchAdminPassword();
                 try {
                     const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
@@ -733,9 +733,9 @@
                     reviewApprovalsBtn.textContent = "Review Approvals";
                 }
             } else { 
-                document.getElementById('adminButtons').classList.add('hidden');
-                document.getElementById('adminSection').classList.add('hidden');
-                document.getElementById('userButtons').classList.remove('hidden');
+                adminButtons.classList.add('hidden');
+                adminSection.classList.add('hidden');
+                userButtons.classList.remove('hidden');
             }
         }
     }
@@ -811,7 +811,7 @@
         suggestionBoxAux.innerHTML = "";
         currentAuxStatusIndex = -1;
     }
-        function displayAuxStatus(index) {
+    function displayAuxStatus(index) {
         const status = auxStatusList[index];
         if (!status) return;
         publisherNameDropdownAux.value = status.publisherId || "";
@@ -845,7 +845,7 @@
             alert("This is the last record.");
         }
     }
-    async function addAuxiliaryStatus() {
+        async function addAuxiliaryStatus() {
         const publisherId = publisherNameDropdownAux.value;
         const serviceYear = serviceYearDropdownAux.value;
         const month = monthYearDropdownAux.value;
@@ -974,7 +974,7 @@
                 break;
         }
     }
-    async function saveReport() {
+        async function saveReport() {
         const publisherId = publisherNameDropdown.value;
         const serviceYear = serviceYearDropdown.value;
         const month = monthYearDropdown.value;
@@ -984,7 +984,6 @@
         fieldHoursInput.value = hoursVal;
         let studiesVal = parseInt(bibleStudiesInput.value) || 0;
         bibleStudiesInput.value = studiesVal;
-
         const privilege = privilege2ReportInput.value;
         let isAuxThisMonth = false;
         if (privilege === 'Publisher/Auxi') {
@@ -995,6 +994,8 @@
                     isAuxThisMonth = true;
                 }
             } catch (e) { console.error("Error checking aux status on save", e); }
+        } else if (["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"].includes(privilege)) {
+            isAuxThisMonth = true;
         }
 
         if (isAuxThisMonth && hoursVal <= 0) {
@@ -1027,6 +1028,109 @@
             clearAddReportForm();
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
+    // Ang mga natitirang function ay kumpleto at nandito na lahat
+    function setupAddReportPage() {
+        clearAddReportForm();
+        serviceYearDropdown.disabled = false;
+        monthYearDropdown.disabled = false;
+        publisherNameDropdown.disabled = false;
+        searchPublisherReport.classList.remove('hidden');
+        publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
+        publisherList.forEach(pub => {
+            const opt = document.createElement("option");
+            opt.value = pub.id;
+            opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
+            publisherNameDropdown.appendChild(opt);
+        });
+        populateServiceYears(serviceYearDropdown);
+        if (currentUser.role === 'user') {
+            publisherNameDropdown.disabled = false;
+            searchPublisherReport.classList.remove('hidden');
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            let serviceYear = (currentMonth >= 8) ? currentYear + 1 : currentYear;
+            serviceYearDropdown.value = serviceYear;
+            serviceYearDropdown.disabled = true;
+            populateMonths(monthYearDropdown, serviceYear);
+            const prevMonthDate = new Date();
+            prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+            const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+            const prevMonthYear = prevMonthDate.getFullYear();
+            monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
+            monthYearDropdown.disabled = true;
+            autofillPublisherDetails(publisherNameDropdown.value);
+        } 
+        searchPublisherReportInput.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxReport.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach(pub => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = pub.fullName;
+                    suggestionBoxReport.innerHTML = "";
+                    publisherNameDropdown.value = pub.id;
+                    autofillPublisherDetails(pub.id);
+                });
+                suggestionBoxReport.appendChild(div);
+            });
+        });
+        publisherNameDropdown.addEventListener("change", async () => await autofillPublisherDetails(publisherNameDropdown.value));
+        serviceYearDropdown.addEventListener("change", async () => {
+            populateMonths(monthYearDropdown, serviceYearDropdown.value);
+            await updateReportFieldsVisibility();
+        });
+        monthYearDropdown.addEventListener("change", async () => await updateReportFieldsVisibility());
+    }
+    async function autofillPublisherDetails(publisherId) {
+        const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
+        if (selectedPublisher) {
+            fieldGroupInput.value = selectedPublisher.fieldServiceGroup || "";
+            privilege2ReportInput.value = selectedPublisher.privilege2 || "";
+        } else {
+            fieldGroupInput.value = "";
+            privilege2ReportInput.value = "";
+        }
+        await updateReportFieldsVisibility();
+    }
+    function clearAddReportForm() {
+        suggestionBoxReport.innerHTML = "";
+        fieldGroupInput.value = "";
+        privilege2ReportInput.value = "";
+        commentsAdd.value = "";
+        lastModifiedByAdd.textContent = "";
+        searchPublisherReportInput.value = "";
+        publisherNameDropdown.value = "";
+        if (currentUser.role === 'admin') {
+            serviceYearDropdown.value = "";
+            monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        }
+        updateReportFieldsVisibility();
+    }
+    async function updateReportFieldsVisibility() {
+        const publisherId = publisherNameDropdown.value;
+        const serviceYear = serviceYearDropdown.value;
+        const month = monthYearDropdown.value;
+        await handleReportFieldLogic({
+            privilegeInput: privilege2ReportInput, fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput, sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox
+        }, publisherId, serviceYear, month);
+    }
+    async function updateReportFieldsVisibility_UpdatePage() {
+        const publisherId = publisherNameDropdownUpdate.value;
+        const serviceYear = serviceYearDropdownUpdate.value;
+        const month = monthYearDropdownUpdate.value;
+        await handleReportFieldLogic({
+             privilegeInput: privilege2Update, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
+        }, publisherId, serviceYear, month);
+    }
+    
+    // Ang mga natitirang function ay kumpleto at buo na.
+    // DITO NA TALAGA NAGATATAPOS ANG LAHAT.
+    
     </script>
 </body>
 </html>
