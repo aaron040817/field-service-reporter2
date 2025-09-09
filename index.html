@@ -1216,6 +1216,15 @@
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
     }
+function updateFullName() { 
+        if (!firstNameInput || !lastNameInput || !fullNameInput) return;
+        fullNameInput.value = (lastNameInput.value.trim() && firstNameInput.value.trim()) ? `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}` : ""; 
+    }
+    function toggleBaptismDate() { 
+        if (!baptismStatusDropdown || !baptismDateContainer || !baptismDateInput) return;
+        baptismDateContainer.classList.toggle("hidden", baptismStatusDropdown.value !== "Baptized"); 
+        if (baptismStatusDropdown.value !== "Baptized") baptismDateInput.value = ""; 
+    }
 
     // Ang mga natitirang function ay kumpleto at buo na.
     // DITO NA TALAGA NAGATATAPOS ANG LAHAT.
