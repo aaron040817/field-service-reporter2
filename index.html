@@ -850,40 +850,41 @@
             alert("This is the last record.");
         }
     }
-        async function addAuxiliaryStatus() {
-        const publisherId = publisherNameDropdownAux.value;
-        const serviceYear = serviceYearDropdownAux.value;
-        const month = monthYearDropdownAux.value;
-        const status = isAuxiliaryPioneerThisMonthAux.value;
-        if (!publisherId || !serviceYear || !month) {
-            alert("Please complete all publisher, year, and month fields before adding.");
+        // IPALIT ITONG BAGONG VERSION
+async function addAuxiliaryStatus() {
+    const publisherId = publisherNameDropdownAux.value;
+    const serviceYear = serviceYearDropdownAux.value;
+    const month = monthYearDropdownAux.value;
+    const status = isAuxiliaryPioneerThisMonthAux.value;
+    if (!publisherId || !serviceYear || !month) {
+        alert("Please complete all publisher, year, and month fields before adding.");
+        return;
+    }
+    const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+    const docRef = db.collection("auxiliary_status").doc(docId);
+    try {
+        const docSnap = await docRef.get();
+        if (docSnap.exists) { // <--- ITO NA ANG TAMA
+            alert("Error: A status for this publisher and month already exists. Use the navigation buttons to find and update it.");
             return;
         }
-        const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-        const docRef = db.collection("auxiliary_status").doc(docId);
-        try {
-            const docSnap = await docRef.get();
-            if (docSnap.exists()) {
-                alert("Error: A status for this publisher and month already exists. Use the navigation buttons to find and update it.");
-                return;
-            }
-            const publisherFullName = publisherNameDropdownAux.options[publisherNameDropdownAux.selectedIndex].text;
-            const statusData = {
-                publisherId, publisherFullName, serviceYear, month,
-                isAuxiliary: status === "Yes",
-                lastModifiedBy: currentUser.email,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            await docRef.set(statusData);
-            alert(`Status for ${publisherFullName} for ${month} has been added as '${status}'.`);
-            await loadAuxStatuses();
-            const newIndex = auxStatusList.findIndex(item => item.id === docId);
-            if (newIndex !== -1) displayAuxStatus(newIndex);
-        } catch (error) {
-            console.error("Error adding auxiliary status: ", error);
-            alert("An error occurred while adding the status.");
-        }
+        const publisherFullName = publisherNameDropdownAux.options[publisherNameDropdownAux.selectedIndex].text;
+        const statusData = {
+            publisherId, publisherFullName, serviceYear, month,
+            isAuxiliary: status === "Yes",
+            lastModifiedBy: currentUser.email,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await docRef.set(statusData);
+        alert(`Status for ${publisherFullName} for ${month} has been added as '${status}'.`);
+        await loadAuxStatuses();
+        const newIndex = auxStatusList.findIndex(item => item.id === docId);
+        if (newIndex !== -1) displayAuxStatus(newIndex);
+    } catch (error) {
+        console.error("Error adding auxiliary status: ", error);
+        alert("An error occurred while adding the status.");
     }
+}
     async function updateAuxiliaryStatus() {
         if (currentAuxStatusIndex < 0) {
             alert("Please select a record to update using the navigation buttons first.");
