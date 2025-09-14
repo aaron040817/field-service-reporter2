@@ -766,7 +766,8 @@
     const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
     try {
         const docSnap = await db.collection("auxiliary_status").doc(docId).get();
-        if (docSnap.exists()) {
+        
+        if (docSnap.exists) { // ITO PO ANG BINAGO, TINANGGAL ANG ()
             const data = docSnap.data();
             isAuxiliaryPioneerThisMonthAux.value = data.isAuxiliary ? "Yes" : "No";
             lastModifiedByAux.textContent = data.lastModifiedBy ? `Last set by: ${data.lastModifiedBy}` : '';
