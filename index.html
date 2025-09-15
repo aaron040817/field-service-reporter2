@@ -1156,21 +1156,19 @@ async function addAuxiliaryStatus() {
         updateReportFieldsVisibility();
     }
     function clearAddReportForm() {
-        suggestionBoxReport.innerHTML = "";
-        fieldGroupInput.value = "";
-        privilege2ReportInput.value = "";
-        isAuxiliaryPioneerThisMonth.value = "";
-        commentsAdd.value = "";
-        lastModifiedByAdd.textContent = "";
-        searchPublisherReportInput.value = "";
-        publisherNameDropdown.value = "";
-
-        if (currentUser.role === 'admin') {
-            serviceYearDropdown.value = "";
-            monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
-        }
-        updateReportFieldsVisibility();
+    suggestionBoxReport.innerHTML = "";
+    fieldGroupInput.value = "";
+    privilege2ReportInput.value = "";
+    commentsAdd.value = "";
+    lastModifiedByAdd.textContent = "";
+    searchPublisherReportInput.value = "";
+    publisherNameDropdown.value = "";
+    if (currentUser.role === 'admin') {
+        serviceYearDropdown.value = "";
+        monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
     }
+    updateReportFieldsVisibility();
+}
     async function updateReportFieldsVisibility() {
         handleReportFieldLogic({
             privilegeInput: privilege2ReportInput, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth, fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput, sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox
