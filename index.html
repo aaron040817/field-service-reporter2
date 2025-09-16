@@ -956,77 +956,77 @@ async function addAuxiliaryStatus() {
         }
     }
     async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
-        elements.fieldHoursContainer.classList.add("hidden");
-        elements.bibleStudiesContainer.classList.add("hidden");
-        elements.sharedMinistryContainer.classList.add("hidden");
-        elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-        elements.fieldHoursInput.value = "";
-        elements.bibleStudiesInput.value = "";
-        elements.sharedMinistryCheckbox.checked = false;
-        elements.auxiliaryPioneerCheckbox.checked = false;
-        elements.sharedMinistryCheckbox.disabled = false;
-        elements.auxiliaryPioneerCheckbox.disabled = false;
-        const handleHoursInput_Standard = () => {
-            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-            if (value && parseInt(value, 10) === 0) { value = ''; }
-            elements.fieldHoursInput.value = value;
-            elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
-        };
-        const handleHoursInput_WithAux = () => {
-            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-            if (value && parseInt(value, 10) === 0) { value = ''; }
-            elements.fieldHoursInput.value = value;
-            const hasHours = parseInt(value, 10) > 0;
-            elements.sharedMinistryCheckbox.checked = hasHours;
-            elements.auxiliaryPioneerCheckbox.checked = hasHours;
-        };
-        const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
-        elements.fieldHoursInput.oninput = null;
-        elements.bibleStudiesInput.oninput = null;
-        const privilege2 = elements.privilegeInput.value;
-        switch (privilege2) {
-            case "Regular Pioneer": case "Special Pioneer": case "Field Missionary": case "Continuous Auxiliary Pioneer":
+    elements.fieldHoursContainer.classList.add("hidden");
+    elements.bibleStudiesContainer.classList.add("hidden");
+    elements.sharedMinistryContainer.classList.add("hidden");
+    elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+    elements.fieldHoursInput.value = "";
+    elements.bibleStudiesInput.value = "";
+    elements.sharedMinistryCheckbox.checked = false;
+    elements.auxiliaryPioneerCheckbox.checked = false;
+    elements.sharedMinistryCheckbox.disabled = false;
+    elements.auxiliaryPioneerCheckbox.disabled = false;
+    const handleHoursInput_Standard = () => {
+        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+        if (value && parseInt(value, 10) === 0) { value = ''; }
+        elements.fieldHoursInput.value = value;
+        elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
+    };
+    const handleHoursInput_WithAux = () => {
+        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+        if (value && parseInt(value, 10) === 0) { value = ''; }
+        elements.fieldHoursInput.value = value;
+        const hasHours = parseInt(value, 10) > 0;
+        elements.sharedMinistryCheckbox.checked = hasHours;
+        elements.auxiliaryPioneerCheckbox.checked = hasHours;
+    };
+    const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
+    elements.fieldHoursInput.oninput = null;
+    elements.bibleStudiesInput.oninput = null;
+    const privilege2 = elements.privilegeInput.value;
+    switch (privilege2) {
+        case "Regular Pioneer": case "Special Pioneer": case "Field Missionary": case "Continuous Auxiliary Pioneer":
+            elements.fieldHoursContainer.classList.remove("hidden");
+            elements.bibleStudiesContainer.classList.remove("hidden");
+            elements.sharedMinistryContainer.classList.remove("hidden");
+            elements.sharedMinistryCheckbox.disabled = true;
+            if (privilege2 === "Continuous Auxiliary Pioneer") {
+                elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                elements.auxiliaryPioneerCheckbox.disabled = true;
+            }
+            elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
+            elements.bibleStudiesInput.oninput = handleStudiesInput;
+            break;
+        case "Publisher/Auxi":
+            let isAux = false;
+            if (publisherId && serviceYear && month) {
+                const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+                const auxStatusRef = db.collection("auxiliary_status").doc(docId);
+                try {
+                    const docSnap = await auxStatusRef.get();
+                    if (docSnap.exists && docSnap.data().isAuxiliary) {
+                        isAux = true;
+                    }
+                } catch (e) { console.error("Error fetching aux status", e); }
+            }
+            if (isAux) {
                 elements.fieldHoursContainer.classList.remove("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
+                elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
                 elements.sharedMinistryCheckbox.disabled = true;
-                if (privilege2 === "Continuous Auxiliary Pioneer") {
-                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-                    elements.auxiliaryPioneerCheckbox.disabled = true;
-                }
+                elements.auxiliaryPioneerCheckbox.disabled = true;
                 elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
-                break;
-            case "Publisher/Auxi":
-                let isAux = false;
-                if (publisherId && serviceYear && month) {
-                    const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-                    const auxStatusRef = db.collection("auxiliary_status").doc(docId);
-                    try {
-                        const docSnap = await auxStatusRef.get();
-                        if (docSnap.exists() && docSnap.data().isAuxiliary) {
-                            isAux = true;
-                        }
-                    } catch (e) { console.error("Error fetching aux status", e); }
-                }
-                if (isAux) {
-                    elements.fieldHoursContainer.classList.remove("hidden");
-                    elements.bibleStudiesContainer.classList.remove("hidden");
-                    elements.sharedMinistryContainer.classList.remove("hidden");
-                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-                    elements.sharedMinistryCheckbox.disabled = true;
-                    elements.auxiliaryPioneerCheckbox.disabled = true;
-                    elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
-                    elements.bibleStudiesInput.oninput = handleStudiesInput;
-                } else {
-                    elements.bibleStudiesContainer.classList.remove("hidden");
-                    elements.sharedMinistryContainer.classList.remove("hidden");
-                    elements.sharedMinistryCheckbox.disabled = false;
-                    elements.bibleStudiesInput.oninput = handleStudiesInput;
-                }
-                break;
-        }
+            } else {
+                elements.bibleStudiesContainer.classList.remove("hidden");
+                elements.sharedMinistryContainer.classList.remove("hidden");
+                elements.sharedMinistryCheckbox.disabled = false;
+                elements.bibleStudiesInput.oninput = handleStudiesInput;
+            }
+            break;
     }
+}
         async function saveReport() {
         const publisherId = publisherNameDropdown.value;
         const serviceYear = serviceYearDropdown.value;
@@ -1079,71 +1079,63 @@ async function addAuxiliaryStatus() {
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
     function setupAddReportPage() {
-        clearAddReportForm();
-        
-        serviceYearDropdown.disabled = false;
-        monthYearDropdown.disabled = false;
+    clearAddReportForm();
+    serviceYearDropdown.disabled = false;
+    monthYearDropdown.disabled = false;
+    publisherNameDropdown.disabled = false;
+    searchPublisherReport.classList.remove('hidden');
+    publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
+    publisherList.forEach(pub => {
+        const opt = document.createElement("option");
+        opt.value = pub.id;
+        opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
+        publisherNameDropdown.appendChild(opt);
+    });
+    populateServiceYears(serviceYearDropdown);
+    populateMonths(monthYearDropdown, serviceYearDropdown.value);
+    if (currentUser.role === 'user') {
         publisherNameDropdown.disabled = false;
         searchPublisherReport.classList.remove('hidden');
-
-        publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
-        publisherList.forEach(pub => {
-            const opt = document.createElement("option");
-            opt.value = pub.id;
-            opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
-            publisherNameDropdown.appendChild(opt);
-        });
-
-        populateServiceYears(serviceYearDropdown);
-        
-        if (currentUser.role === 'user') {
-            // Re-enable publisher selection for User, as requested.
-            publisherNameDropdown.disabled = false;
-            searchPublisherReport.classList.remove('hidden');
-
-            const today = new Date();
-            const currentMonth = today.getMonth(); // January is 0, December is 11
-            const currentYear = today.getFullYear();
-            let serviceYear = (currentMonth >= 9 && currentMonth <= 11) ? currentYear + 1 : currentYear;
-            
-            serviceYearDropdown.value = serviceYear;
-            serviceYearDropdown.disabled = true;
-
-            populateMonths(monthYearDropdown, serviceYear);
-            const prevMonthDate = new Date();
-            prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-            const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
-            const prevMonthYear = prevMonthDate.getFullYear();
-            monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
-            monthYearDropdown.disabled = true;
-            
-            autofillPublisherDetails(publisherNameDropdown.value);
-
-        } 
-        
-        // Attach listeners that are common to both roles or specific to admin
-        searchPublisherReportInput.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxReport.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach(pub => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = pub.fullName;
-                    suggestionBoxReport.innerHTML = "";
-                    publisherNameDropdown.value = pub.id;
-                    autofillPublisherDetails(pub.id);
-                });
-                suggestionBoxReport.appendChild(div);
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        let serviceYear = (currentMonth >= 8) ? currentYear + 1 : currentYear;
+        serviceYearDropdown.value = serviceYear;
+        serviceYearDropdown.disabled = true;
+        populateMonths(monthYearDropdown, serviceYear);
+        const prevMonthDate = new Date();
+        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+        const prevMonthYear = prevMonthDate.getFullYear();
+        monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
+        monthYearDropdown.disabled = true;
+        autofillPublisherDetails(publisherNameDropdown.value);
+    } 
+    searchPublisherReportInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        suggestionBoxReport.innerHTML = "";
+        if (!query) return;
+        const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+        matches.forEach(pub => {
+            const div = document.createElement("div");
+            div.textContent = pub.fullName;
+            div.classList.add("suggestion-item");
+            div.addEventListener("click", () => {
+                this.value = pub.fullName;
+                suggestionBoxReport.innerHTML = "";
+                publisherNameDropdown.value = pub.id;
+                autofillPublisherDetails(pub.id);
             });
+            suggestionBoxReport.appendChild(div);
         });
-        publisherNameDropdown.addEventListener("change", () => autofillPublisherDetails(publisherNameDropdown.value));
-        serviceYearDropdown.addEventListener("change", () => populateMonths(monthYearDropdown, serviceYearDropdown.value));
-        isAuxiliaryPioneerThisMonth.addEventListener("change", updateReportFieldsVisibility);
-    }
+    });
+    publisherNameDropdown.addEventListener("change", async () => await autofillPublisherDetails(publisherNameDropdown.value));
+    serviceYearDropdown.addEventListener("change", async () => {
+        populateMonths(monthYearDropdown, serviceYearDropdown.value);
+        await updateReportFieldsVisibility();
+    });
+    monthYearDropdown.addEventListener("change", async () => await updateReportFieldsVisibility());
+}
     async function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
