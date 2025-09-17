@@ -323,7 +323,7 @@
         <button id="backHomeFromUploadPublishersBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
     </div>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script>
@@ -338,14 +338,14 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.firestore();
-    const auth = firebase.auth();
+    const auth = firebase.auth(); 
     let publisherList = [];
     let auxStatusList = [];
     let currentIndex = -1;
     let currentAuxStatusIndex = -1;
     let currentDocId = null;
     let currentUser = null;
-    let currentReportId = null;
+    let currentReportId = null; 
     let parsedExcelData = [];
     let adminPassword = null;
     let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage, uploadPublishersPage, manageAuxiliaryPage;
@@ -373,7 +373,9 @@
     let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
     let selectFileBtnPublishers, excelFileInputPublishers, uploadStatusPublishers, processUploadBtnPublishers, backHomeFromUploadPublishersBtn, logoutBtnFromUploadPublishers;
     let searchPublisherAux, suggestionBoxAux, publisherNameDropdownAux, fieldGroupAux, privilege2Aux, serviceYearDropdownAux, monthYearDropdownAux, isAuxiliaryPioneerThisMonthAux, addAuxStatusBtn, updateAuxStatusBtn, previousAuxStatusBtn, nextAuxStatusBtn, clearAuxFormBtn, backHomeFromAuxBtn, lastModifiedByAux;
+
     document.addEventListener("DOMContentLoaded", initializeApp);
+
     async function initializeApp() {
         getAllElements();
         attachAllListeners();
@@ -400,7 +402,8 @@
             }
         });
     }
-        function getAllElements() {
+
+    function getAllElements() {
         loginPage = document.getElementById('loginPage');
         homePage = document.getElementById('homePage');
         addReportPage = document.getElementById('addReportPage');
@@ -579,7 +582,7 @@
         nextAuxStatusBtn?.addEventListener("click", nextAuxStatus);
         clearAuxFormBtn?.addEventListener("click", clearManageAuxiliaryForm);
     }
-        function showPage(pageId) {
+    function showPage(pageId) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
         if (targetPage) {
@@ -739,7 +742,7 @@
             }
         }
     }
-        async function loadPublishers() {
+    async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
             publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -944,7 +947,7 @@
             alert("An error occurred while updating the status.");
         }
     }
-        async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
+    async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
         elements.fieldHoursContainer.classList.add("hidden");
         elements.bibleStudiesContainer.classList.add("hidden");
         elements.sharedMinistryContainer.classList.add("hidden");
@@ -1061,6 +1064,7 @@
             clearAddReportForm();
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
+    // Dito na po nagsisimula ang mga function na nawawala kanina
     function setupAddReportPage() {
         clearAddReportForm();
         serviceYearDropdown.disabled = false;
@@ -1160,7 +1164,120 @@
              privilegeInput: privilege2Update, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
         }, publisherId, serviceYear, month);
     }
-    // Dito nagtatapos ang buong script
+    function setupUpdateReportPage() {
+        clearUpdateReportForm(); 
+        publisherNameDropdownUpdate.innerHTML = '<option value="">-- Select Publisher --</option>';
+        publisherList.forEach(pub => {
+            const opt = document.createElement("option");
+            opt.value = pub.id;
+            opt.textContent = pub.fullName;
+            publisherNameDropdownUpdate.appendChild(opt);
+        });
+        populateServiceYears(serviceYearDropdownUpdate);
+        searchPublisherUpdate.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxUpdate.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach(pub => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = pub.fullName;
+                    suggestionBoxUpdate.innerHTML = "";
+                    publisherNameDropdownUpdate.value = pub.id;
+                    publisherNameDropdownUpdate.dispatchEvent(new Event('change'));
+                });
+                suggestionBoxUpdate.appendChild(div);
+            });
+        });
+        const handlePublisherSelection = async () => {
+            const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownUpdate.value);
+            if(selectedPublisher) {
+                fieldGroupUpdate.value = selectedPublisher.fieldServiceGroup || '';
+                privilege2Update.value = selectedPublisher.privilege2 || '';
+            } else {
+                fieldGroupUpdate.value = '';
+                privilege2Update.value = '';
+            }
+            await fetchReportData();
+        }
+        publisherNameDropdownUpdate.addEventListener('change', handlePublisherSelection);
+        serviceYearDropdownUpdate.addEventListener('change', async () => {
+            populateMonths(monthYearDropdownUpdate, serviceYearDropdownUpdate.value);
+            await fetchReportData();
+        });
+        monthYearDropdownUpdate.addEventListener('change', fetchReportData);
+    }
+    async function fetchReportData() {
+        const publisherId = publisherNameDropdownUpdate.value;
+        const serviceYear = serviceYearDropdownUpdate.value;
+        const month = monthYearDropdownUpdate.value;
+        if (!publisherId || !serviceYear || !month) {
+             clearUpdateReportForm(false);
+             return;
+        }
+        const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const reportRef = db.collection("reports").doc(reportId);
+        try {
+            const doc = await reportRef.get();
+            if (doc.exists) {
+                const data = doc.data();
+                currentReportId = doc.id;
+                await updateReportFieldsVisibility_UpdatePage();
+                updateReportFieldsDiv.style.display = 'block';
+                fieldHoursUpdate.value = data.hours || '';
+                bibleStudiesUpdate.value = data.bibleStudies || '';
+                sharedMinistryUpdate.checked = data.sharedInMinistry || false;
+                auxiliaryPioneerCheckboxUpdate.checked = data.wasAuxiliaryPioneer || false;
+                commentsUpdate.value = data.comments || '';
+                lastModifiedByUpdate.textContent = data.lastModifiedBy ? `Last modified by: ${data.lastModifiedBy}` : '';
+            } else {
+                alert("No report found for the selected publisher and period.");
+                clearUpdateReportForm(false);
+                currentReportId = null;
+            }
+        } catch (error) {
+            console.error("Error fetching report data:", error);
+            alert("An error occurred while fetching the report.");
+            currentReportId = null;
+        }
+    }
+    function setupManagePublisherPage() {}
+    function setupSubmitRequestPage() {}
+    async function setupReviewApprovalsPage() {}
+    function setupUploadPage() {}
+    function setupUploadPublishersPage() {}
+    function populateServiceYears(dropdownElement) {
+        if (!dropdownElement) return;
+        dropdownElement.innerHTML = '<option value="">-- Select Year --</option>';
+        const startYear = 2015;
+        const endYear = new Date().getFullYear() + 5;
+        for (let year = startYear; year <= endYear; year++) {
+            const option = document.createElement("option");
+            option.value = year;
+            option.textContent = year;
+            dropdownElement.appendChild(option);
+        }
+    }
+    function populateMonths(monthDropdown, serviceYear) {
+        if (!monthDropdown || !serviceYear) { monthDropdown.innerHTML = '<option value="">-- Select Month --</option>'; return; };
+        monthDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        const selectedServiceYear = parseInt(serviceYear);
+        const startMonthYear = new Date(selectedServiceYear - 1, 8);
+        const endMonthYear = new Date(selectedServiceYear, 7);
+        let currentMonth = new Date(startMonthYear);
+        while (currentMonth <= endMonthYear) {
+            const option = document.createElement("option");
+            const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
+            const year = currentMonth.getFullYear();
+            option.value = `${monthName} ${year}`;
+            option.textContent = `${monthName} ${year}`;
+            monthDropdown.appendChild(option);
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+        }
+    }
     </script>
 </body>
 </html>
