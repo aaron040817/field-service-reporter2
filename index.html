@@ -1269,6 +1269,173 @@
         updateReportFieldsDiv.style.display = 'none';
         currentReportId = null;
     }
+        function setupSubmitRequestPage() {
+        clearSubmitRequestForm();
+        publisherNameDropdownRequest.innerHTML = '<option value="">-- Select Publisher --</option>';
+        publisherList.forEach(pub => {
+            const opt = document.createElement("option");
+            opt.value = pub.id;
+            opt.textContent = pub.fullName;
+            publisherNameDropdownRequest.appendChild(opt);
+        });
+        populateServiceYears(serviceYearRequest);
+        const handlePublisherSelection = () => {
+            const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownRequest.value);
+            if(selectedPublisher) {
+                fieldGroupRequest.value = selectedPublisher.fieldServiceGroup || '';
+                privilege2Request.value = selectedPublisher.privilege2 || '';
+            } else {
+                fieldGroupRequest.value = '';
+                privilege2Request.value = '';
+            }
+            fetchReportDataForRequest();
+        }
+        searchPublisherRequest.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxRequest.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach(pub => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = pub.fullName;
+                    suggestionBoxRequest.innerHTML = "";
+                    publisherNameDropdownRequest.value = pub.id;
+                    publisherNameDropdownRequest.dispatchEvent(new Event('change'));
+                });
+                suggestionBoxRequest.appendChild(div);
+            });
+        });
+        publisherNameDropdownRequest.addEventListener('change', handlePublisherSelection);
+        serviceYearRequest.addEventListener('change', () => {
+            populateMonths(monthYearRequest, serviceYearRequest.value);
+            fetchReportDataForRequest();
+        });
+        monthYearRequest.addEventListener('change', fetchReportDataForRequest);
+    }
+    async function setupReviewApprovalsPage() {
+        pendingRequestsList.innerHTML = '';
+        noPendingRequestsLabel.classList.remove('hidden'); 
+        try {
+            const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
+            if (snapshot.empty) {
+                noPendingRequestsLabel.classList.remove('hidden');
+                return;
+            }
+            noPendingRequestsLabel.classList.add('hidden'); 
+            const newPendingList = pendingRequestsList.cloneNode(false);
+            pendingRequestsList.parentNode.replaceChild(newPendingList, pendingRequestsList);
+            pendingRequestsList = newPendingList;
+            snapshot.forEach(doc => {
+                const request = doc.data();
+                const requestId = doc.id;
+                const changes = request.requestedChanges;
+                const requestDiv = document.createElement('div');
+                requestDiv.className = 'request-item';
+                requestDiv.innerHTML = `<h4>Request from: ${request.requestingUserEmail}</h4><p><strong>Publisher:</strong> ${request.publisherToUpdateName}<br><strong>Period:</strong> ${request.month}</p><p><strong>New Values:</strong><br>Hours: ${changes.hours}, Studies: ${changes.bibleStudies}<br>Shared in Ministry: ${changes.sharedInMinistry ? 'Yes' : 'No'}<br>Was Aux Pioneer: ${changes.wasAuxiliaryPioneer ? 'Yes' : 'No'}<br>Comments: ${changes.comments || '<i>No comments</i>'}</p><button class="approve-btn" data-id="${requestId}">Approve</button><button class="reject-btn" data-id="${requestId}">Reject</button>`;
+                pendingRequestsList.appendChild(requestDiv);
+            });
+            pendingRequestsList.addEventListener('click', async (e) => {
+                const target = e.target;
+                const requestId = target.dataset.id;
+                if (!requestId) return;
+                if (target.classList.contains('approve-btn')) await approveRequest(requestId);
+                else if (target.classList.contains('reject-btn')) await rejectRequest(requestId);
+            });
+        } catch (error) {
+            console.error("Error fetching pending requests:", error);
+            pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
+        }
+    }
+    function clearSubmitRequestForm() {
+        publisherNameDropdownRequest.value = "";
+        serviceYearRequest.value = "";
+        monthYearRequest.innerHTML = '<option value="">-- Select Month --</option>';
+        searchPublisherRequest.value = "";
+        fieldGroupRequest.value = "";
+        privilege2Request.value = "";
+        requestFields.innerHTML = "";
+        requestFields.style.display = 'none';
+    }
+    async function fetchReportDataForRequest() {
+        const publisherId = publisherNameDropdownRequest.value;
+        const serviceYear = serviceYearRequest.value;
+        const month = monthYearRequest.value;
+        requestFields.innerHTML = "";
+        requestFields.style.display = 'none';
+        if (!publisherId || !serviceYear || !month) { return; }
+        const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const reportRef = db.collection("reports").doc(reportId);
+        try {
+            const doc = await reportRef.get();
+            if (doc.exists) {
+                const data = doc.data();
+                let fieldsHTML = `<div id="fieldHoursContainerRequest" class="hidden"><label for="fieldHoursRequest">Field Hours:</label><input type="number" id="fieldHoursRequest" min="1"></div><div id="bibleStudiesContainerRequest" class="hidden"><label for="bibleStudiesRequest">Bible Studies:</label><input type="number" id="bibleStudiesRequest" min="0"></div><div id="sharedMinistryContainerRequest" class="hidden checkbox-container"><input type="checkbox" id="sharedMinistryRequest"><label for="sharedMinistryRequest">Shared in Ministry</label></div><div id="auxiliaryPioneerCheckboxContainerRequest" class="hidden checkbox-container"><input type="checkbox" id="auxiliaryPioneerRequest"><label for="auxiliaryPioneerRequest">Auxiliary Pioneer</label></div><label for="commentsRequest">Comments/Reason for Update (Optional):</label><textarea id="commentsRequest"></textarea><div id="lastModifiedByRequest" class="last-modified"></div>`;
+                requestFields.innerHTML = fieldsHTML;
+                const dynamicElements = { privilegeInput: privilege2Request, fieldHoursContainer: document.getElementById('fieldHoursContainerRequest'), fieldHoursInput: document.getElementById('fieldHoursRequest'), bibleStudiesContainer: document.getElementById('bibleStudiesContainerRequest'), bibleStudiesInput: document.getElementById('bibleStudiesRequest'), sharedMinistryContainer: document.getElementById('sharedMinistryContainerRequest'), sharedMinistryCheckbox: document.getElementById('sharedMinistryRequest'), auxiliaryPioneerCheckboxContainer: document.getElementById('auxiliaryPioneerCheckboxContainerRequest'), auxiliaryPioneerCheckbox: document.getElementById('auxiliaryPioneerRequest') };
+                await handleReportFieldLogic(dynamicElements, publisherId, serviceYear, month);
+                document.getElementById('fieldHoursRequest').value = data.hours || '';
+                document.getElementById('bibleStudiesRequest').value = data.bibleStudies || '';
+                document.getElementById('sharedMinistryRequest').checked = data.sharedInMinistry || false;
+                if (dynamicElements.auxiliaryPioneerCheckbox) { dynamicElements.auxiliaryPioneerCheckbox.checked = data.wasAuxiliaryPioneer || false; }
+                document.getElementById('commentsRequest').value = data.comments || '';
+                document.getElementById('lastModifiedByRequest').textContent = data.lastModifiedBy ? `Last modified by: ${data.lastModifiedBy}` : '';
+                requestFields.style.display = 'block';
+            } else {
+                alert("No existing report found for this period to update.");
+            }
+        } catch (error) { console.error("Error fetching report for request:", error); }
+    }
+    async function submitRequestForApproval() {
+        const publisherId = publisherNameDropdownRequest.value;
+        const serviceYear = serviceYearRequest.value;
+        const month = monthYearRequest.value;
+        if (!publisherId || !serviceYear || !month) { alert("Please select the publisher, service year, and month of the report."); return; }
+        const originalReportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const hoursInput = document.getElementById('fieldHoursRequest');
+        if (!hoursInput) { alert("No report data loaded. Please select a valid period with an existing report."); return; }
+        const studiesInput = document.getElementById('bibleStudiesRequest');
+        const sharedMinistryInput = document.getElementById('sharedMinistryRequest');
+        const auxPioneerInput = document.getElementById('auxiliaryPioneerRequest');
+        const commentsInput = document.getElementById('commentsRequest');
+        if (hoursInput.parentElement.classList.contains('hidden') === false && !hoursInput.value) { alert("Validation Error: Please enter the number of hours."); return; }
+        if (studiesInput.parentElement.classList.contains('hidden') === false && !studiesInput.value) { alert("Validation Error: Please enter the number of bible studies."); return; }
+        if (sharedMinistryInput.parentElement.classList.contains('hidden') === false && !sharedMinistryInput.checked) { alert("Validation Error: The 'Shared in Ministry' box must be checked."); return; }
+        if (auxPioneerInput && auxPioneerInput.parentElement.classList.contains('hidden') === false && !auxPioneerInput.checked) { alert("Validation Error: The 'Auxiliary Pioneer' box must be checked."); return; }
+        const wasAuxPioneerThisMonth = (auxPioneerInput && !auxPioneerInput.parentElement.classList.contains('hidden') && auxPioneerInput.checked);
+        const requestedChanges = { hours: parseInt(hoursInput.value) || 0, bibleStudies: parseInt(studiesInput.value) || 0, sharedInMinistry: sharedMinistryInput.checked, wasAuxiliaryPioneer: wasAuxPioneerThisMonth, comments: commentsInput.value, lastModifiedBy: currentUser.email, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+        const requestData = { requestingUserUid: currentUser.uid, requestingUserEmail: currentUser.email, publisherToUpdateId: publisherId, publisherToUpdateName: publisherNameDropdownRequest.options[publisherNameDropdownRequest.selectedIndex].text, originalReportId: originalReportId, serviceYear: serviceYear, month: month, requestedChanges: requestedChanges, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+        try {
+            await db.collection('updateRequests').add(requestData);
+            alert("Request Submitted. Please wait for the admin approval to take effect the changes.");
+            clearSubmitRequestForm();
+        } catch (error) { console.error("Error submitting request:", error); alert("Failed to submit request. Please check security rules and console."); }
+    }
+    async function approveRequest(requestId) {
+        if (!confirm("Are you sure you want to approve these changes? The report will be overwritten.")) return;
+        try {
+            const requestRef = db.collection('updateRequests').doc(requestId);
+            const requestDoc = await requestRef.get();
+            if (!requestDoc.exists) { alert("Error: Request not found. It may have been processed already."); setupReviewApprovalsPage(); return; }
+            const requestData = requestDoc.data();
+            const reportRef = db.collection('reports').doc(requestData.originalReportId);
+            await reportRef.update(requestData.requestedChanges);
+            await requestRef.update({ status: 'approved', processedBy: currentUser.email });
+            alert("Request approved and report has been updated.");
+            setupReviewApprovalsPage();
+        } catch (error) { console.error("Error approving request:", error); alert("Failed to approve request."); }
+    }
+    async function rejectRequest(requestId) {
+        if (!confirm("Are you sure you want to reject this request?")) return;
+        try {
+            const requestRef = db.collection('updateRequests').doc(requestId);
+            await requestRef.update({ status: 'rejected', processedBy: currentUser.email });
+            alert("Request has been rejected.");
+            setupReviewApprovalsPage();
+        } catch (error) { console.error("Error rejecting request:", error); alert("Failed to reject request."); }
+    }
         async function saveReport() {
         const publisherId = publisherNameDropdown.value;
         const serviceYear = serviceYearDropdown.value;
