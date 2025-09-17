@@ -1706,24 +1706,31 @@
         });
         populateServiceYears(serviceYearDropdown);
         populateMonths(monthYearDropdown, serviceYearDropdown.value);
+
         if (currentUser.role === 'user') {
             publisherNameDropdown.disabled = false;
             searchPublisherReport.classList.remove('hidden');
             const today = new Date();
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
-            let serviceYear = (currentMonth >= 8) ? currentYear + 1 : currentYear;
+            
+            let serviceYear = (currentMonth >= 9) ? currentYear + 1 : currentYear;
+            
             serviceYearDropdown.value = serviceYear;
             serviceYearDropdown.disabled = true;
+            
             populateMonths(monthYearDropdown, serviceYear);
+            
             const prevMonthDate = new Date();
             prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
             const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
             const prevMonthYear = prevMonthDate.getFullYear();
             monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
             monthYearDropdown.disabled = true;
+            
             autofillPublisherDetails(publisherNameDropdown.value);
-        } 
+        }
+
         searchPublisherReportInput.addEventListener("input", function () {
             const query = this.value.toLowerCase();
             suggestionBoxReport.innerHTML = "";
