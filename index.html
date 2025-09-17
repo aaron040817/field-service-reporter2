@@ -323,7 +323,7 @@
         <button id="backHomeFromUploadPublishersBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script>
@@ -338,14 +338,14 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.firestore();
-    const auth = firebase.auth(); 
+    const auth = firebase.auth();
     let publisherList = [];
     let auxStatusList = [];
     let currentIndex = -1;
     let currentAuxStatusIndex = -1;
     let currentDocId = null;
     let currentUser = null;
-    let currentReportId = null; 
+    let currentReportId = null;
     let parsedExcelData = [];
     let adminPassword = null;
     let loginPage, homePage, addReportPage, publisherPage, updateReportPage, submitRequestPage, reviewApprovalsPage, uploadPage, uploadPublishersPage, manageAuxiliaryPage;
@@ -373,7 +373,7 @@
     let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
     let selectFileBtnPublishers, excelFileInputPublishers, uploadStatusPublishers, processUploadBtnPublishers, backHomeFromUploadPublishersBtn, logoutBtnFromUploadPublishers;
     let searchPublisherAux, suggestionBoxAux, publisherNameDropdownAux, fieldGroupAux, privilege2Aux, serviceYearDropdownAux, monthYearDropdownAux, isAuxiliaryPioneerThisMonthAux, addAuxStatusBtn, updateAuxStatusBtn, previousAuxStatusBtn, nextAuxStatusBtn, clearAuxFormBtn, backHomeFromAuxBtn, lastModifiedByAux;
-        document.addEventListener("DOMContentLoaded", initializeApp);
+    document.addEventListener("DOMContentLoaded", initializeApp);
     async function initializeApp() {
         getAllElements();
         attachAllListeners();
@@ -522,7 +522,7 @@
         backHomeFromAuxBtn = document.getElementById('backHomeFromAuxBtn');
         lastModifiedByAux = document.getElementById('lastModifiedByAux');
     }
-        function attachAllListeners() {
+    function attachAllListeners() {
         document.getElementById("loginBtn")?.addEventListener("click", login);
         document.getElementById("logoutBtn")?.addEventListener("click", logout);
         document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage'));
@@ -579,7 +579,7 @@
         nextAuxStatusBtn?.addEventListener("click", nextAuxStatus);
         clearAuxFormBtn?.addEventListener("click", clearManageAuxiliaryForm);
     }
-    function showPage(pageId) {
+        function showPage(pageId) {
         document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
         const targetPage = document.getElementById(pageId);
         if (targetPage) {
@@ -602,7 +602,7 @@
             showPage('loginPage');
         }
     }
-        async function login() {
+    async function login() {
         const email = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
         if (!email || !password) {
@@ -657,7 +657,7 @@
             alert("Incorrect password. Action cancelled.");
         }
     }
-        async function clearAllData() {
+    async function clearAllData() {
         if (confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
             try {
                 const publishers = await db.collection("publishers").get();
@@ -739,7 +739,7 @@
             }
         }
     }
-    async function loadPublishers() {
+        async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
             publisherList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -751,106 +751,63 @@
             auxStatusList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error) { console.error("Error loading auxiliary statuses:", error); }
     }
-        async function fetchAndDisplayAuxStatus() {
-    const publisherId = publisherNameDropdownAux.value;
-    const serviceYear = serviceYearDropdownAux.value;
-    const month = monthYearDropdownAux.value;
-
-    isAuxiliaryPioneerThisMonthAux.value = "No";
-    lastModifiedByAux.textContent = "";
-
-    if (!publisherId || !serviceYear || !month) {
-        return;
-    }
-
-    const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-    try {
-        const docSnap = await db.collection("auxiliary_status").doc(docId).get();
-        
-        if (docSnap.exists) { // ITO PO ANG BINAGO, TINANGGAL ANG ()
-            const data = docSnap.data();
-            isAuxiliaryPioneerThisMonthAux.value = data.isAuxiliary ? "Yes" : "No";
-            lastModifiedByAux.textContent = data.lastModifiedBy ? `Last set by: ${data.lastModifiedBy}` : '';
-            
-            const recordIndex = auxStatusList.findIndex(item => item.id === docId);
-            if (recordIndex !== -1) {
-                currentAuxStatusIndex = recordIndex;
-            } else {
-                currentAuxStatusIndex = -1;
-            }
-        } else {
-            isAuxiliaryPioneerThisMonthAux.value = "No";
-            lastModifiedByAux.textContent = "No status set for this period.";
-            currentAuxStatusIndex = -1;
-        }
-    } catch (e) {
-        console.error("Error fetching status", e);
-        isAuxiliaryPioneerThisMonthAux.value = "No";
-        lastModifiedByAux.textContent = "Error fetching status.";
-    }
-}
-        function setupManageAuxiliaryPage() {
-    clearManageAuxiliaryForm();
-    publisherNameDropdownAux.innerHTML = '<option value="">-- Select Publisher --</option>';
-    const auxiPublishers = publisherList.filter(p => p.privilege2 === 'Publisher/Auxi');
-    auxiPublishers.forEach(pub => {
-        const opt = document.createElement("option");
-        opt.value = pub.id;
-        opt.textContent = pub.fullName;
-        publisherNameDropdownAux.appendChild(opt);
-    });
-
-    populateServiceYears(serviceYearDropdownAux);
-    populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
-
-    const handlePublisherSelection = () => {
-        const selected = publisherList.find(p => p.id === publisherNameDropdownAux.value);
-        if(selected) {
-            fieldGroupAux.value = selected.fieldServiceGroup || '';
-            privilege2Aux.value = selected.privilege2 || '';
-        } else {
-            fieldGroupAux.value = '';
-            privilege2Aux.value = '';
-        }
-        fetchAndDisplayAuxStatus();
-    };
-    
-    publisherNameDropdownAux.addEventListener('change', handlePublisherSelection);
-    serviceYearDropdownAux.addEventListener('change', () => {
-        populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
-        fetchAndDisplayAuxStatus();
-    });
-    monthYearDropdownAux.addEventListener('change', fetchAndDisplayAuxStatus);
-    
-    searchPublisherAux.addEventListener("input", function () {
-        const query = this.value.toLowerCase();
-        suggestionBoxAux.innerHTML = "";
-        if (!query) return;
-        const matches = auxiPublishers.filter(pub => pub.fullName.toLowerCase().includes(query));
-        matches.forEach(pub => {
-            const div = document.createElement("div");
-            div.textContent = pub.fullName;
-            div.classList.add("suggestion-item");
-            div.addEventListener("click", () => {
-                this.value = pub.fullName;
-                suggestionBoxAux.innerHTML = "";
-                publisherNameDropdownAux.value = pub.id;
-                publisherNameDropdownAux.dispatchEvent(new Event('change'));
-            });
-            suggestionBoxAux.appendChild(div);
+    function setupManageAuxiliaryPage() {
+        clearManageAuxiliaryForm();
+        publisherNameDropdownAux.innerHTML = '<option value="">-- Select Publisher --</option>';
+        const auxiPublishers = publisherList.filter(p => p.privilege2 === 'Publisher/Auxi');
+        auxiPublishers.forEach(pub => {
+            const opt = document.createElement("option");
+            opt.value = pub.id;
+            opt.textContent = pub.fullName;
+            publisherNameDropdownAux.appendChild(opt);
         });
-    });
-
-    if (auxStatusList.length > 0) {
-        updateAuxStatusBtn.disabled = false;
-        previousAuxStatusBtn.disabled = false;
-        nextAuxStatusBtn.disabled = false;
-    } else {
-        updateAuxStatusBtn.disabled = true;
-        previousAuxStatusBtn.disabled = true;
-        nextAuxStatusBtn.disabled = true;
+        populateServiceYears(serviceYearDropdownAux);
+        populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
+        const handlePublisherSelection = () => {
+            const selected = publisherList.find(p => p.id === publisherNameDropdownAux.value);
+            if(selected) {
+                fieldGroupAux.value = selected.fieldServiceGroup || '';
+                privilege2Aux.value = selected.privilege2 || '';
+            } else {
+                fieldGroupAux.value = '';
+                privilege2Aux.value = '';
+            }
+            fetchAndDisplayAuxStatus();
+        };
+        publisherNameDropdownAux.addEventListener('change', handlePublisherSelection);
+        serviceYearDropdownAux.addEventListener('change', () => {
+            populateMonths(monthYearDropdownAux, serviceYearDropdownAux.value);
+            fetchAndDisplayAuxStatus();
+        });
+        monthYearDropdownAux.addEventListener('change', fetchAndDisplayAuxStatus);
+        searchPublisherAux.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxAux.innerHTML = "";
+            if (!query) return;
+            const matches = auxiPublishers.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach(pub => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = pub.fullName;
+                    suggestionBoxAux.innerHTML = "";
+                    publisherNameDropdownAux.value = pub.id;
+                    publisherNameDropdownAux.dispatchEvent(new Event('change'));
+                });
+                suggestionBoxAux.appendChild(div);
+            });
+        });
+        if (auxStatusList.length > 0) {
+            updateAuxStatusBtn.disabled = false;
+            previousAuxStatusBtn.disabled = false;
+            nextAuxStatusBtn.disabled = false;
+        } else {
+            updateAuxStatusBtn.disabled = true;
+            previousAuxStatusBtn.disabled = true;
+            nextAuxStatusBtn.disabled = true;
+        }
     }
-}
     function clearManageAuxiliaryForm() {
         publisherNameDropdownAux.value = "";
         serviceYearDropdownAux.value = "";
@@ -862,6 +819,39 @@
         lastModifiedByAux.textContent = "";
         suggestionBoxAux.innerHTML = "";
         currentAuxStatusIndex = -1;
+    }
+    async function fetchAndDisplayAuxStatus() {
+        const publisherId = publisherNameDropdownAux.value;
+        const serviceYear = serviceYearDropdownAux.value;
+        const month = monthYearDropdownAux.value;
+        isAuxiliaryPioneerThisMonthAux.value = "No";
+        lastModifiedByAux.textContent = "";
+        if (!publisherId || !serviceYear || !month) {
+            return;
+        }
+        const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        try {
+            const docSnap = await db.collection("auxiliary_status").doc(docId).get();
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                isAuxiliaryPioneerThisMonthAux.value = data.isAuxiliary ? "Yes" : "No";
+                lastModifiedByAux.textContent = data.lastModifiedBy ? `Last set by: ${data.lastModifiedBy}` : '';
+                const recordIndex = auxStatusList.findIndex(item => item.id === docId);
+                if (recordIndex !== -1) {
+                    currentAuxStatusIndex = recordIndex;
+                } else {
+                    currentAuxStatusIndex = -1;
+                }
+            } else {
+                isAuxiliaryPioneerThisMonthAux.value = "No";
+                lastModifiedByAux.textContent = "No status set for this period.";
+                currentAuxStatusIndex = -1;
+            }
+        } catch (e) {
+            console.error("Error fetching status", e);
+            isAuxiliaryPioneerThisMonthAux.value = "No";
+            lastModifiedByAux.textContent = "Error fetching status.";
+        }
     }
     function displayAuxStatus(index) {
         const status = auxStatusList[index];
@@ -897,41 +887,40 @@
             alert("This is the last record.");
         }
     }
-        // IPALIT ITONG BAGONG VERSION
-async function addAuxiliaryStatus() {
-    const publisherId = publisherNameDropdownAux.value;
-    const serviceYear = serviceYearDropdownAux.value;
-    const month = monthYearDropdownAux.value;
-    const status = isAuxiliaryPioneerThisMonthAux.value;
-    if (!publisherId || !serviceYear || !month) {
-        alert("Please complete all publisher, year, and month fields before adding.");
-        return;
-    }
-    const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-    const docRef = db.collection("auxiliary_status").doc(docId);
-    try {
-        const docSnap = await docRef.get();
-        if (docSnap.exists) { // <--- ITO NA ANG TAMA
-            alert("Error: A status for this publisher and month already exists. Use the navigation buttons to find and update it.");
+    async function addAuxiliaryStatus() {
+        const publisherId = publisherNameDropdownAux.value;
+        const serviceYear = serviceYearDropdownAux.value;
+        const month = monthYearDropdownAux.value;
+        const status = isAuxiliaryPioneerThisMonthAux.value;
+        if (!publisherId || !serviceYear || !month) {
+            alert("Please complete all publisher, year, and month fields before adding.");
             return;
         }
-        const publisherFullName = publisherNameDropdownAux.options[publisherNameDropdownAux.selectedIndex].text;
-        const statusData = {
-            publisherId, publisherFullName, serviceYear, month,
-            isAuxiliary: status === "Yes",
-            lastModifiedBy: currentUser.email,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        await docRef.set(statusData);
-        alert(`Status for ${publisherFullName} for ${month} has been added as '${status}'.`);
-        await loadAuxStatuses();
-        const newIndex = auxStatusList.findIndex(item => item.id === docId);
-        if (newIndex !== -1) displayAuxStatus(newIndex);
-    } catch (error) {
-        console.error("Error adding auxiliary status: ", error);
-        alert("An error occurred while adding the status.");
+        const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+        const docRef = db.collection("auxiliary_status").doc(docId);
+        try {
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
+                alert("Error: A status for this publisher and month already exists. Use the navigation buttons to find and update it.");
+                return;
+            }
+            const publisherFullName = publisherNameDropdownAux.options[publisherNameDropdownAux.selectedIndex].text;
+            const statusData = {
+                publisherId, publisherFullName, serviceYear, month,
+                isAuxiliary: status === "Yes",
+                lastModifiedBy: currentUser.email,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await docRef.set(statusData);
+            alert(`Status for ${publisherFullName} for ${month} has been added as '${status}'.`);
+            await loadAuxStatuses();
+            const newIndex = auxStatusList.findIndex(item => item.id === docId);
+            if (newIndex !== -1) displayAuxStatus(newIndex);
+        } catch (error) {
+            console.error("Error adding auxiliary status: ", error);
+            alert("An error occurred while adding the status.");
+        }
     }
-}
     async function updateAuxiliaryStatus() {
         if (currentAuxStatusIndex < 0) {
             alert("Please select a record to update using the navigation buttons first.");
@@ -955,79 +944,73 @@ async function addAuxiliaryStatus() {
             alert("An error occurred while updating the status.");
         }
     }
-    async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
-    elements.fieldHoursContainer.classList.add("hidden");
-    elements.bibleStudiesContainer.classList.add("hidden");
-    elements.sharedMinistryContainer.classList.add("hidden");
-    elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-    elements.fieldHoursInput.value = "";
-    elements.bibleStudiesInput.value = "";
-    elements.sharedMinistryCheckbox.checked = false;
-    elements.auxiliaryPioneerCheckbox.checked = false;
-    elements.sharedMinistryCheckbox.disabled = false;
-    elements.auxiliaryPioneerCheckbox.disabled = false;
-    const handleHoursInput_Standard = () => {
-        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-        if (value && parseInt(value, 10) === 0) { value = ''; }
-        elements.fieldHoursInput.value = value;
-        elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
-    };
-    const handleHoursInput_WithAux = () => {
-        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-        if (value && parseInt(value, 10) === 0) { value = ''; }
-        elements.fieldHoursInput.value = value;
-        const hasHours = parseInt(value, 10) > 0;
-        elements.sharedMinistryCheckbox.checked = hasHours;
-        elements.auxiliaryPioneerCheckbox.checked = hasHours;
-    };
-    const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
-    elements.fieldHoursInput.oninput = null;
-    elements.bibleStudiesInput.oninput = null;
-    const privilege2 = elements.privilegeInput.value;
-    switch (privilege2) {
-        case "Regular Pioneer": case "Special Pioneer": case "Field Missionary": case "Continuous Auxiliary Pioneer":
-            elements.fieldHoursContainer.classList.remove("hidden");
-            elements.bibleStudiesContainer.classList.remove("hidden");
-            elements.sharedMinistryContainer.classList.remove("hidden");
-            elements.sharedMinistryCheckbox.disabled = true;
-            if (privilege2 === "Continuous Auxiliary Pioneer") {
-                elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-                elements.auxiliaryPioneerCheckbox.disabled = true;
-            }
-            elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
-            elements.bibleStudiesInput.oninput = handleStudiesInput;
-            break;
-        case "Publisher/Auxi":
-            let isAux = false;
-            if (publisherId && serviceYear && month) {
-                const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-                const auxStatusRef = db.collection("auxiliary_status").doc(docId);
-                try {
-                    const docSnap = await auxStatusRef.get();
-                    if (docSnap.exists && docSnap.data().isAuxiliary) {
-                        isAux = true;
-                    }
-                } catch (e) { console.error("Error fetching aux status", e); }
-            }
-            if (isAux) {
+        async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
+        elements.fieldHoursContainer.classList.add("hidden");
+        elements.bibleStudiesContainer.classList.add("hidden");
+        elements.sharedMinistryContainer.classList.add("hidden");
+        elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+        elements.fieldHoursInput.value = "";
+        elements.bibleStudiesInput.value = "";
+        elements.sharedMinistryCheckbox.checked = false;
+        elements.auxiliaryPioneerCheckbox.checked = false;
+        elements.sharedMinistryCheckbox.disabled = false;
+        elements.auxiliaryPioneerCheckbox.disabled = false;
+        const handleHoursInput_WithAux = () => {
+            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+            if (value && parseInt(value, 10) === 0) { value = ''; }
+            elements.fieldHoursInput.value = value;
+            const hasHours = parseInt(value, 10) > 0;
+            elements.sharedMinistryCheckbox.checked = hasHours;
+            elements.auxiliaryPioneerCheckbox.checked = hasHours;
+        };
+        const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
+        elements.fieldHoursInput.oninput = null;
+        elements.bibleStudiesInput.oninput = null;
+        const privilege2 = elements.privilegeInput.value;
+        switch (privilege2) {
+            case "Regular Pioneer": case "Special Pioneer": case "Field Missionary": case "Continuous Auxiliary Pioneer":
                 elements.fieldHoursContainer.classList.remove("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
-                elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
                 elements.sharedMinistryCheckbox.disabled = true;
-                elements.auxiliaryPioneerCheckbox.disabled = true;
+                if (privilege2 === "Continuous Auxiliary Pioneer") {
+                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                    elements.auxiliaryPioneerCheckbox.disabled = true;
+                }
                 elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
-            } else {
-                elements.bibleStudiesContainer.classList.remove("hidden");
-                elements.sharedMinistryContainer.classList.remove("hidden");
-                elements.sharedMinistryCheckbox.disabled = false;
-                elements.bibleStudiesInput.oninput = handleStudiesInput;
-            }
-            break;
+                break;
+            case "Publisher/Auxi":
+                let isAux = false;
+                if (publisherId && serviceYear && month) {
+                    const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+                    const auxStatusRef = db.collection("auxiliary_status").doc(docId);
+                    try {
+                        const docSnap = await auxStatusRef.get();
+                        if (docSnap.exists && docSnap.data().isAuxiliary) {
+                            isAux = true;
+                        }
+                    } catch (e) { console.error("Error fetching aux status", e); }
+                }
+                if (isAux) {
+                    elements.fieldHoursContainer.classList.remove("hidden");
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                    elements.sharedMinistryCheckbox.disabled = true;
+                    elements.auxiliaryPioneerCheckbox.disabled = true;
+                    elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
+                } else {
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    elements.sharedMinistryCheckbox.disabled = false;
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
+                }
+                break;
+        }
     }
-}
-        async function saveReport() {
+    async function saveReport() {
         const publisherId = publisherNameDropdown.value;
         const serviceYear = serviceYearDropdown.value;
         const month = monthYearDropdown.value;
@@ -1042,14 +1025,14 @@ async function addAuxiliaryStatus() {
             const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
             try {
                 const docSnap = await db.collection("auxiliary_status").doc(docId).get();
-                if (docSnap.exists() && docSnap.data().isAuxiliary) {
+                if (docSnap.exists && docSnap.data().isAuxiliary) {
                     isAuxThisMonth = true;
                 }
             } catch (e) { console.error("Error checking aux status on save", e); }
         } else if (["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"].includes(privilege)) {
             isAuxThisMonth = true;
         }
-        if (isAuxThisMonth && hoursVal <= 0) {
+        if ((isAuxThisMonth || auxiliaryPioneerCheckbox.checked) && hoursVal <= 0) {
             alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
         }
         if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryCheckbox.checked) {
@@ -1079,63 +1062,63 @@ async function addAuxiliaryStatus() {
         } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
     }
     function setupAddReportPage() {
-    clearAddReportForm();
-    serviceYearDropdown.disabled = false;
-    monthYearDropdown.disabled = false;
-    publisherNameDropdown.disabled = false;
-    searchPublisherReport.classList.remove('hidden');
-    publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
-    publisherList.forEach(pub => {
-        const opt = document.createElement("option");
-        opt.value = pub.id;
-        opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
-        publisherNameDropdown.appendChild(opt);
-    });
-    populateServiceYears(serviceYearDropdown);
-    populateMonths(monthYearDropdown, serviceYearDropdown.value);
-    if (currentUser.role === 'user') {
+        clearAddReportForm();
+        serviceYearDropdown.disabled = false;
+        monthYearDropdown.disabled = false;
         publisherNameDropdown.disabled = false;
         searchPublisherReport.classList.remove('hidden');
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        let serviceYear = (currentMonth >= 8) ? currentYear + 1 : currentYear;
-        serviceYearDropdown.value = serviceYear;
-        serviceYearDropdown.disabled = true;
-        populateMonths(monthYearDropdown, serviceYear);
-        const prevMonthDate = new Date();
-        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-        const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
-        const prevMonthYear = prevMonthDate.getFullYear();
-        monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
-        monthYearDropdown.disabled = true;
-        autofillPublisherDetails(publisherNameDropdown.value);
-    } 
-    searchPublisherReportInput.addEventListener("input", function () {
-        const query = this.value.toLowerCase();
-        suggestionBoxReport.innerHTML = "";
-        if (!query) return;
-        const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-        matches.forEach(pub => {
-            const div = document.createElement("div");
-            div.textContent = pub.fullName;
-            div.classList.add("suggestion-item");
-            div.addEventListener("click", () => {
-                this.value = pub.fullName;
-                suggestionBoxReport.innerHTML = "";
-                publisherNameDropdown.value = pub.id;
-                autofillPublisherDetails(pub.id);
-            });
-            suggestionBoxReport.appendChild(div);
+        publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
+        publisherList.forEach(pub => {
+            const opt = document.createElement("option");
+            opt.value = pub.id;
+            opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
+            publisherNameDropdown.appendChild(opt);
         });
-    });
-    publisherNameDropdown.addEventListener("change", async () => await autofillPublisherDetails(publisherNameDropdown.value));
-    serviceYearDropdown.addEventListener("change", async () => {
+        populateServiceYears(serviceYearDropdown);
         populateMonths(monthYearDropdown, serviceYearDropdown.value);
-        await updateReportFieldsVisibility();
-    });
-    monthYearDropdown.addEventListener("change", async () => await updateReportFieldsVisibility());
-}
+        if (currentUser.role === 'user') {
+            publisherNameDropdown.disabled = false;
+            searchPublisherReport.classList.remove('hidden');
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            let serviceYear = (currentMonth >= 8) ? currentYear + 1 : currentYear;
+            serviceYearDropdown.value = serviceYear;
+            serviceYearDropdown.disabled = true;
+            populateMonths(monthYearDropdown, serviceYear);
+            const prevMonthDate = new Date();
+            prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+            const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+            const prevMonthYear = prevMonthDate.getFullYear();
+            monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
+            monthYearDropdown.disabled = true;
+            autofillPublisherDetails(publisherNameDropdown.value);
+        } 
+        searchPublisherReportInput.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+            suggestionBoxReport.innerHTML = "";
+            if (!query) return;
+            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+            matches.forEach(pub => {
+                const div = document.createElement("div");
+                div.textContent = pub.fullName;
+                div.classList.add("suggestion-item");
+                div.addEventListener("click", () => {
+                    this.value = pub.fullName;
+                    suggestionBoxReport.innerHTML = "";
+                    publisherNameDropdown.value = pub.id;
+                    autofillPublisherDetails(pub.id);
+                });
+                suggestionBoxReport.appendChild(div);
+            });
+        });
+        publisherNameDropdown.addEventListener("change", async () => await autofillPublisherDetails(publisherNameDropdown.value));
+        serviceYearDropdown.addEventListener("change", async () => {
+            populateMonths(monthYearDropdown, serviceYearDropdown.value);
+            await updateReportFieldsVisibility();
+        });
+        monthYearDropdown.addEventListener("change", async () => await updateReportFieldsVisibility());
+    }
     async function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -1145,397 +1128,39 @@ async function addAuxiliaryStatus() {
             fieldGroupInput.value = "";
             privilege2ReportInput.value = "";
         }
-        updateReportFieldsVisibility();
+        await updateReportFieldsVisibility();
     }
     function clearAddReportForm() {
-    suggestionBoxReport.innerHTML = "";
-    fieldGroupInput.value = "";
-    privilege2ReportInput.value = "";
-    commentsAdd.value = "";
-    lastModifiedByAdd.textContent = "";
-    searchPublisherReportInput.value = "";
-    publisherNameDropdown.value = "";
-    if (currentUser.role === 'admin') {
-        serviceYearDropdown.value = "";
-        monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        suggestionBoxReport.innerHTML = "";
+        fieldGroupInput.value = "";
+        privilege2ReportInput.value = "";
+        commentsAdd.value = "";
+        lastModifiedByAdd.textContent = "";
+        searchPublisherReportInput.value = "";
+        publisherNameDropdown.value = "";
+        if (currentUser.role === 'admin') {
+            serviceYearDropdown.value = "";
+            monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        }
+        updateReportFieldsVisibility();
     }
-    updateReportFieldsVisibility();
-}
     async function updateReportFieldsVisibility() {
-        handleReportFieldLogic({
-            privilegeInput: privilege2ReportInput, auxPioneerQuestionContainer, isAuxiliaryPioneerThisMonth, fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput, sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox
-        });
+        const publisherId = publisherNameDropdown.value;
+        const serviceYear = serviceYearDropdown.value;
+        const month = monthYearDropdown.value;
+        await handleReportFieldLogic({
+            privilegeInput: privilege2ReportInput, fieldHoursContainer, fieldHoursInput, bibleStudiesContainer, bibleStudiesInput, sharedMinistryContainer, sharedMinistryCheckbox, auxiliaryPioneerCheckboxContainer, auxiliaryPioneerCheckbox
+        }, publisherId, serviceYear, month);
     }
-    
     async function updateReportFieldsVisibility_UpdatePage() {
-         handleReportFieldLogic({
-            privilegeInput: privilege2Update, auxPioneerQuestionContainer: auxPioneerQuestionContainerUpdate, isAuxiliaryPioneerThisMonth: isAuxiliaryPioneerThisMonthUpdate, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
-        });
-    }
-    async function addPublisher() {
-        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before adding."); return;
-        }
-        const docId = `${lastNameInput.value.trim()}_${firstNameInput.value.trim()}_${birthdateInput.value}`.replace(/\s+/g, "_");
-        try {
-            const existingDoc = await db.collection("publishers").doc(docId).get();
-            if (existingDoc.exists) { alert("A publisher with the same last name, first name, and birthdate already exists."); return; }
-            const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
-            await db.collection("publishers").doc(docId).set({
-                firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert("Publisher record successfully added!");
-            await loadPublishers();
-            clearPublisherForm();
-        } catch (error) { console.error("Error adding publisher:", error); alert("Failed to add publisher record."); }
-    }
-    async function updatePublisher() {
-        if (!currentDocId) { alert("Please select a publisher to update."); return; }
-        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before updating."); return;
-        }
-        const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
-        const updatedData = {
-            firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        try {
-            await db.collection("publishers").doc(currentDocId).update(updatedData);
-            alert("Publisher record updated successfully!");
-            await loadPublishers();
-            clearPublisherForm();
-        } catch (error) { console.error("Error updating publisher:", error); alert("Failed to update publisher record."); }
-    }
-    async function deletePublisher() {
-        if (!currentDocId) { alert("Please select a publisher to delete."); return; }
-        if (!confirm("Are you sure you want to permanently delete this publisher record? This action cannot be undone.")) return;
-        try {
-            await db.collection("publishers").doc(currentDocId).delete();
-            alert("Publisher record deleted successfully!");
-            await loadPublishers();
-            clearPublisherForm();
-        } catch (error) { console.error("Error deleting publisher:", error); alert("Failed to delete publisher record."); }
-    }
-    function previousPublisher() { 
-        if (publisherList.length === 0) return;
-        if (currentIndex > 0) { 
-            currentIndex--; 
-            displayPublisher(currentIndex); 
-        } else { 
-            alert("This is the first record."); 
-        } 
-    }
-    function nextPublisher() { 
-        if (publisherList.length === 0) return;
-        if (currentIndex < publisherList.length - 1) { 
-            currentIndex++; 
-            displayPublisher(currentIndex); 
-        } else { 
-            alert("This is the last record."); 
-        } 
-    }
-    function clearPublisherForm() {
-        const inputs = [firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismDateInput, searchInputManage];
-        const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown];
-        inputs.forEach(i => i && (i.value = ''));
-        selects.forEach(s => s && (s.value = ''));
-        baptismDateContainer?.classList.add("hidden");
-        suggestionBoxManage && (suggestionBoxManage.innerHTML = "");
-        currentIndex = -1;
-        currentDocId = null;
-    }
-    function displayPublisher(index) {
-        const pub = publisherList[index];
-        if (!pub) { clearPublisherForm(); return; }
-        currentIndex = index;
-        currentDocId = pub.id;
-        firstNameInput.value = pub.firstName || "";
-        lastNameInput.value = pub.lastName || "";
-        fullNameInput.value = pub.fullName || "";
-        birthdateInput.value = pub.birthdate || "";
-        baptismStatusDropdown.value = pub.baptismStatus || "";
-        toggleBaptismDate();
-        if (pub.baptismStatus === "Baptized") { baptismDateInput.value = pub.baptismDate || ""; }
-        genderDropdown.value = pub.gender || "";
-        hopeDropdown.value = pub.hope || "";
-        privilegeDropdown.value = pub.privilege || "";
-        privilege2Dropdown.value = pub.privilege2 || "";
-        fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
-    }
-    function updateFullName(){}
-    function toggleBaptismDate(){}
-    async function updateReport(){}
-    async function deleteReport(){}
-    function clearUpdateReportForm(clearAll = true){}
-    function clearSubmitRequestForm() {}
-    async function fetchReportDataForRequest() {}
-    async function submitRequestForApproval() {}
-    async function approveRequest(requestId) {}
-    async function rejectRequest(requestId) {}
-    function handleFileSelect(event) {}
-    async function processAndUploadRecords() {}
-    function handlePublisherFileSelect(event) {}
-    async function processAndUploadPublishers() {}
-    function populateServiceYears(dropdownElement) {
-        if (!dropdownElement) return;
-        dropdownElement.innerHTML = '<option value="">-- Select Year --</option>';
-        const startYear = 2015;
-        const endYear = new Date().getFullYear() + 5;
-        for (let year = startYear; year <= endYear; year++) {
-            const option = document.createElement("option");
-            option.value = year;
-            option.textContent = year;
-            dropdownElement.appendChild(option);
-        }
-    }
-    function populateMonths(monthDropdown, serviceYear) {
-        if (!monthDropdown || !serviceYear) { monthDropdown.innerHTML = '<option value="">-- Select Month --</option>'; return; };
-        monthDropdown.innerHTML = '<option value="">-- Select Month --</option>';
-        const selectedServiceYear = parseInt(serviceYear);
-        const startMonthYear = new Date(selectedServiceYear - 1, 8);
-        const endMonthYear = new Date(selectedServiceYear, 7);
-        let currentMonth = new Date(startMonthYear);
-        while (currentMonth <= endMonthYear) {
-            const option = document.createElement("option");
-            const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
-            const year = currentMonth.getFullYear();
-            option.value = `${monthName} ${year}`;
-            option.textContent = `${monthName} ${year}`;
-            monthDropdown.appendChild(option);
-            currentMonth.setMonth(currentMonth.getMonth() + 1);
-        }
-    }
-    function setupUpdateReportPage() {
-        clearUpdateReportForm(); 
-        publisherNameDropdownUpdate.innerHTML = '<option value="">-- Select Publisher --</option>';
-        publisherList.forEach(pub => {
-            const opt = document.createElement("option");
-            opt.value = pub.id;
-            opt.textContent = pub.fullName;
-            publisherNameDropdownUpdate.appendChild(opt);
-        });
-        populateServiceYears(serviceYearDropdownUpdate);
-        
-        searchPublisherUpdate.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxUpdate.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach(pub => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = pub.fullName;
-                    suggestionBoxUpdate.innerHTML = "";
-                    publisherNameDropdownUpdate.value = pub.id;
-                    publisherNameDropdownUpdate.dispatchEvent(new Event('change'));
-                });
-                suggestionBoxUpdate.appendChild(div);
-            });
-        });
-
-        const handlePublisherSelection = () => {
-            const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownUpdate.value);
-            if(selectedPublisher) {
-                fieldGroupUpdate.value = selectedPublisher.fieldServiceGroup || '';
-                privilege2Update.value = selectedPublisher.privilege2 || '';
-            } else {
-                fieldGroupUpdate.value = '';
-                privilege2Update.value = '';
-            }
-            fetchReportData();
-        }
-        publisherNameDropdownUpdate.addEventListener('change', handlePublisherSelection);
-        serviceYearDropdownUpdate.addEventListener('change', () => {
-            populateMonths(monthYearDropdownUpdate, serviceYearDropdownUpdate.value);
-            fetchReportData();
-        });
-        monthYearDropdownUpdate.addEventListener('change', fetchReportData);
-        isAuxiliaryPioneerThisMonthUpdate.addEventListener('change', updateReportFieldsVisibility_UpdatePage);
-    }
-    async function fetchReportData() {
         const publisherId = publisherNameDropdownUpdate.value;
         const serviceYear = serviceYearDropdownUpdate.value;
         const month = monthYearDropdownUpdate.value;
-        if (!publisherId || !serviceYear || !month) {
-             clearUpdateReportForm(false);
-             return;
-        }
-        const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-        const reportRef = db.collection("reports").doc(reportId);
-        try {
-            const doc = await reportRef.get();
-            if (doc.exists) {
-                const data = doc.data();
-                currentReportId = doc.id;
-                
-                if (privilege2Update.value === 'Publisher/Auxi') {
-                    const auxPioneerAnswer = data.wasAuxiliaryPioneer ? 'Yes' : 'No';
-                    isAuxiliaryPioneerThisMonthUpdate.value = auxPioneerAnswer;
-                }
-                
-                updateReportFieldsVisibility_UpdatePage(); // Applys logic to show/hide fields
-                
-                updateReportFieldsDiv.style.display = 'block';
-                fieldHoursUpdate.value = data.hours || '';
-                bibleStudiesUpdate.value = data.bibleStudies || '';
-                sharedMinistryUpdate.checked = data.sharedInMinistry || false;
-                auxiliaryPioneerCheckboxUpdate.checked = data.wasAuxiliaryPioneer || false;
-                commentsUpdate.value = data.comments || '';
-                lastModifiedByUpdate.textContent = data.lastModifiedBy ? `Last modified by: ${data.lastModifiedBy}` : '';
-
-            } else {
-                alert("No report found for the selected publisher and period.");
-                clearUpdateReportForm(false);
-                currentReportId = null;
-            }
-        } catch (error) {
-            console.error("Error fetching report data:", error);
-            alert("An error occurred while fetching the report.");
-            currentReportId = null;
-        }
+        await handleReportFieldLogic({
+             privilegeInput: privilege2Update, fieldHoursContainer: fieldHoursContainerUpdate, fieldHoursInput: fieldHoursUpdate, bibleStudiesContainer: bibleStudiesContainerUpdate, bibleStudiesInput: bibleStudiesUpdate, sharedMinistryContainer: sharedMinistryContainerUpdate, sharedMinistryCheckbox: sharedMinistryUpdate, auxiliaryPioneerCheckboxContainer: auxiliaryPioneerCheckboxContainerUpdate, auxiliaryPioneerCheckbox: auxiliaryPioneerCheckboxUpdate
+        }, publisherId, serviceYear, month);
     }
-    function setupManagePublisherPage() {
-        clearPublisherForm(); // Start with a blank form as requested
-        searchInputManage.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxManage.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach((pub) => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = "";
-                    suggestionBoxManage.innerHTML = "";
-                    currentIndex = publisherList.findIndex(p => p.id === pub.id);
-                    if (currentIndex !== -1) displayPublisher(currentIndex);
-                });
-                suggestionBoxManage.appendChild(div);
-            });
-        });
-    }
-    function setupSubmitRequestPage() {
-        clearSubmitRequestForm();
-        publisherNameDropdownRequest.innerHTML = '<option value="">-- Select Publisher --</option>';
-        publisherList.forEach(pub => {
-            const opt = document.createElement("option");
-            opt.value = pub.id;
-            opt.textContent = pub.fullName;
-            publisherNameDropdownRequest.appendChild(opt);
-        });
-        populateServiceYears(serviceYearRequest);
-        
-        const handlePublisherSelection = () => {
-            const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownRequest.value);
-            if(selectedPublisher) {
-                fieldGroupRequest.value = selectedPublisher.fieldServiceGroup || '';
-                privilege2Request.value = selectedPublisher.privilege2 || '';
-            } else {
-                fieldGroupRequest.value = '';
-                privilege2Request.value = '';
-            }
-            fetchReportDataForRequest();
-        }
-
-        searchPublisherRequest.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxRequest.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach(pub => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = pub.fullName;
-                    suggestionBoxRequest.innerHTML = "";
-                    publisherNameDropdownRequest.value = pub.id;
-                    publisherNameDropdownRequest.dispatchEvent(new Event('change'));
-                });
-                suggestionBoxRequest.appendChild(div);
-            });
-        });
-
-        publisherNameDropdownRequest.addEventListener('change', handlePublisherSelection);
-        serviceYearRequest.addEventListener('change', () => {
-            populateMonths(monthYearRequest, serviceYearRequest.value);
-            fetchReportDataForRequest();
-        });
-        monthYearRequest.addEventListener('change', fetchReportDataForRequest);
-    }
-    async function setupReviewApprovalsPage() {
-        pendingRequestsList.innerHTML = '';
-        noPendingRequestsLabel.classList.remove('hidden'); 
-        try {
-            const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
-            if (snapshot.empty) {
-                noPendingRequestsLabel.classList.remove('hidden');
-                return;
-            }
-
-            noPendingRequestsLabel.classList.add('hidden'); 
-            
-            const newPendingList = pendingRequestsList.cloneNode(false);
-            pendingRequestsList.parentNode.replaceChild(newPendingList, pendingRequestsList);
-            pendingRequestsList = newPendingList;
-
-            snapshot.forEach(doc => {
-                const request = doc.data();
-                const requestId = doc.id;
-                const changes = request.requestedChanges;
-
-                const requestDiv = document.createElement('div');
-                requestDiv.className = 'request-item';
-                requestDiv.innerHTML = `
-                    <h4>Request from: ${request.requestingUserEmail}</h4>
-                    <p>
-                        <strong>Publisher:</strong> ${request.publisherToUpdateName}<br>
-                        <strong>Period:</strong> ${request.month}
-                    </p>
-                    <p>
-                        <strong>New Values:</strong><br>
-                        Hours: ${changes.hours}, Studies: ${changes.bibleStudies}<br>
-                        Shared in Ministry: ${changes.sharedInMinistry ? 'Yes' : 'No'}<br>
-                        Was Aux Pioneer: ${changes.wasAuxiliaryPioneer ? 'Yes' : 'No'}<br>
-                        Comments: ${changes.comments || '<i>No comments</i>'}
-                    </p>
-                    <button class="approve-btn" data-id="${requestId}">Approve</button>
-                    <button class="reject-btn" data-id="${requestId}">Reject</button>
-                `;
-                pendingRequestsList.appendChild(requestDiv);
-            });
-            
-            pendingRequestsList.addEventListener('click', async (e) => {
-                const target = e.target;
-                const requestId = target.dataset.id;
-                if (!requestId) return;
-
-                if (target.classList.contains('approve-btn')) {
-                    await approveRequest(requestId);
-                } else if (target.classList.contains('reject-btn')) {
-                    await rejectRequest(requestId);
-                }
-            });
-
-        } catch (error) {
-            console.error("Error fetching pending requests:", error);
-            pendingRequestsList.innerHTML = '<p style="color:red;">Could not load requests.</p>';
-        }
-    }
-    function setupUploadPage() {
-        uploadStatus.innerHTML = '<p>No file selected.</p>';
-        processUploadBtn.disabled = true;
-        excelFileInput.value = ''; 
-        parsedExcelData = [];
-    }
-    function setupUploadPublishersPage() {
-        uploadStatusPublishers.innerHTML = '<p>No file selected.</p>';
-        processUploadBtnPublishers.disabled = true;
-        excelFileInputPublishers.value = ''; 
-        parsedExcelData = [];
-    }        
+    // Dito nagtatapos ang buong script
     </script>
 </body>
 </html>
