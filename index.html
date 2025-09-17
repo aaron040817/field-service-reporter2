@@ -1436,6 +1436,210 @@
             setupReviewApprovalsPage();
         } catch (error) { console.error("Error rejecting request:", error); alert("Failed to reject request."); }
     }
+        function setupUploadPage() {
+        uploadStatus.innerHTML = '<p>No file selected.</p>';
+        processUploadBtn.disabled = true;
+        excelFileInput.value = ''; 
+        parsedExcelData = [];
+    }
+    function setupUploadPublishersPage() {
+        uploadStatusPublishers.innerHTML = '<p>No file selected.</p>';
+        processUploadBtnPublishers.disabled = true;
+        excelFileInputPublishers.value = ''; 
+        parsedExcelData = [];
+    }
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) { return; }
+        uploadStatus.innerHTML = `<p>Reading file: ${file.name}...</p>`;
+        processUploadBtn.disabled = true;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json_data = XLSX.utils.sheet_to_json(worksheet);
+                if (json_data.length === 0) {
+                    uploadStatus.innerHTML = '<p style="color:red;">Error: The file is empty or in an incorrect format.</p>';
+                    return;
+                }
+                parsedExcelData = json_data;
+                uploadStatus.innerHTML = `<p style="color:green;">Read ${parsedExcelData.length} records from ${file.name}.</p><p>Click "Upload and Process" to continue.</p>`;
+                processUploadBtn.disabled = false;
+            } catch (error) {
+                console.error("Error reading Excel file:", error);
+                uploadStatus.innerHTML = '<p style="color:red;">Error: Failed to read the file. Please ensure it is a valid Excel/CSV file.</p>';
+                parsedExcelData = [];
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    async function processAndUploadRecords() {
+        if (parsedExcelData.length === 0) { alert("No data to upload."); return; }
+        processUploadBtn.disabled = true;
+        uploadStatus.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
+        const statusLog = uploadStatus.querySelector('pre');
+        const batch = db.batch();
+        let newRecordsCount = 0, skippedRecordsCount = 0, errorCount = 0;
+        for (const record of parsedExcelData) {
+            try {
+                const publisherFullName = record["Publisher Name"]?.trim();
+                const serviceYear = String(record["Service Year"])?.trim();
+                const month = String(record["Month"])?.trim();
+                if (!publisherFullName || !serviceYear || !month) {
+                    statusLog.textContent += `Skipping row: Missing required data.\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+                const publisher = publisherList.find(p => p.fullName === publisherFullName);
+                if (!publisher) {
+                    statusLog.textContent += `Skipping "${publisherFullName}": Publisher not found.\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+                const reportId = `${publisher.id}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+                const reportRef = db.collection("reports").doc(reportId);
+                const doc = await reportRef.get();
+                if (doc.exists) {
+                    statusLog.textContent += `Skipping "${publisherFullName}" (${month}): Already exists.\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+                const reportData = {
+                    publisherId: publisher.id, publisherFullName: publisher.fullName, serviceYear, month,
+                    fieldServiceGroup: record["Field Service Group"] || publisher.fieldServiceGroup,
+                    privilege2AtTimeOfReport: record["Privilege at Time of Report"] || publisher.privilege2,
+                    hours: parseInt(record.Hours) || 0,
+                    bibleStudies: parseInt(record["Bible Studies"]) || 0,
+                    sharedInMinistry: String(record["Shared in Ministry"] || '').toLowerCase() === 'yes',
+                    wasAuxiliaryPioneer: String(record["Was Auxiliary Pioneer"] || '').toLowerCase() === 'yes',
+                    comments: record.Comments || '',
+                    lastModifiedBy: currentUser.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                batch.set(reportRef, reportData);
+                newRecordsCount++;
+            } catch (error) {
+                 console.error("Error processing record:", record, error);
+                 statusLog.textContent += `Error on row for "${record["Publisher Name"]}". Skipping.\n`;
+                 errorCount++;
+            }
+        }
+        try {
+            await batch.commit();
+            let summary = `Upload complete!\n\nNew Records Added: ${newRecordsCount}\nRecords Skipped: ${skippedRecordsCount}\nErrors: ${errorCount}`;
+            statusLog.textContent += `\n${summary}`;
+            alert(summary);
+            processUploadBtn.disabled = true;
+        } catch (error) {
+            console.error("Error committing batch:", error);
+            statusLog.textContent += "\nFATAL ERROR: Could not save records to the database.";
+            alert("A fatal error occurred during the upload. Please check the status log.");
+        }
+    }
+    function handlePublisherFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) { return; }
+        uploadStatusPublishers.innerHTML = `<p>Reading file: ${file.name}...</p>`;
+        processUploadBtnPublishers.disabled = true;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json_data = XLSX.utils.sheet_to_json(worksheet);
+                if (json_data.length === 0) {
+                    uploadStatusPublishers.innerHTML = '<p style="color:red;">Error: The file is empty.</p>';
+                    return;
+                }
+                parsedExcelData = json_data;
+                uploadStatusPublishers.innerHTML = `<p style="color:green;">Read ${parsedExcelData.length} records from ${file.name}.</p><p>Click "Upload and Process" to continue.</p>`;
+                processUploadBtnPublishers.disabled = false;
+            } catch (error) {
+                console.error("Error reading publisher file:", error);
+                uploadStatusPublishers.innerHTML = '<p style="color:red;">Error: Failed to read or parse the file.</p>';
+                parsedExcelData = [];
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    async function processAndUploadPublishers() {
+        if (parsedExcelData.length === 0) { alert("No data to upload."); return; }
+        processUploadBtnPublishers.disabled = true;
+        uploadStatusPublishers.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
+        const statusLog = uploadStatusPublishers.querySelector('pre');
+        const batch = db.batch();
+        let newRecordsCount = 0, skippedRecordsCount = 0, errorCount = 0;
+        const requiredFields = ["FirstName", "LastName", "Birthdate", "BaptismStatus", "Gender", "Hope", "Privilege", "Privilege2", "FieldServiceGroup"];
+        for (const record of parsedExcelData) {
+            try {
+                const missingField = requiredFields.find(field => !record[field]);
+                if (missingField) {
+                    statusLog.textContent += `Skipping row: Missing required field "${missingField}".\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+                const firstName = record.FirstName.trim();
+                const lastName = record.LastName.trim();
+                const birthdateRaw = record.Birthdate;
+                if (!(birthdateRaw instanceof Date)) {
+                     statusLog.textContent += `Skipping ${lastName}, ${firstName}: 'Birthdate' is not a valid date format.\n`;
+                     skippedRecordsCount++;
+                     continue;
+                }
+                const tzOffset = birthdateRaw.getTimezoneOffset() * 60000;
+                const localDate = new Date(birthdateRaw.getTime() - tzOffset);
+                const birthdate = localDate.toISOString().slice(0, 10);
+                if (record.BaptismStatus === 'Baptized' && !(record.BaptismDate instanceof Date)) {
+                    statusLog.textContent += `Skipping ${lastName}, ${firstName}: 'BaptismDate' is required and must be a valid date when status is 'Baptized'.\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+                const baptismDate = record.BaptismDate instanceof Date ? new Date(record.BaptismDate.getTime() - (record.BaptismDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 10) : "";
+                const docId = `${lastName}_${firstName}_${birthdate}`.replace(/\s+/g, "_");
+                const publisherRef = db.collection("publishers").doc(docId);
+                const docSnap = await publisherRef.get();
+                if (docSnap.exists) {
+                    statusLog.textContent += `Skipping "${lastName}, ${firstName}": Already exists.\n`;
+                    skippedRecordsCount++;
+                    continue;
+                }
+                const publisherData = {
+                    firstName, lastName, birthdate, baptismDate,
+                    fullName: `${lastName}, ${firstName}`,
+                    baptismStatus: record.BaptismStatus,
+                    gender: record.Gender,
+                    hope: record.Hope,
+                    privilege: record.Privilege,
+                    privilege2: record.Privilege2,
+                    fieldServiceGroup: record.FieldServiceGroup,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                batch.set(publisherRef, publisherData);
+                newRecordsCount++;
+            } catch (error) {
+                 console.error("Error processing record:", record, error);
+                 statusLog.textContent += `Error on row for "${record.LastName}, ${record.FirstName}". Skipping.\n`;
+                 errorCount++;
+            }
+        }
+        try {
+            await batch.commit();
+            let summary = `Upload complete!\n\nNew Publishers Added: ${newRecordsCount}\nPublishers Skipped: ${skippedRecordsCount}\nErrors: ${errorCount}`;
+            statusLog.textContent += `\n${summary}`;
+            alert(summary);
+            await loadPublishers();
+            processUploadBtnPublishers.disabled = true;
+        } catch (error) {
+            console.error("Error committing batch upload:", error);
+            statusLog.textContent += "\nFATAL ERROR: Could not save records to the database.";
+            alert("A fatal error occurred. Please check the status log.");
+        }
+    }
         async function saveReport() {
         const publisherId = publisherNameDropdown.value;
         const serviceYear = serviceYearDropdown.value;
