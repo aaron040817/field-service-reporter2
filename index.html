@@ -51,19 +51,29 @@
         <button id="loginBtn">Login</button>
     </div>
     <div id="homePage" class="page-container hidden">
-        <h2>Welcome, <span id="loggedInUser"></span>!</h2>
-        <div id="adminButtons">
-    <button id="managePublisherBtn">Manage Publisher</button>
-    <button id="manageAuxiliaryPioneerBtn">Manage Auxiliary Pioneer</button>
-    <button id="addReportBtnAdmin">Add Report</button>
-    <button id="updateReportPageBtn">Update Report</button>
-    <button id="reviewApprovalsBtn">Review Approvals</button>
-    <button id="viewSummaryBtn">View Summary Report</button>
-    <button id="exportExcelBtn">Export to Excel</button>
-    <button id="uploadReportsBtn">Upload Reports</button>
-    <button id="uploadPublishersBtn">Upload Publishers</button>
+    <h2>Welcome, <span id="loggedInUser"></span>!</h2>
+    <div id="adminButtons">
+        <button id="managePublisherBtn">Manage Publisher</button>
+        <button id="manageAuxiliaryPioneerBtn">Manage Auxiliary Pioneer</button>
+        <button id="addReportBtnAdmin">Add Report</button>
+        <button id="updateReportPageBtn">Update Report</button>
+        <button id="reviewApprovalsBtn">Review Approvals</button>
+        <button id="viewSummaryBtn">View Summary Report</button>
+        <button id="exportExcelBtn">Export to Excel</button>
+        <button id="uploadReportsBtn">Upload Reports</button>
+        <button id="uploadPublishersBtn">Upload Publishers</button>
+    </div>
+    <div id="userButtons">
+        <button id="addReportBtnUser">Add Report</button>
+        <button id="submitRequestPageBtn">Submit Request to Update</button>
+    </div>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+    <div id="adminSection" style="margin-top: 20px;">
+         <button id="clearAllDataBtn">Clear All Data</button>
+         <p style="color: red; font-size: 12px; margin-top: 5px;">Warning: This will delete all publisher and report data.</p>
+    </div>
 </div>
-        <div id="summaryReportPage" class="page-container hidden">
+<div id="summaryReportPage" class="page-container hidden">
     <h2>Monthly Summary Report</h2>
     <p>Select a service year and month to generate the summary.</p>
     <label for="serviceYearSummary">Service Year:</label>
