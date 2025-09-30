@@ -1826,6 +1826,155 @@
             currentMonth.setMonth(currentMonth.getMonth() + 1);
         }
     } 
+    function setupSummaryReportPage() {
+        summaryResults.innerHTML = "<p>Click the button to generate the summary for the currently open reporting month.</p>";
+        
+        const today = new Date();
+        const prevMonthDate = new Date();
+        prevMonthDate.setMonth(today.getMonth() - 1);
+        const monthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+        const year = prevMonthDate.getFullYear();
+        
+        document.getElementById('generateSummaryBtn').textContent = `Generate Summary for ${monthName} ${year}`;
+    }
+
+    function parseMonthString(monthStr) {
+        if (!monthStr) return null;
+        const parts = monthStr.split(' ');
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const monthIndex = monthNames.indexOf(parts[0]);
+        const year = parseInt(parts[1], 10);
+        if (monthIndex !== -1 && !isNaN(year)) {
+            return new Date(year, monthIndex, 1);
+        }
+        return null;
+    }
+
+    async function generateSummaryReport() {
+        summaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
+
+        try {
+            const configSnap = await db.collection("config").doc("admin_settings").get();
+            if (!configSnap.exists || !configSnap.data().openReportingMonth) {
+                alert("Error: 'openReportingMonth' is not set in Firebase config/admin_settings.");
+                summaryResults.innerHTML = "<p>Configuration error. Please set the open reporting month in Firebase.</p>";
+                return;
+            }
+            const openReportingMonthStr = configSnap.data().openReportingMonth;
+            
+            const allReportsSnap = await db.collection("reports").get();
+            const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
+            
+            const allReports = allReportsSnap.docs.map(doc => doc.data());
+            const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
+            
+            const openReportMonthDate = parseMonthString(openReportingMonthStr);
+
+            const reportsToSummarize = allReports.filter(report => {
+                if (!report.month || !report.timestamp) return false;
+                const reportMonthDate = parseMonthString(report.month);
+                if (!reportMonthDate) return false;
+
+                if (report.month === openReportingMonthStr) {
+                    return true;
+                }
+
+                const submissionDate = report.timestamp.toDate();
+                const lockDateForReportMonth = new Date(reportMonthDate);
+                lockDateForReportMonth.setMonth(reportMonthDate.getMonth() + 2, 0); 
+                lockDateForReportMonth.setHours(23, 59, 59, 999);
+                
+                if (submissionDate > lockDateForReportMonth) {
+                    return true; 
+                }
+                
+                return false;
+            });
+            
+            let summary = {
+                activeInLast6Months: 0,
+                publishersReported: 0,
+                publishersStudies: 0,
+                auxPioneersReported: 0,
+                auxPioneersHours: 0,
+                auxPioneersStudies: 0,
+                fullTimePioneersReported: 0,
+                fullTimePioneersHours: 0,
+                fullTimePioneersStudies: 0,
+            };
+
+            const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
+
+            for (const report of reportsToSummarize) {
+                const privilege = report.privilege2AtTimeOfReport;
+                
+                if (fullTimePrivileges.includes(privilege)) {
+                    if (report.hours > 0) {
+                        summary.fullTimePioneersReported++;
+                        summary.fullTimePioneersHours += report.hours;
+                        summary.fullTimePioneersStudies += report.bibleStudies;
+                    }
+                } else if (privilege === "Continuous Auxiliary Pioneer") {
+                     if (report.hours > 0) {
+                        summary.auxPioneersReported++;
+                        summary.auxPioneersHours += report.hours;
+                        summary.auxPioneersStudies += report.bibleStudies;
+                    }
+                } else if (privilege === "Publisher/Auxi") {
+                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
+                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
+                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
+
+                    if (isAux) {
+                        if (report.hours > 0) {
+                            summary.auxPioneersReported++;
+                            summary.auxPioneersHours += report.hours;
+                            summary.auxPioneersStudies += report.bibleStudies;
+                        }
+                    } else {
+                        if (report.sharedInMinistry) {
+                            summary.publishersReported++;
+                            summary.publishersStudies += report.bibleStudies;
+                        }
+                    }
+                }
+            }
+            
+            const sixMonthsAgo = new Date(openReportMonthDate);
+            sixMonthsAgo.setMonth(openReportMonthDate.getMonth() - 5);
+            sixMonthsAgo.setDate(1);
+
+            const activePublishers = new Set();
+            allReports.forEach(report => {
+                if (!report.month) return;
+                const reportDate = parseMonthString(report.month);
+                if (reportDate && reportDate >= sixMonthsAgo && reportDate <= openReportMonthDate) {
+                    activePublishers.add(report.publisherId);
+                }
+            });
+            summary.activeInLast6Months = activePublishers.size;
+            
+            const resultsHTML = `
+                <h3>Summary for ${openReportingMonthStr} (and late reports)</h3>
+                <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
+                    <tr><td style="width:80%;">1. Active publishers in the last 6 months:</td><td style="text-align:right;"><b>${summary.activeInLast6Months}</b></td></tr>
+                    <tr><td>2. Count of Publishers who shared in ministry:</td><td style="text-align:right;"><b>${summary.publishersReported}</b></td></tr>
+                    <tr><td>3. Total Bible Studies from Publishers:</td><td style="text-align:right;"><b>${summary.publishersStudies}</b></td></tr>
+                    <tr><td>4. Count of Auxiliary Pioneers reporting time:</td><td style="text-align:right;"><b>${summary.auxPioneersReported}</b></td></tr>
+                    <tr><td>5. Total Hours from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersHours}</b></td></tr>
+                    <tr><td>6. Total Bible Studies from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersStudies}</b></td></tr>
+                    <tr><td>7. Count of Regular/Special Pioneers & Missionaries reporting time:</td><td style="text-align:right;"><b>${summary.fullTimePioneersReported}</b></td></tr>
+                    <tr><td>8. Total Hours from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersHours}</b></td></tr>
+                    <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
+                </table>
+            `;
+            summaryResults.innerHTML = resultsHTML;
+
+        } catch (error) {
+            console.error("Error generating summary:", error);
+            summaryResults.innerHTML = `<p style="color:red;">An error occurred while generating the summary. Please check the console.</p>`;
+        }
+    }
     </script>
 </body>
 </html>
