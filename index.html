@@ -53,15 +53,16 @@
     <div id="homePage" class="page-container hidden">
         <h2>Welcome, <span id="loggedInUser"></span>!</h2>
         <div id="adminButtons">
-            <button id="managePublisherBtn">Manage Publisher</button>
-            <button id="manageAuxiliaryPioneerBtn">Manage Auxiliary Pioneer</button>
-            <button id="addReportBtnAdmin">Add Report</button>
-            <button id="updateReportPageBtn">Update Report</button>
-            <button id="reviewApprovalsBtn">Review Approvals</button>
-            <button id="exportExcelBtn">Export to Excel</button>
-            <button id="uploadReportsBtn">Upload Reports</button>
-            <button id="uploadPublishersBtn">Upload Publishers</button>
-        </div>
+    <button id="managePublisherBtn">Manage Publisher</button>
+    <button id="manageAuxiliaryPioneerBtn">Manage Auxiliary Pioneer</button>
+    <button id="addReportBtnAdmin">Add Report</button>
+    <button id="updateReportPageBtn">Update Report</button>
+    <button id="reviewApprovalsBtn">Review Approvals</button>
+    <button id="viewSummaryBtn">View Summary Report</button>
+    <button id="exportExcelBtn">Export to Excel</button>
+    <button id="uploadReportsBtn">Upload Reports</button>
+    <button id="uploadPublishersBtn">Upload Publishers</button>
+</div>
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
             <button id="submitRequestPageBtn">Submit Request to Update</button>
@@ -323,6 +324,20 @@
         <button id="backHomeFromUploadPublishersBtn" class="back-btn">Back to Home</button>
         <button id="logoutBtnFromUploadPublishers" class="logout-btn">Logout</button>
     </div>
+    <div id="summaryReportPage" class="page-container hidden">
+    <h2>Monthly Summary Report</h2>
+    <p>Select a service year and month to generate the summary.</p>
+    <label for="serviceYearSummary">Service Year:</label>
+    <select id="serviceYearSummary"></select>
+    <label for="monthSummary">Month:</label>
+    <select id="monthSummary"></select>
+    <button id="generateSummaryBtn">Generate Summary</button>
+    <hr style="margin: 20px 0;">
+    <div id="summaryResults">
+        <p>No summary generated yet.</p>
+    </div>
+    <button id="backHomeFromSummaryBtn" class="back-btn">Back to Home</button>
+</div>
    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -373,6 +388,9 @@
     let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
     let selectFileBtnPublishers, excelFileInputPublishers, uploadStatusPublishers, processUploadBtnPublishers, backHomeFromUploadPublishersBtn, logoutBtnFromUploadPublishers;
     let searchPublisherAux, suggestionBoxAux, publisherNameDropdownAux, fieldGroupAux, privilege2Aux, serviceYearDropdownAux, monthYearDropdownAux, isAuxiliaryPioneerThisMonthAux, addAuxStatusBtn, updateAuxStatusBtn, previousAuxStatusBtn, nextAuxStatusBtn, clearAuxFormBtn, backHomeFromAuxBtn, lastModifiedByAux;
+    let summaryReportPage;
+    let serviceYearSummary, monthSummary, generateSummaryBtn, summaryResults, backHomeFromSummaryBtn;
+    
     document.addEventListener("DOMContentLoaded", initializeApp);
     async function initializeApp() {
         getAllElements();
@@ -401,200 +419,211 @@
         });
     }
         function getAllElements() {
-        loginPage = document.getElementById('loginPage');
-        homePage = document.getElementById('homePage');
-        addReportPage = document.getElementById('addReportPage');
-        publisherPage = document.getElementById('publisherPage');
-        updateReportPage = document.getElementById('updateReportPage');
-        submitRequestPage = document.getElementById('submitRequestPage');
-        reviewApprovalsPage = document.getElementById('reviewApprovalsPage');
-        uploadPage = document.getElementById('uploadPage');
-        uploadPublishersPage = document.getElementById('uploadPublishersPage');
-        manageAuxiliaryPage = document.getElementById('manageAuxiliaryPage');
-        loggedInUser = document.getElementById('loggedInUser');
-        adminButtons = document.getElementById('adminButtons');
-        userButtons = document.getElementById('userButtons');
-        adminSection = document.getElementById('adminSection');
-        loginUsername = document.getElementById('loginUsername');
-        loginPassword = document.getElementById('loginPassword');
-        serviceYearDropdown = document.getElementById("serviceYearDropdown");
-        monthYearDropdown = document.getElementById("monthYearDropdown");
-        fieldHoursContainer = document.getElementById("fieldHoursContainer");
-        fieldHoursInput = document.getElementById("fieldHours");
-        bibleStudiesContainer = document.getElementById("bibleStudiesContainer");
-        bibleStudiesInput = document.getElementById("bibleStudies");
-        sharedMinistryContainer = document.getElementById("sharedMinistryContainer");
-        sharedMinistryCheckbox = document.getElementById("sharedMinistry");
-        auxiliaryPioneerCheckboxContainer = document.getElementById("auxiliaryPioneerCheckboxContainer");
-        auxiliaryPioneerCheckbox = document.getElementById("auxiliaryPioneerCheckbox");
-        privilege2ReportInput = document.getElementById("privilege2Report");
-        searchPublisherReportInput = document.getElementById("searchPublisherReport");
-        suggestionBoxReport = document.getElementById("suggestionBoxReport");
-        publisherNameDropdown = document.getElementById("publisherNameDropdown");
-        fieldGroupInput = document.getElementById("fieldGroup");
-        logoutBtnFromReport = document.getElementById("logoutBtnFromReport");
-        commentsAdd = document.getElementById('commentsAdd');
-        lastModifiedByAdd = document.getElementById('lastModifiedByAdd');
-        firstNameInput = document.getElementById("firstName");
-        lastNameInput = document.getElementById("lastName");
-        fullNameInput = document.getElementById("fullName");
-        birthdateInput = document.getElementById("birthdate");
-        baptismStatusDropdown = document.getElementById("baptismStatus");
-        baptismDateContainer = document.getElementById("baptismDateContainer");
-        baptismDateInput = document.getElementById("baptismDate");
-        genderDropdown = document.getElementById("gender");
-        hopeDropdown = document.getElementById("hope");
-        privilegeDropdown = document.getElementById("privilege");
-        privilege2Dropdown = document.getElementById("privilege2");
-        fieldServiceGroupDropdown = document.getElementById("fieldServiceGroup");
-        addPublisherBtn = document.getElementById("addPublisherBtn");
-        updatePublisherBtn = document.getElementById("updatePublisherBtn");
-        deletePublisherBtn = document.getElementById("deletePublisherBtn");
-        previousPublisherBtn = document.getElementById("previousPublisherBtn");
-        nextPublisherBtn = document.getElementById("nextPublisherBtn");
-        clearPublisherFormBtn = document.getElementById("clearPublisherFormBtn");
-        backHomeFromPublisherBtn = document.getElementById("backHomeFromPublisherBtn");
-        logoutBtnFromPublisher = document.getElementById("logoutBtnFromPublisher");
-        searchInputManage = document.getElementById("searchPublisher");
-        suggestionBoxManage = document.getElementById("suggestionBox");
-        publisherNameDropdownUpdate = document.getElementById('publisherNameDropdownUpdate');
-        serviceYearDropdownUpdate = document.getElementById('serviceYearDropdownUpdate');
-        monthYearDropdownUpdate = document.getElementById('monthYearDropdownUpdate');
-        searchPublisherUpdate = document.getElementById('searchPublisherUpdate');
-        suggestionBoxUpdate = document.getElementById('suggestionBoxUpdate');
-        fieldGroupUpdate = document.getElementById('fieldGroupUpdate');
-        privilege2Update = document.getElementById('privilege2Update');
-        updateReportFieldsDiv = document.getElementById('updateReportFields');
-        fieldHoursUpdate = document.getElementById('fieldHoursUpdate');
-        bibleStudiesUpdate = document.getElementById('bibleStudiesUpdate');
-        sharedMinistryUpdate = document.getElementById('sharedMinistryUpdate');
-        auxiliaryPioneerCheckboxUpdate = document.getElementById('auxiliaryPioneerCheckboxUpdate');
-        fieldHoursContainerUpdate = document.getElementById('fieldHoursContainerUpdate');
-        bibleStudiesContainerUpdate = document.getElementById('bibleStudiesContainerUpdate');
-        sharedMinistryContainerUpdate = document.getElementById('sharedMinistryContainerUpdate');
-        auxiliaryPioneerCheckboxContainerUpdate = document.getElementById('auxiliaryPioneerCheckboxContainerUpdate');
-        updateReportBtn = document.getElementById('updateReportBtn');
-        deleteReportBtn = document.getElementById('deleteReportBtn');
-        clearUpdateFormBtn = document.getElementById('clearUpdateFormBtn');
-        backHomeFromUpdateBtn = document.getElementById('backHomeFromUpdateBtn');
-        logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
-        commentsUpdate = document.getElementById('commentsUpdate');
-        lastModifiedByUpdate = document.getElementById('lastModifiedByUpdate');
-        searchPublisherRequest = document.getElementById('searchPublisherRequest');
-        suggestionBoxRequest = document.getElementById('suggestionBoxRequest');
-        publisherNameDropdownRequest = document.getElementById('publisherNameDropdownRequest');
-        fieldGroupRequest = document.getElementById('fieldGroupRequest');
-        privilege2Request = document.getElementById('privilege2Request');
-        serviceYearRequest = document.getElementById('serviceYearRequest');
-        monthYearRequest = document.getElementById('monthYearRequest');
-        requestFields = document.getElementById('requestFields');
-        submitRequestApprovalBtn = document.getElementById('submitRequestApprovalBtn');
-        clearRequestFormBtn = document.getElementById('clearRequestFormBtn');
-        backHomeFromRequestBtn = document.getElementById('backHomeFromRequestBtn');
-        logoutBtnFromRequest = document.getElementById('logoutBtnFromRequest');
-        pendingRequestsList = document.getElementById('pendingRequestsList');
-        noPendingRequestsLabel = document.getElementById('noPendingRequestsLabel');
-        selectFileBtn = document.getElementById('selectFileBtn');
-        excelFileInput = document.getElementById('excelFileInput');
-        uploadStatus = document.getElementById('uploadStatus');
-        processUploadBtn = document.getElementById('processUploadBtn');
-        backHomeFromUploadBtn = document.getElementById('backHomeFromUploadBtn');
-        logoutBtnFromUpload = document.getElementById('logoutBtnFromUpload');
-        selectFileBtnPublishers = document.getElementById('selectFileBtnPublishers');
-        excelFileInputPublishers = document.getElementById('excelFileInputPublishers');
-        uploadStatusPublishers = document.getElementById('uploadStatusPublishers');
-        processUploadBtnPublishers = document.getElementById('processUploadBtnPublishers');
-        backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
-        logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
-        searchPublisherAux = document.getElementById('searchPublisherAux');
-        suggestionBoxAux = document.getElementById('suggestionBoxAux');
-        publisherNameDropdownAux = document.getElementById('publisherNameDropdownAux');
-        fieldGroupAux = document.getElementById('fieldGroupAux');
-        privilege2Aux = document.getElementById('privilege2Aux');
-        serviceYearDropdownAux = document.getElementById('serviceYearDropdownAux');
-        monthYearDropdownAux = document.getElementById('monthYearDropdownAux');
-        isAuxiliaryPioneerThisMonthAux = document.getElementById('isAuxiliaryPioneerThisMonthAux');
-        addAuxStatusBtn = document.getElementById('addAuxStatusBtn');
-        updateAuxStatusBtn = document.getElementById('updateAuxStatusBtn');
-        previousAuxStatusBtn = document.getElementById('previousAuxStatusBtn');
-        nextAuxStatusBtn = document.getElementById('nextAuxStatusBtn');
-        clearAuxFormBtn = document.getElementById('clearAuxFormBtn');
-        backHomeFromAuxBtn = document.getElementById('backHomeFromAuxBtn');
-        lastModifiedByAux = document.getElementById('lastModifiedByAux');
-    }
+    loginPage = document.getElementById('loginPage');
+    homePage = document.getElementById('homePage');
+    addReportPage = document.getElementById('addReportPage');
+    publisherPage = document.getElementById('publisherPage');
+    updateReportPage = document.getElementById('updateReportPage');
+    submitRequestPage = document.getElementById('submitRequestPage');
+    reviewApprovalsPage = document.getElementById('reviewApprovalsPage');
+    uploadPage = document.getElementById('uploadPage');
+    uploadPublishersPage = document.getElementById('uploadPublishersPage');
+    manageAuxiliaryPage = document.getElementById('manageAuxiliaryPage');
+    summaryReportPage = document.getElementById('summaryReportPage');
+    loggedInUser = document.getElementById('loggedInUser');
+    adminButtons = document.getElementById('adminButtons');
+    userButtons = document.getElementById('userButtons');
+    adminSection = document.getElementById('adminSection');
+    loginUsername = document.getElementById('loginUsername');
+    loginPassword = document.getElementById('loginPassword');
+    serviceYearDropdown = document.getElementById("serviceYearDropdown");
+    monthYearDropdown = document.getElementById("monthYearDropdown");
+    fieldHoursContainer = document.getElementById("fieldHoursContainer");
+    fieldHoursInput = document.getElementById("fieldHours");
+    bibleStudiesContainer = document.getElementById("bibleStudiesContainer");
+    bibleStudiesInput = document.getElementById("bibleStudies");
+    sharedMinistryContainer = document.getElementById("sharedMinistryContainer");
+    sharedMinistryCheckbox = document.getElementById("sharedMinistry");
+    auxiliaryPioneerCheckboxContainer = document.getElementById("auxiliaryPioneerCheckboxContainer");
+    auxiliaryPioneerCheckbox = document.getElementById("auxiliaryPioneerCheckbox");
+    privilege2ReportInput = document.getElementById("privilege2Report");
+    searchPublisherReportInput = document.getElementById("searchPublisherReport");
+    suggestionBoxReport = document.getElementById("suggestionBoxReport");
+    publisherNameDropdown = document.getElementById("publisherNameDropdown");
+    fieldGroupInput = document.getElementById("fieldGroup");
+    logoutBtnFromReport = document.getElementById("logoutBtnFromReport");
+    commentsAdd = document.getElementById('commentsAdd');
+    lastModifiedByAdd = document.getElementById('lastModifiedByAdd');
+    firstNameInput = document.getElementById("firstName");
+    lastNameInput = document.getElementById("lastName");
+    fullNameInput = document.getElementById("fullName");
+    birthdateInput = document.getElementById("birthdate");
+    baptismStatusDropdown = document.getElementById("baptismStatus");
+    baptismDateContainer = document.getElementById("baptismDateContainer");
+    baptismDateInput = document.getElementById("baptismDate");
+    genderDropdown = document.getElementById("gender");
+    hopeDropdown = document.getElementById("hope");
+    privilegeDropdown = document.getElementById("privilege");
+    privilege2Dropdown = document.getElementById("privilege2");
+    fieldServiceGroupDropdown = document.getElementById("fieldServiceGroup");
+    addPublisherBtn = document.getElementById("addPublisherBtn");
+    updatePublisherBtn = document.getElementById("updatePublisherBtn");
+    deletePublisherBtn = document.getElementById("deletePublisherBtn");
+    previousPublisherBtn = document.getElementById("previousPublisherBtn");
+    nextPublisherBtn = document.getElementById("nextPublisherBtn");
+    clearPublisherFormBtn = document.getElementById("clearPublisherFormBtn");
+    backHomeFromPublisherBtn = document.getElementById("backHomeFromPublisherBtn");
+    logoutBtnFromPublisher = document.getElementById("logoutBtnFromPublisher");
+    searchInputManage = document.getElementById("searchPublisher");
+    suggestionBoxManage = document.getElementById("suggestionBox");
+    publisherNameDropdownUpdate = document.getElementById('publisherNameDropdownUpdate');
+    serviceYearDropdownUpdate = document.getElementById('serviceYearDropdownUpdate');
+    monthYearDropdownUpdate = document.getElementById('monthYearDropdownUpdate');
+    searchPublisherUpdate = document.getElementById('searchPublisherUpdate');
+    suggestionBoxUpdate = document.getElementById('suggestionBoxUpdate');
+    fieldGroupUpdate = document.getElementById('fieldGroupUpdate');
+    privilege2Update = document.getElementById('privilege2Update');
+    updateReportFieldsDiv = document.getElementById('updateReportFields');
+    fieldHoursUpdate = document.getElementById('fieldHoursUpdate');
+    bibleStudiesUpdate = document.getElementById('bibleStudiesUpdate');
+    sharedMinistryUpdate = document.getElementById('sharedMinistryUpdate');
+    auxiliaryPioneerCheckboxUpdate = document.getElementById('auxiliaryPioneerCheckboxUpdate');
+    fieldHoursContainerUpdate = document.getElementById('fieldHoursContainerUpdate');
+    bibleStudiesContainerUpdate = document.getElementById('bibleStudiesContainerUpdate');
+    sharedMinistryContainerUpdate = document.getElementById('sharedMinistryContainerUpdate');
+    auxiliaryPioneerCheckboxContainerUpdate = document.getElementById('auxiliaryPioneerCheckboxContainerUpdate');
+    updateReportBtn = document.getElementById('updateReportBtn');
+    deleteReportBtn = document.getElementById('deleteReportBtn');
+    clearUpdateFormBtn = document.getElementById('clearUpdateFormBtn');
+    backHomeFromUpdateBtn = document.getElementById('backHomeFromUpdateBtn');
+    logoutBtnFromUpdate = document.getElementById('logoutBtnFromUpdate');
+    commentsUpdate = document.getElementById('commentsUpdate');
+    lastModifiedByUpdate = document.getElementById('lastModifiedByUpdate');
+    searchPublisherRequest = document.getElementById('searchPublisherRequest');
+    suggestionBoxRequest = document.getElementById('suggestionBoxRequest');
+    publisherNameDropdownRequest = document.getElementById('publisherNameDropdownRequest');
+    fieldGroupRequest = document.getElementById('fieldGroupRequest');
+    privilege2Request = document.getElementById('privilege2Request');
+    serviceYearRequest = document.getElementById('serviceYearRequest');
+    monthYearRequest = document.getElementById('monthYearRequest');
+    requestFields = document.getElementById('requestFields');
+    submitRequestApprovalBtn = document.getElementById('submitRequestApprovalBtn');
+    clearRequestFormBtn = document.getElementById('clearRequestFormBtn');
+    backHomeFromRequestBtn = document.getElementById('backHomeFromRequestBtn');
+    logoutBtnFromRequest = document.getElementById('logoutBtnFromRequest');
+    pendingRequestsList = document.getElementById('pendingRequestsList');
+    noPendingRequestsLabel = document.getElementById('noPendingRequestsLabel');
+    selectFileBtn = document.getElementById('selectFileBtn');
+    excelFileInput = document.getElementById('excelFileInput');
+    uploadStatus = document.getElementById('uploadStatus');
+    processUploadBtn = document.getElementById('processUploadBtn');
+    backHomeFromUploadBtn = document.getElementById('backHomeFromUploadBtn');
+    logoutBtnFromUpload = document.getElementById('logoutBtnFromUpload');
+    selectFileBtnPublishers = document.getElementById('selectFileBtnPublishers');
+    excelFileInputPublishers = document.getElementById('excelFileInputPublishers');
+    uploadStatusPublishers = document.getElementById('uploadStatusPublishers');
+    processUploadBtnPublishers = document.getElementById('processUploadBtnPublishers');
+    backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
+    logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
+    searchPublisherAux = document.getElementById('searchPublisherAux');
+    suggestionBoxAux = document.getElementById('suggestionBoxAux');
+    publisherNameDropdownAux = document.getElementById('publisherNameDropdownAux');
+    fieldGroupAux = document.getElementById('fieldGroupAux');
+    privilege2Aux = document.getElementById('privilege2Aux');
+    serviceYearDropdownAux = document.getElementById('serviceYearDropdownAux');
+    monthYearDropdownAux = document.getElementById('monthYearDropdownAux');
+    isAuxiliaryPioneerThisMonthAux = document.getElementById('isAuxiliaryPioneerThisMonthAux');
+    addAuxStatusBtn = document.getElementById('addAuxStatusBtn');
+    updateAuxStatusBtn = document.getElementById('updateAuxStatusBtn');
+    previousAuxStatusBtn = document.getElementById('previousAuxStatusBtn');
+    nextAuxStatusBtn = document.getElementById('nextAuxStatusBtn');
+    clearAuxFormBtn = document.getElementById('clearAuxFormBtn');
+    backHomeFromAuxBtn = document.getElementById('backHomeFromAuxBtn');
+    lastModifiedByAux = document.getElementById('lastModifiedByAux');
+    summaryReportPage = document.getElementById('summaryReportPage');
+    serviceYearSummary = document.getElementById('serviceYearSummary');
+    monthSummary = document.getElementById('monthSummary');
+    generateSummaryBtn = document.getElementById('generateSummaryBtn');
+    summaryResults = document.getElementById('summaryResults');
+    backHomeFromSummaryBtn = document.getElementById('backHomeFromSummaryBtn');
+}
     function attachAllListeners() {
-        document.getElementById("loginBtn")?.addEventListener("click", login);
-        document.getElementById("logoutBtn")?.addEventListener("click", logout);
-        document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage'));
-        document.getElementById("manageAuxiliaryPioneerBtn")?.addEventListener("click", () => showPage('manageAuxiliaryPage'));
-        document.getElementById("addReportBtnAdmin")?.addEventListener("click", () => showPage('addReportPage'));
-        document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage'));
-        document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => showPage('reviewApprovalsPage'));
-        document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
-        document.getElementById("uploadReportsBtn")?.addEventListener("click", () => promptForAdminPassword(() => showPage('uploadPage')));
-        document.getElementById("uploadPublishersBtn")?.addEventListener("click", () => promptForAdminPassword(() => showPage('uploadPublishersPage')));
-        document.getElementById("clearAllDataBtn")?.addEventListener("click", () => promptForAdminPassword(clearAllData));
-        document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage'));
-        document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage'));
-        document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage'));
-        document.getElementById("backHomeFromPublisherBtn")?.addEventListener("click", () => showPage('homePage'));
-        document.getElementById("backHomeFromUpdateBtn")?.addEventListener("click", () => showPage('homePage'));
-        document.getElementById("backHomeFromRequestBtn")?.addEventListener("click", () => showPage('homePage'));
-        document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage'));
-        document.getElementById("backHomeFromUploadBtn")?.addEventListener('click', () => showPage('homePage'));
-        document.getElementById("backHomeFromUploadPublishersBtn")?.addEventListener('click', () => showPage('homePage'));
-        backHomeFromAuxBtn?.addEventListener("click", () => showPage('homePage'));
-        document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
-        document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
-        logoutBtnFromReport?.addEventListener("click", logout);
-        addPublisherBtn?.addEventListener("click", addPublisher);
-        updatePublisherBtn?.addEventListener("click", updatePublisher);
-        deletePublisherBtn?.addEventListener("click", deletePublisher);
-        previousPublisherBtn?.addEventListener("click", previousPublisher);
-        nextPublisherBtn?.addEventListener("click", nextPublisher);
-        clearPublisherFormBtn?.addEventListener("click", clearPublisherForm);
-        logoutBtnFromPublisher?.addEventListener("click", logout);
-        firstNameInput?.addEventListener("input", updateFullName);
-        lastNameInput?.addEventListener("input", updateFullName);
-        baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
-        updateReportBtn?.addEventListener("click", updateReport);
-        deleteReportBtn?.addEventListener("click", deleteReport);
-        clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
-        logoutBtnFromUpdate?.addEventListener("click", logout);
-        submitRequestApprovalBtn?.addEventListener('click', submitRequestForApproval);
-        clearRequestFormBtn?.addEventListener('click', clearSubmitRequestForm);
-        logoutBtnFromRequest?.addEventListener('click', logout);
-        document.getElementById("logoutBtnFromReview")?.addEventListener("click", logout);
-        selectFileBtn?.addEventListener('click', () => excelFileInput.click());
-        excelFileInput?.addEventListener('change', handleFileSelect);
-        processUploadBtn?.addEventListener('click', processAndUploadRecords);
-        logoutBtnFromUpload?.addEventListener('click', logout);
-        selectFileBtnPublishers?.addEventListener('click', () => excelFileInputPublishers.click());
-        excelFileInputPublishers?.addEventListener('change', handlePublisherFileSelect);
-        processUploadBtnPublishers?.addEventListener('click', processAndUploadPublishers);
-        logoutBtnFromUploadPublishers?.addEventListener('click', logout);
-        addAuxStatusBtn?.addEventListener("click", addAuxiliaryStatus);
-        updateAuxStatusBtn?.addEventListener("click", updateAuxiliaryStatus);
-        previousAuxStatusBtn?.addEventListener("click", previousAuxStatus);
-        nextAuxStatusBtn?.addEventListener("click", nextAuxStatus);
-        clearAuxFormBtn?.addEventListener("click", clearManageAuxiliaryForm);
-    }
+    document.getElementById("loginBtn")?.addEventListener("click", login);
+    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+    document.getElementById("managePublisherBtn")?.addEventListener("click", () => showPage('publisherPage'));
+    document.getElementById("manageAuxiliaryPioneerBtn")?.addEventListener("click", () => showPage('manageAuxiliaryPage'));
+    document.getElementById("addReportBtnAdmin")?.addEventListener("click", () => showPage('addReportPage'));
+    document.getElementById("updateReportPageBtn")?.addEventListener("click", () => showPage('updateReportPage'));
+    document.getElementById("reviewApprovalsBtn")?.addEventListener("click", () => showPage('reviewApprovalsPage'));
+    document.getElementById("viewSummaryBtn")?.addEventListener("click", () => showPage('summaryReportPage'));
+    document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
+    document.getElementById("uploadReportsBtn")?.addEventListener("click", () => promptForAdminPassword(() => showPage('uploadPage')));
+    document.getElementById("uploadPublishersBtn")?.addEventListener("click", () => promptForAdminPassword(() => showPage('uploadPublishersPage')));
+    document.getElementById("clearAllDataBtn")?.addEventListener("click", () => promptForAdminPassword(clearAllData));
+    document.getElementById("addReportBtnUser")?.addEventListener("click", () => showPage('addReportPage'));
+    document.getElementById("submitRequestPageBtn")?.addEventListener("click", () => showPage('submitRequestPage'));
+    document.getElementById("backHomeFromReportBtn")?.addEventListener("click", () => showPage('homePage'));
+    document.getElementById("backHomeFromPublisherBtn")?.addEventListener("click", () => showPage('homePage'));
+    document.getElementById("backHomeFromUpdateBtn")?.addEventListener("click", () => showPage('homePage'));
+    document.getElementById("backHomeFromRequestBtn")?.addEventListener("click", () => showPage('homePage'));
+    document.getElementById("backHomeFromReviewBtn")?.addEventListener('click', () => showPage('homePage'));
+    document.getElementById("backHomeFromUploadBtn")?.addEventListener('click', () => showPage('homePage'));
+    document.getElementById("backHomeFromUploadPublishersBtn")?.addEventListener('click', () => showPage('homePage'));
+    backHomeFromAuxBtn?.addEventListener("click", () => showPage('homePage'));
+    backHomeFromSummaryBtn?.addEventListener("click", () => showPage('homePage'));
+    document.getElementById("saveReportBtn")?.addEventListener("click", saveReport);
+    document.getElementById("clearReportBtn")?.addEventListener("click", clearAddReportForm);
+    logoutBtnFromReport?.addEventListener("click", logout);
+    addPublisherBtn?.addEventListener("click", addPublisher);
+    updatePublisherBtn?.addEventListener("click", updatePublisher);
+    deletePublisherBtn?.addEventListener("click", deletePublisher);
+    previousPublisherBtn?.addEventListener("click", previousPublisher);
+    nextPublisherBtn?.addEventListener("click", nextPublisher);
+    clearPublisherFormBtn?.addEventListener("click", clearPublisherForm);
+    logoutBtnFromPublisher?.addEventListener("click", logout);
+    firstNameInput?.addEventListener("input", updateFullName);
+    lastNameInput?.addEventListener("input", updateFullName);
+    baptismStatusDropdown?.addEventListener("change", toggleBaptismDate);
+    updateReportBtn?.addEventListener("click", updateReport);
+    deleteReportBtn?.addEventListener("click", deleteReport);
+    clearUpdateFormBtn?.addEventListener("click", clearUpdateFormBtn);
+    logoutBtnFromUpdate?.addEventListener("click", logout);
+    submitRequestApprovalBtn?.addEventListener('click', submitRequestForApproval);
+    clearRequestFormBtn?.addEventListener('click', clearSubmitRequestForm);
+    logoutBtnFromRequest?.addEventListener('click', logout);
+    document.getElementById("logoutBtnFromReview")?.addEventListener("click", logout);
+    selectFileBtn?.addEventListener('click', () => excelFileInput.click());
+    excelFileInput?.addEventListener('change', handleFileSelect);
+    processUploadBtn?.addEventListener('click', processAndUploadRecords);
+    logoutBtnFromUpload?.addEventListener('click', logout);
+    selectFileBtnPublishers?.addEventListener('click', () => excelFileInputPublishers.click());
+    excelFileInputPublishers?.addEventListener('change', handlePublisherFileSelect);
+    processUploadBtnPublishers?.addEventListener('click', processAndUploadPublishers);
+    logoutBtnFromUploadPublishers?.addEventListener('click', logout);
+    addAuxStatusBtn?.addEventListener("click", addAuxiliaryStatus);
+    updateAuxStatusBtn?.addEventListener("click", updateAuxiliaryStatus);
+    previousAuxStatusBtn?.addEventListener("click", previousAuxStatus);
+    nextAuxStatusBtn?.addEventListener("click", nextAuxStatus);
+    clearAuxFormBtn?.addEventListener("click", clearManageAuxiliaryForm);
+    generateSummaryBtn?.addEventListener("click", generateSummaryReport);
+}
         function showPage(pageId) {
-        document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
-        const targetPage = document.getElementById(pageId);
-        if (targetPage) {
-            targetPage.classList.remove('hidden');
-        }
-        if (pageId === 'homePage') { updateHomePage(); } 
-        else if (pageId === 'addReportPage') { setupAddReportPage(); } 
-        else if (pageId === 'publisherPage') { setupManagePublisherPage(); } 
-        else if (pageId === 'updateReportPage') { setupUpdateReportPage(); }
-        else if (pageId === 'submitRequestPage') { setupSubmitRequestPage(); }
-        else if (pageId === 'reviewApprovalsPage') { setupReviewApprovalsPage(); }
-        else if (pageId === 'uploadPage') { setupUploadPage(); }
-        else if (pageId === 'uploadPublishersPage') { setupUploadPublishersPage(); }
-        else if (pageId === 'manageAuxiliaryPage') { setupManageAuxiliaryPage(); }
+    document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.remove('hidden');
     }
+    if (pageId === 'homePage') { updateHomePage(); } 
+    else if (pageId === 'addReportPage') { setupAddReportPage(); } 
+    else if (pageId === 'publisherPage') { setupManagePublisherPage(); } 
+    else if (pageId === 'updateReportPage') { setupUpdateReportPage(); }
+    else if (pageId === 'submitRequestPage') { setupSubmitRequestPage(); }
+    else if (pageId === 'reviewApprovalsPage') { setupReviewApprovalsPage(); }
+    else if (pageId === 'uploadPage') { setupUploadPage(); }
+    else if (pageId === 'uploadPublishersPage') { setupUploadPublishersPage(); }
+    else if (pageId === 'manageAuxiliaryPage') { setupManageAuxiliaryPage(); }
+    else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
+}
     function handleRouteChange() {
         if (currentUser) {
             showPage('homePage');
