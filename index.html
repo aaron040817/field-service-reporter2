@@ -2005,143 +2005,153 @@ deathMonth = document.getElementById('deathMonth');
         return null;
     }
 async function generateSummaryReport() {
-        const selectedYear = serviceYearSummary.value;
-        const selectedMonthStr = monthSummary.value;
+    const selectedYear = serviceYearSummary.value;
+    const selectedMonthStr = monthSummary.value;
 
-        if (!selectedYear || !selectedMonthStr) {
-            alert("Please select a service year and month.");
-            return;
-        }
+    if (!selectedYear || !selectedMonthStr) {
+        alert("Please select a service year and month.");
+        return;
+    }
 
-        summaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
+    summaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
 
-        try {
-            const allReportsSnap = await db.collection("reports").get();
-            const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
+    try {
+        const allReportsSnap = await db.collection("reports").get();
+        const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
+        
+        const allReports = allReportsSnap.docs.map(doc => doc.data());
+        const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
+        
+        const targetMonthDate = parseMonthString(selectedMonthStr);
+        
+        const reportingWindowStart = new Date(targetMonthDate);
+        reportingWindowStart.setMonth(targetMonthDate.getMonth() + 1, 1);
+        reportingWindowStart.setHours(0, 0, 0, 0);
+
+        const reportingWindowEnd = new Date(reportingWindowStart);
+        reportingWindowEnd.setMonth(reportingWindowStart.getMonth() + 1, 0);
+        reportingWindowEnd.setHours(23, 59, 59, 999);
+
+        const reportsToSummarize = allReports.filter(report => {
+            if (!report.month || !report.timestamp) return false;
+            const reportMonthDate = parseMonthString(report.month);
+            if (!reportMonthDate) return false;
+
+            if (report.month === selectedMonthStr) {
+                return true;
+            }
+
+            const submissionDate = report.timestamp.toDate();
+            const lockDateForReportMonth = new Date(reportMonthDate);
+            lockDateForReportMonth.setMonth(reportMonthDate.getMonth() + 2, 0); 
             
-            const allReports = allReportsSnap.docs.map(doc => doc.data());
-            const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
+            if (submissionDate > lockDateForReportMonth) {
+                 if (submissionDate >= reportingWindowStart && submissionDate <= reportingWindowEnd) {
+                     return true;
+                 }
+            }
             
-            const targetMonthDate = parseMonthString(selectedMonthStr);
+            return false;
+        });
+        
+        let summary = {
+            activeInLast6Months: 0,
+            publishersReported: 0,
+            publishersStudies: 0,
+            auxPioneersReported: 0,
+            auxPioneersHours: 0,
+            auxPioneersStudies: 0,
+            fullTimePioneersReported: 0,
+            fullTimePioneersHours: 0,
+            fullTimePioneersStudies: 0,
+        };
+
+        const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
+
+        for (const report of reportsToSummarize) {
+            const privilege = report.privilege2AtTimeOfReport;
             
-            const reportingWindowStart = new Date(targetMonthDate);
-            reportingWindowStart.setMonth(targetMonthDate.getMonth() + 1, 1);
-            reportingWindowStart.setHours(0, 0, 0, 0);
-
-            const reportingWindowEnd = new Date(reportingWindowStart);
-            reportingWindowEnd.setMonth(reportingWindowStart.getMonth() + 1, 0);
-            reportingWindowEnd.setHours(23, 59, 59, 999);
-
-            const reportsToSummarize = allReports.filter(report => {
-                if (!report.month || !report.timestamp) return false;
-                const reportMonthDate = parseMonthString(report.month);
-                if (!reportMonthDate) return false;
-
-                if (report.month === selectedMonthStr) {
-                    return true;
+            if (fullTimePrivileges.includes(privilege)) {
+                if (report.hours > 0) {
+                    summary.fullTimePioneersReported++;
+                    summary.fullTimePioneersHours += report.hours;
+                    summary.fullTimePioneersStudies += report.bibleStudies;
                 }
-
-                const submissionDate = report.timestamp.toDate();
-                const lockDateForReportMonth = new Date(reportMonthDate);
-                lockDateForReportMonth.setMonth(reportMonthDate.getMonth() + 2, 0);
-                
-                if (submissionDate > lockDateForReportMonth) {
-                     if (submissionDate >= reportingWindowStart && submissionDate <= reportingWindowEnd) {
-                         return true;
-                     }
+            } else if (privilege === "Continuous Auxiliary Pioneer") {
+                 if (report.hours > 0) {
+                    summary.auxPioneersReported++;
+                    summary.auxPioneersHours += report.hours;
+                    summary.auxPioneersStudies += report.bibleStudies;
                 }
-                
-                return false;
-            });
-            
-            let summary = {
-                activeInLast6Months: 0,
-                publishersReported: 0,
-                publishersStudies: 0,
-                auxPioneersReported: 0,
-                auxPioneersHours: 0,
-                auxPioneersStudies: 0,
-                fullTimePioneersReported: 0,
-                fullTimePioneersHours: 0,
-                fullTimePioneersStudies: 0,
-            };
+            } else if (privilege === "Publisher/Auxi") {
+                const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
+                const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
+                const isAux = auxStatus ? auxStatus.isAuxiliary : false;
 
-            const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
-
-            for (const report of reportsToSummarize) {
-                const privilege = report.privilege2AtTimeOfReport;
-                
-                if (fullTimePrivileges.includes(privilege)) {
+                if (isAux) {
                     if (report.hours > 0) {
-                        summary.fullTimePioneersReported++;
-                        summary.fullTimePioneersHours += report.hours;
-                        summary.fullTimePioneersStudies += report.bibleStudies;
-                    }
-                } else if (privilege === "Continuous Auxiliary Pioneer") {
-                     if (report.hours > 0) {
                         summary.auxPioneersReported++;
                         summary.auxPioneersHours += report.hours;
                         summary.auxPioneersStudies += report.bibleStudies;
                     }
-                } else if (privilege === "Publisher/Auxi") {
-                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
-                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
-                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
-
-                    if (isAux) {
-                        if (report.hours > 0) {
-                            summary.auxPioneersReported++;
-                            summary.auxPioneersHours += report.hours;
-                            summary.auxPioneersStudies += report.bibleStudies;
-                        }
-                    } else {
-                        if (report.sharedInMinistry) {
-                            summary.publishersReported++;
-                            summary.publishersStudies += report.bibleStudies;
-                        }
+                } else {
+                    if (report.sharedInMinistry) {
+                        summary.publishersReported++;
+                        summary.publishersStudies += report.bibleStudies;
                     }
                 }
             }
-            
-            const sixMonthsAgo = new Date(targetMonthDate);
-            sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5);
-            sixMonthsAgo.setDate(1);
-
-            const activePublishersIds = new Set();
-            allReports.forEach(report => {
-                if (!report.month) return;
-                const reportDate = parseMonthString(report.month);
-                if (reportDate && reportDate >= sixMonthsAgo && reportDate <= targetMonthDate) {
-                    const pub = publisherList.find(p => p.id === report.publisherId);
-                    const status = pub?.publisherStatus || "In the Congregation";
-                    if (status === "In the Congregation") {
-                        activePublishersIds.add(report.publisherId);
-                    }
-                }
-            });
-            summary.activeInLast6Months = activePublishersIds.size;
-            
-            const resultsHTML = `
-                <h3>Summary for ${selectedMonthStr} (and late reports)</h3>
-                <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
-                    <tr><td style="width:80%;">1. Active publishers in the last 6 months:</td><td style="text-align:right;"><b>${summary.activeInLast6Months}</b></td></tr>
-                    <tr><td>2. Count of Publishers who shared in ministry:</td><td style="text-align:right;"><b>${summary.publishersReported}</b></td></tr>
-                    <tr><td>3. Total Bible Studies from Publishers:</td><td style="text-align:right;"><b>${summary.publishersStudies}</b></td></tr>
-                    <tr><td>4. Count of Auxiliary Pioneers reporting time:</td><td style="text-align:right;"><b>${summary.auxPioneersReported}</b></td></tr>
-                    <tr><td>5. Total Hours from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersHours}</b></td></tr>
-                    <tr><td>6. Total Bible Studies from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersStudies}</b></td></tr>
-                    <tr><td>7. Count of Regular/Special Pioneers & Missionaries reporting time:</td><td style="text-align:right;"><b>${summary.fullTimePioneersReported}</b></td></tr>
-                    <tr><td>8. Total Hours from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersHours}</b></td></tr>
-                    <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
-                </table>
-            `;
-            summaryResults.innerHTML = resultsHTML;
-
-        } catch (error) {
-            console.error("Error generating summary:", error);
-            summaryResults.innerHTML = `<p style="color:red;">An error occurred while generating the summary. Please check the console.</p>`;
         }
-    }   
+        
+        const sixMonthsAgo = new Date(targetMonthDate);
+        sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5, 1);
+        sixMonthsAgo.setHours(0,0,0,0);
+
+        const windowEnd = new Date(targetMonthDate);
+        windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
+        windowEnd.setHours(23,59,59,999);
+
+        const activePublishersIds = new Set();
+        allReports.forEach(report => {
+            if (!report.month || !report.publisherId) return;
+            const reportDate = parseMonthString(report.month);
+            
+            if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
+                const pub = publisherList.find(p => p.id === report.publisherId);
+                
+                if (!pub) {
+                    return; 
+                }
+
+                const status = pub.publisherStatus || "In the Congregation";
+                if (status === "In the Congregation") {
+                    activePublishersIds.add(report.publisherId);
+                }
+            }
+        });
+        summary.activeInLast6Months = activePublishersIds.size;
+        
+        const resultsHTML = `
+            <h3>Summary for ${selectedMonthStr} (and late reports)</h3>
+            <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
+                <tr><td style="width:80%;">1. Active publishers in the last 6 months:</td><td style="text-align:right;"><b>${summary.activeInLast6Months}</b></td></tr>
+                <tr><td>2. Count of Publishers who shared in ministry:</td><td style="text-align:right;"><b>${summary.publishersReported}</b></td></tr>
+                <tr><td>3. Total Bible Studies from Publishers:</td><td style="text-align:right;"><b>${summary.publishersStudies}</b></td></tr>
+                <tr><td>4. Count of Auxiliary Pioneers reporting time:</td><td style="text-align:right;"><b>${summary.auxPioneersReported}</b></td></tr>
+                <tr><td>5. Total Hours from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersHours}</b></td></tr>
+                <tr><td>6. Total Bible Studies from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersStudies}</b></td></tr>
+                <tr><td>7. Count of Regular/Special Pioneers & Missionaries reporting time:</td><td style="text-align:right;"><b>${summary.fullTimePioneersReported}</b></td></tr>
+                <tr><td>8. Total Hours from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersHours}</b></td></tr>
+                <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
+            </table>
+        `;
+        summaryResults.innerHTML = resultsHTML;
+
+    } catch (error) {
+        console.error("Error generating summary:", error);
+        summaryResults.innerHTML = `<p style="color:red;">An error occurred while generating the summary. Please check the console.</p>`;
+    }
+}   
 function clearSummaryPage() {
     serviceYearSummary.value = "";
     monthSummary.innerHTML = '<option value="">-- Select Month --</option>';
