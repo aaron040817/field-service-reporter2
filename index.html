@@ -1181,39 +1181,79 @@ deathMonth = document.getElementById('deathMonth');
         } catch (error) { console.error("Error adding publisher:", error); alert("Failed to add publisher record."); }
     }
     async function updatePublisher() {
-        if (!currentDocId) { alert("Please select a publisher to update."); return; }
-        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !publisherStatus.value) {
-            alert("Please complete First Name, Last Name, and Publisher Status."); return;
-        }
-        const status = publisherStatus.value;
-        if ((status === 'Transferred' && (!transferYear.value || !transferMonth.value)) || (status === 'Dead' && (!deathYear.value || !deathMonth.value))) {
-            alert("Please select the month and year for the selected status."); return;
+    if (!currentDocId) { 
+        alert("Please select a publisher to update."); 
+        return; 
+    }
+    if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !publisherStatus.value) {
+        alert("Please complete First Name, Last Name, and Publisher Status."); 
+        return;
+    }
+    const status = publisherStatus.value;
+    if ((status === 'Transferred' && (!transferYear.value || !transferMonth.value)) || (status === 'Dead' && (!deathYear.value || !deathMonth.value))) {
+        alert("Please select the month and year for the selected status."); 
+        return;
+    }
+    if (!confirm("Are you sure you want to update this publisher? This will also update their name on all past reports.")) {
+        return;
+    }
+
+    const oldPublisherData = publisherList.find(p => p.id === currentDocId);
+    const oldFullName = oldPublisherData ? oldPublisherData.fullName : '';
+    const newFullName = `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`;
+
+    const updatedData = {
+        firstName: firstNameInput.value.trim(),
+        lastName: lastNameInput.value.trim(),
+        fullName: newFullName,
+        publisherStatus: publisherStatus.value,
+        monthOfTransfer: status === 'Transferred' ? transferMonth.value : '',
+        monthOfDeath: status === 'Dead' ? deathMonth.value : '',
+        birthdate: birthdateInput.value,
+        baptismStatus: baptismStatusDropdown.value,
+        baptismDate: baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "",
+        gender: genderDropdown.value,
+        hope: hopeDropdown.value,
+        privilege: privilegeDropdown.value,
+        privilege2: privilege2Dropdown.value,
+        fieldServiceGroup: fieldServiceGroupDropdown.value,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        const batch = db.batch();
+        const publisherRef = db.collection("publishers").doc(currentDocId);
+        batch.update(publisherRef, updatedData);
+
+        if (oldFullName !== newFullName && newFullName.trim() !== '') {
+            const reportsQuery = db.collection("reports").where("publisherId", "==", currentDocId);
+            const reportsSnapshot = await reportsQuery.get();
+            
+            if (!reportsSnapshot.empty) {
+                reportsSnapshot.forEach(doc => {
+                    batch.update(doc.ref, { publisherFullName: newFullName });
+                });
+            }
         }
 
-        const updatedData = {
-            firstName: firstNameInput.value.trim(),
-            lastName: lastNameInput.value.trim(),
-            fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
-            publisherStatus: publisherStatus.value,
-            monthOfTransfer: status === 'Transferred' ? `${transferMonth.options[transferMonth.selectedIndex].text}` : '',
-            monthOfDeath: status === 'Dead' ? `${deathMonth.options[deathMonth.selectedIndex].text}` : '',
-            birthdate: birthdateInput.value,
-            baptismStatus: baptismStatusDropdown.value,
-            baptismDate: baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "",
-            gender: genderDropdown.value,
-            hope: hopeDropdown.value,
-            privilege: privilegeDropdown.value,
-            privilege2: privilege2Dropdown.value,
-            fieldServiceGroup: fieldServiceGroupDropdown.value,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        try {
-            await db.collection("publishers").doc(currentDocId).update(updatedData);
-            alert("Publisher record updated successfully!");
-            await loadPublishers();
+        await batch.commit();
+        
+        alert("Publisher record and all associated reports updated successfully!");
+        
+        await loadPublishers();
+        
+        const updatedIndex = publisherList.findIndex(p => p.id === currentDocId);
+        if (updatedIndex !== -1) {
+            displayPublisher(updatedIndex);
+        } else {
             clearPublisherForm();
-        } catch (error) { console.error("Error updating publisher:", error); alert("Failed to update publisher record."); }
+        }
+
+    } catch (error) {
+        console.error("Error updating publisher and reports:", error);
+        alert("Failed to update publisher record and reports.");
     }
+}
     async function deletePublisher() {
         if (!currentDocId) { alert("Please select a publisher to delete."); return; }
         if (!confirm("Are you sure you want to permanently delete this publisher record? This action cannot be undone.")) return;
