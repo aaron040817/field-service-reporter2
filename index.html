@@ -2056,43 +2056,11 @@ async function generateSummaryReport() {
     summaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
 
     try {
-        const allReportsSnap = await db.collection("reports").get();
+        const monthlyReportsSnap = await db.collection("reports").where("month", "==", selectedMonthStr).get();
         const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
         
-        const allReports = allReportsSnap.docs.map(doc => doc.data());
+        const reportsToSummarize = monthlyReportsSnap.docs.map(doc => doc.data());
         const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
-        
-        const targetMonthDate = parseMonthString(selectedMonthStr);
-        
-        const reportingWindowStart = new Date(targetMonthDate);
-        reportingWindowStart.setMonth(targetMonthDate.getMonth() + 1, 1);
-        reportingWindowStart.setHours(0, 0, 0, 0);
-
-        const reportingWindowEnd = new Date(reportingWindowStart);
-        reportingWindowEnd.setMonth(reportingWindowStart.getMonth() + 1, 0);
-        reportingWindowEnd.setHours(23, 59, 59, 999);
-
-        const reportsToSummarize = allReports.filter(report => {
-            if (!report.month || !report.timestamp) return false;
-            const reportMonthDate = parseMonthString(report.month);
-            if (!reportMonthDate) return false;
-
-            if (report.month === selectedMonthStr) {
-                return true;
-            }
-
-            const submissionDate = report.timestamp.toDate();
-            const lockDateForReportMonth = new Date(reportMonthDate);
-            lockDateForReportMonth.setMonth(reportMonthDate.getMonth() + 2, 0); 
-            
-            if (submissionDate > lockDateForReportMonth) {
-                 if (submissionDate >= reportingWindowStart && submissionDate <= reportingWindowEnd) {
-                     return true;
-                 }
-            }
-            
-            return false;
-        });
         
         let summary = {
             activeInLast6Months: 0,
@@ -2143,6 +2111,9 @@ async function generateSummaryReport() {
             }
         }
         
+        const allReportsSnap_for6Months = await db.collection("reports").get();
+        const allReports = allReportsSnap_for6Months.docs.map(doc => doc.data());
+        const targetMonthDate = parseMonthString(selectedMonthStr);
         const sixMonthsAgo = new Date(targetMonthDate);
         sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5, 1);
         sixMonthsAgo.setHours(0,0,0,0);
@@ -2172,7 +2143,7 @@ async function generateSummaryReport() {
         summary.activeInLast6Months = activePublishersIds.size;
         
         const resultsHTML = `
-            <h3>Summary for ${selectedMonthStr} (and late reports)</h3>
+            <h3>Summary for ${selectedMonthStr}</h3>
             <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
                 <tr><td style="width:80%;">1. Active publishers in the last 6 months:</td><td style="text-align:right;"><b>${summary.activeInLast6Months}</b></td></tr>
                 <tr><td>2. Count of Publishers who shared in ministry:</td><td style="text-align:right;"><b>${summary.publishersReported}</b></td></tr>
