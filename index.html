@@ -582,20 +582,22 @@ deathYear = document.getElementById('deathYear');
 deathMonth = document.getElementById('deathMonth');
         }
     function toggleStatusDateFields() {
-        const status = publisherStatus.value;
-        transferDateContainer.classList.add('hidden');
-        deathDateContainer.classList.add('hidden');
+    const status = publisherStatus.value;
+    transferDateContainer.classList.add('hidden');
+    deathDateContainer.classList.add('hidden');
+    transferYear.value = '';
+    transferMonth.innerHTML = '<option value="">-- Select --</option>';
+    deathYear.value = '';
+    deathMonth.innerHTML = '<option value="">-- Select --</option>';
 
-        if (status === 'Transferred') {
-            transferDateContainer.classList.remove('hidden');
-            populateServiceYears(transferYear);
-            populateMonths(transferMonth, transferYear.value);
-        } else if (status === 'Dead') {
-            deathDateContainer.classList.remove('hidden');
-            populateServiceYears(deathYear);
-            populateMonths(deathMonth, deathYear.value);
-        }
+    if (status === 'Transferred') {
+        transferDateContainer.classList.remove('hidden');
+        populateServiceYears(transferYear);
+    } else if (status === 'Dead') {
+        deathDateContainer.classList.remove('hidden');
+        populateServiceYears(deathYear);
     }
+}
     function attachAllListeners() {
     document.getElementById("loginBtn")?.addEventListener("click", login);
     document.getElementById("logoutBtn")?.addEventListener("click", logout);
@@ -655,8 +657,10 @@ deathMonth = document.getElementById('deathMonth');
     nextAuxStatusBtn?.addEventListener("click", nextAuxStatus);
     clearAuxFormBtn?.addEventListener("click", clearManageAuxiliaryForm);
     generateSummaryBtn?.addEventListener("click", generateSummaryReport);
-    clearSummaryBtn?.addEventListener("click", clearSummaryPage);
-    }
+    publisherStatus?.addEventListener('change', toggleStatusDateFields);
+    transferYear?.addEventListener('change', () => populateMonths(transferMonth, transferYear.value));
+    deathYear?.addEventListener('change', () => populateMonths(deathMonth, deathYear.value));
+}
         function showPage(pageId) {
     document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
     const targetPage = document.getElementById(pageId);
