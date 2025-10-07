@@ -2111,7 +2111,7 @@ async function generateSummaryReport() {
         windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
         windowEnd.setHours(23,59,59,999);
 
-        const activePublishersIds = new Set();
+        const activePublishersList = [];
         allReports.forEach(report => {
             if (!report.month || !report.publisherId) return;
             const reportDate = parseMonthString(report.month);
@@ -2125,11 +2125,13 @@ async function generateSummaryReport() {
 
                 const status = pub.publisherStatus || "In the Congregation";
                 if (status === "In the Congregation") {
-                    activePublishersIds.add(report.publisherId);
+                    activePublishersList.push(pub.fullName);
                 }
             }
         });
-        summary.activeInLast6Months = activePublishersIds.size;
+        
+        const uniqueActiveNames = [...new Set(activePublishersList)].sort();
+        summary.activeInLast6Months = uniqueActiveNames.length;
         
         const resultsHTML = `
             <h3>Summary for ${selectedMonthStr} (and late reports)</h3>
@@ -2144,6 +2146,9 @@ async function generateSummaryReport() {
                 <tr><td>8. Total Hours from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersHours}</b></td></tr>
                 <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
             </table>
+            <hr>
+            <h4>List of ${uniqueActiveNames.length} Active Publishers Counted:</h4>
+            <pre>${uniqueActiveNames.join('\n')}</pre>
         `;
         summaryResults.innerHTML = resultsHTML;
 
