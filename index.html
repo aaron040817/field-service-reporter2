@@ -203,6 +203,29 @@
         <input type="text" id="lastName">
         <label for="fullName">Full Name:</label>
         <input type="text" id="fullName" disabled>
+
+        <label for="publisherStatus">Publisher Status:</label>
+        <select id="publisherStatus">
+            <option value="">-- Select --</option>
+            <option value="In the Congregation">In the Congregation</option>
+            <option value="Transferred">Transferred</option>
+            <option value="Dead">Dead</option>
+        </select>
+
+        <div id="transferDateContainer" class="hidden">
+            <label for="transferYear">Year of Transfer:</label>
+            <select id="transferYear"></select>
+            <label for="transferMonth">Month of Transfer:</label>
+            <select id="transferMonth"></select>
+        </div>
+
+        <div id="deathDateContainer" class="hidden">
+            <label for="deathYear">Year of Death:</label>
+            <select id="deathYear"></select>
+            <label for="deathMonth">Month of Death:</label>
+            <select id="deathMonth"></select>
+        </div>
+
         <label for="birthdate">Birthdate:</label>
         <input type="date" id="birthdate">
         <label for="baptismStatus">Baptism Status:</label>
@@ -392,6 +415,7 @@
     let summaryReportPage;
     let serviceYearSummary, monthSummary, generateSummaryBtn, summaryResults, backHomeFromSummaryBtn;
     let clearSummaryBtn;
+    let publisherStatus, transferDateContainer, transferYear, transferMonth, deathDateContainer, deathYear, deathMonth;
     
     document.addEventListener("DOMContentLoaded", initializeApp);
     async function initializeApp() {
@@ -549,7 +573,29 @@
     summaryResults = document.getElementById('summaryResults');
     backHomeFromSummaryBtn = document.getElementById('backHomeFromSummaryBtn');
     clearSummaryBtn = document.getElementById('clearSummaryBtn');
-}
+    publisherStatus = document.getElementById('publisherStatus');
+transferDateContainer = document.getElementById('transferDateContainer');
+transferYear = document.getElementById('transferYear');
+transferMonth = document.getElementById('transferMonth');
+deathDateContainer = document.getElementById('deathDateContainer');
+deathYear = document.getElementById('deathYear');
+deathMonth = document.getElementById('deathMonth');
+        }
+    function toggleStatusDateFields() {
+        const status = publisherStatus.value;
+        transferDateContainer.classList.add('hidden');
+        deathDateContainer.classList.add('hidden');
+
+        if (status === 'Transferred') {
+            transferDateContainer.classList.remove('hidden');
+            populateServiceYears(transferYear);
+            populateMonths(transferMonth, transferYear.value);
+        } else if (status === 'Dead') {
+            deathDateContainer.classList.remove('hidden');
+            populateServiceYears(deathYear);
+            populateMonths(deathMonth, deathYear.value);
+        }
+    }
     function attachAllListeners() {
     document.getElementById("loginBtn")?.addEventListener("click", login);
     document.getElementById("logoutBtn")?.addEventListener("click", logout);
@@ -1093,17 +1139,38 @@
         if (baptismStatusDropdown.value !== "Baptized") baptismDateInput.value = ""; 
     }
     async function addPublisher() {
-        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before adding."); return;
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !publisherStatus.value) {
+            alert("Please complete First Name, Last Name, and Publisher Status."); return;
         }
+        const status = publisherStatus.value;
+        if ((status === 'Transferred' && (!transferYear.value || !transferMonth.value)) || (status === 'Dead' && (!deathYear.value || !deathMonth.value))) {
+            alert("Please select the month and year for the selected status."); return;
+        }
+
         const docId = `${lastNameInput.value.trim()}_${firstNameInput.value.trim()}_${birthdateInput.value}`.replace(/\s+/g, "_");
         try {
             const existingDoc = await db.collection("publishers").doc(docId).get();
             if (existingDoc.exists) { alert("A publisher with the same last name, first name, and birthdate already exists."); return; }
-            const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
-            await db.collection("publishers").doc(docId).set({
-                firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            
+            const publisherData = {
+                firstName: firstNameInput.value.trim(),
+                lastName: lastNameInput.value.trim(),
+                fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
+                publisherStatus: publisherStatus.value,
+                monthOfTransfer: status === 'Transferred' ? `${transferMonth.value} ${transferYear.value}` : '',
+                monthOfDeath: status === 'Dead' ? `${deathMonth.value} ${deathYear.value}` : '',
+                birthdate: birthdateInput.value,
+                baptismStatus: baptismStatusDropdown.value,
+                baptismDate: baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "",
+                gender: genderDropdown.value,
+                hope: hopeDropdown.value,
+                privilege: privilegeDropdown.value,
+                privilege2: privilege2Dropdown.value,
+                fieldServiceGroup: fieldServiceGroupDropdown.value,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await db.collection("publishers").doc(docId).set(publisherData);
             alert("Publisher record successfully added!");
             await loadPublishers();
             clearPublisherForm();
@@ -1111,12 +1178,30 @@
     }
     async function updatePublisher() {
         if (!currentDocId) { alert("Please select a publisher to update."); return; }
-        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !birthdateInput.value || !baptismStatusDropdown.value || !genderDropdown.value || !hopeDropdown.value || !privilegeDropdown.value || !privilege2Dropdown.value || !fieldServiceGroupDropdown.value || (baptismStatusDropdown.value === "Baptized" && !baptismDateInput.value)) {
-            alert("Please complete all fields before updating."); return;
+        if (!firstNameInput.value.trim() || !lastNameInput.value.trim() || !publisherStatus.value) {
+            alert("Please complete First Name, Last Name, and Publisher Status."); return;
         }
-        const baptismDateValue = baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "";
+        const status = publisherStatus.value;
+        if ((status === 'Transferred' && (!transferYear.value || !transferMonth.value)) || (status === 'Dead' && (!deathYear.value || !deathMonth.value))) {
+            alert("Please select the month and year for the selected status."); return;
+        }
+
         const updatedData = {
-            firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), birthdate: birthdateInput.value, baptismStatus: baptismStatusDropdown.value, baptismDate: baptismDateValue, gender: genderDropdown.value, hope: hopeDropdown.value, privilege: privilegeDropdown.value, privilege2: privilege2Dropdown.value, fieldServiceGroup: fieldServiceGroupDropdown.value, fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            firstName: firstNameInput.value.trim(),
+            lastName: lastNameInput.value.trim(),
+            fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
+            publisherStatus: publisherStatus.value,
+            monthOfTransfer: status === 'Transferred' ? `${transferMonth.options[transferMonth.selectedIndex].text}` : '',
+            monthOfDeath: status === 'Dead' ? `${deathMonth.options[deathMonth.selectedIndex].text}` : '',
+            birthdate: birthdateInput.value,
+            baptismStatus: baptismStatusDropdown.value,
+            baptismDate: baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "",
+            gender: genderDropdown.value,
+            hope: hopeDropdown.value,
+            privilege: privilegeDropdown.value,
+            privilege2: privilege2Dropdown.value,
+            fieldServiceGroup: fieldServiceGroupDropdown.value,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
         try {
             await db.collection("publishers").doc(currentDocId).update(updatedData);
@@ -1155,10 +1240,12 @@
     }
     function clearPublisherForm() {
         const inputs = [firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismDateInput, searchInputManage];
-        const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown];
+        const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown, publisherStatus, transferYear, transferMonth, deathYear, deathMonth];
         inputs.forEach(i => i && (i.value = ''));
         selects.forEach(s => s && (s.value = ''));
         baptismDateContainer?.classList.add("hidden");
+        transferDateContainer?.classList.add("hidden");
+        deathDateContainer?.classList.add("hidden");
         suggestionBoxManage && (suggestionBoxManage.innerHTML = "");
         currentIndex = -1;
         currentDocId = null;
@@ -1171,6 +1258,7 @@
         firstNameInput.value = pub.firstName || "";
         lastNameInput.value = pub.lastName || "";
         fullNameInput.value = pub.fullName || "";
+        publisherStatus.value = pub.publisherStatus || "In the Congregation";
         birthdateInput.value = pub.birthdate || "";
         baptismStatusDropdown.value = pub.baptismStatus || "";
         toggleBaptismDate();
@@ -1180,6 +1268,21 @@
         privilegeDropdown.value = pub.privilege || "";
         privilege2Dropdown.value = pub.privilege2 || "";
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
+
+        toggleStatusDateFields();
+
+        if (pub.monthOfTransfer) {
+            const [transferM, transferY] = pub.monthOfTransfer.split(' ');
+            transferYear.value = transferY;
+            populateMonths(transferMonth, transferY);
+            transferMonth.value = pub.monthOfTransfer;
+        }
+        if (pub.monthOfDeath) {
+            const [deathM, deathY] = pub.monthOfDeath.split(' ');
+            deathYear.value = deathY;
+            populateMonths(deathMonth, deathY);
+            deathMonth.value = pub.monthOfDeath;
+        }
     }
         function setupUpdateReportPage() {
         clearUpdateReportForm(); 
@@ -1898,139 +2001,143 @@
         return null;
     }
 async function generateSummaryReport() {
-    const selectedYear = serviceYearSummary.value;
-    const selectedMonthStr = monthSummary.value;
+        const selectedYear = serviceYearSummary.value;
+        const selectedMonthStr = monthSummary.value;
 
-    if (!selectedYear || !selectedMonthStr) {
-        alert("Please select a service year and month.");
-        return;
-    }
+        if (!selectedYear || !selectedMonthStr) {
+            alert("Please select a service year and month.");
+            return;
+        }
 
-    summaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
+        summaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
 
-    try {
-        const allReportsSnap = await db.collection("reports").get();
-        const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
-        
-        const allReports = allReportsSnap.docs.map(doc => doc.data());
-        const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
-        
-        const targetMonthDate = parseMonthString(selectedMonthStr);
-        
-        const reportingWindowStart = new Date(targetMonthDate);
-        reportingWindowStart.setMonth(targetMonthDate.getMonth() + 1, 1);
-        reportingWindowStart.setHours(0, 0, 0, 0);
-
-        const reportingWindowEnd = new Date(reportingWindowStart);
-        reportingWindowEnd.setMonth(reportingWindowStart.getMonth() + 1, 0);
-        reportingWindowEnd.setHours(23, 59, 59, 999);
-
-        const reportsToSummarize = allReports.filter(report => {
-            if (!report.month || !report.timestamp) return false;
-            const reportMonthDate = parseMonthString(report.month);
-            if (!reportMonthDate) return false;
-
-            if (report.month === selectedMonthStr) {
-                return true;
-            }
-
-            const submissionDate = report.timestamp.toDate();
-            const lockDateForReportMonth = new Date(reportMonthDate);
-            lockDateForReportMonth.setMonth(reportMonthDate.getMonth() + 2, 0);
+        try {
+            const allReportsSnap = await db.collection("reports").get();
+            const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
             
-            if (submissionDate > lockDateForReportMonth) {
-                 if (submissionDate >= reportingWindowStart && submissionDate <= reportingWindowEnd) {
-                     return true;
-                 }
-            }
+            const allReports = allReportsSnap.docs.map(doc => doc.data());
+            const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
             
-            return false;
-        });
-        
-        let summary = {
-            activeInLast6Months: 0,
-            publishersReported: 0,
-            publishersStudies: 0,
-            auxPioneersReported: 0,
-            auxPioneersHours: 0,
-            auxPioneersStudies: 0,
-            fullTimePioneersReported: 0,
-            fullTimePioneersHours: 0,
-            fullTimePioneersStudies: 0,
-        };
-
-        const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
-
-        for (const report of reportsToSummarize) {
-            const privilege = report.privilege2AtTimeOfReport;
+            const targetMonthDate = parseMonthString(selectedMonthStr);
             
-            if (fullTimePrivileges.includes(privilege)) {
-                if (report.hours > 0) {
-                    summary.fullTimePioneersReported++;
-                    summary.fullTimePioneersHours += report.hours;
-                    summary.fullTimePioneersStudies += report.bibleStudies;
+            const reportingWindowStart = new Date(targetMonthDate);
+            reportingWindowStart.setMonth(targetMonthDate.getMonth() + 1, 1);
+            reportingWindowStart.setHours(0, 0, 0, 0);
+
+            const reportingWindowEnd = new Date(reportingWindowStart);
+            reportingWindowEnd.setMonth(reportingWindowStart.getMonth() + 1, 0);
+            reportingWindowEnd.setHours(23, 59, 59, 999);
+
+            const reportsToSummarize = allReports.filter(report => {
+                if (!report.month || !report.timestamp) return false;
+                const reportMonthDate = parseMonthString(report.month);
+                if (!reportMonthDate) return false;
+
+                if (report.month === selectedMonthStr) {
+                    return true;
                 }
-            } else if (privilege === "Continuous Auxiliary Pioneer") {
-                 if (report.hours > 0) {
-                    summary.auxPioneersReported++;
-                    summary.auxPioneersHours += report.hours;
-                    summary.auxPioneersStudies += report.bibleStudies;
-                }
-            } else if (privilege === "Publisher/Auxi") {
-                const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
-                const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
-                const isAux = auxStatus ? auxStatus.isAuxiliary : false;
 
-                if (isAux) {
+                const submissionDate = report.timestamp.toDate();
+                const lockDateForReportMonth = new Date(reportMonthDate);
+                lockDateForReportMonth.setMonth(reportMonthDate.getMonth() + 2, 0);
+                
+                if (submissionDate > lockDateForReportMonth) {
+                     if (submissionDate >= reportingWindowStart && submissionDate <= reportingWindowEnd) {
+                         return true;
+                     }
+                }
+                
+                return false;
+            });
+            
+            let summary = {
+                activeInLast6Months: 0,
+                publishersReported: 0,
+                publishersStudies: 0,
+                auxPioneersReported: 0,
+                auxPioneersHours: 0,
+                auxPioneersStudies: 0,
+                fullTimePioneersReported: 0,
+                fullTimePioneersHours: 0,
+                fullTimePioneersStudies: 0,
+            };
+
+            const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
+
+            for (const report of reportsToSummarize) {
+                const privilege = report.privilege2AtTimeOfReport;
+                
+                if (fullTimePrivileges.includes(privilege)) {
                     if (report.hours > 0) {
+                        summary.fullTimePioneersReported++;
+                        summary.fullTimePioneersHours += report.hours;
+                        summary.fullTimePioneersStudies += report.bibleStudies;
+                    }
+                } else if (privilege === "Continuous Auxiliary Pioneer") {
+                     if (report.hours > 0) {
                         summary.auxPioneersReported++;
                         summary.auxPioneersHours += report.hours;
                         summary.auxPioneersStudies += report.bibleStudies;
                     }
-                } else {
-                    if (report.sharedInMinistry) {
-                        summary.publishersReported++;
-                        summary.publishersStudies += report.bibleStudies;
+                } else if (privilege === "Publisher/Auxi") {
+                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
+                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
+                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
+
+                    if (isAux) {
+                        if (report.hours > 0) {
+                            summary.auxPioneersReported++;
+                            summary.auxPioneersHours += report.hours;
+                            summary.auxPioneersStudies += report.bibleStudies;
+                        }
+                    } else {
+                        if (report.sharedInMinistry) {
+                            summary.publishersReported++;
+                            summary.publishersStudies += report.bibleStudies;
+                        }
                     }
                 }
             }
+            
+            const sixMonthsAgo = new Date(targetMonthDate);
+            sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5);
+            sixMonthsAgo.setDate(1);
+
+            const activePublishersIds = new Set();
+            allReports.forEach(report => {
+                if (!report.month) return;
+                const reportDate = parseMonthString(report.month);
+                if (reportDate && reportDate >= sixMonthsAgo && reportDate <= targetMonthDate) {
+                    const pub = publisherList.find(p => p.id === report.publisherId);
+                    const status = pub?.publisherStatus || "In the Congregation";
+                    if (status === "In the Congregation") {
+                        activePublishersIds.add(report.publisherId);
+                    }
+                }
+            });
+            summary.activeInLast6Months = activePublishersIds.size;
+            
+            const resultsHTML = `
+                <h3>Summary for ${selectedMonthStr} (and late reports)</h3>
+                <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
+                    <tr><td style="width:80%;">1. Active publishers in the last 6 months:</td><td style="text-align:right;"><b>${summary.activeInLast6Months}</b></td></tr>
+                    <tr><td>2. Count of Publishers who shared in ministry:</td><td style="text-align:right;"><b>${summary.publishersReported}</b></td></tr>
+                    <tr><td>3. Total Bible Studies from Publishers:</td><td style="text-align:right;"><b>${summary.publishersStudies}</b></td></tr>
+                    <tr><td>4. Count of Auxiliary Pioneers reporting time:</td><td style="text-align:right;"><b>${summary.auxPioneersReported}</b></td></tr>
+                    <tr><td>5. Total Hours from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersHours}</b></td></tr>
+                    <tr><td>6. Total Bible Studies from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersStudies}</b></td></tr>
+                    <tr><td>7. Count of Regular/Special Pioneers & Missionaries reporting time:</td><td style="text-align:right;"><b>${summary.fullTimePioneersReported}</b></td></tr>
+                    <tr><td>8. Total Hours from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersHours}</b></td></tr>
+                    <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
+                </table>
+            `;
+            summaryResults.innerHTML = resultsHTML;
+
+        } catch (error) {
+            console.error("Error generating summary:", error);
+            summaryResults.innerHTML = `<p style="color:red;">An error occurred while generating the summary. Please check the console.</p>`;
         }
-        
-        const sixMonthsAgo = new Date(targetMonthDate);
-        sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5);
-        sixMonthsAgo.setDate(1);
-
-        const activePublishers = new Set();
-        allReports.forEach(report => {
-            if (!report.month) return;
-            const reportDate = parseMonthString(report.month);
-            if (reportDate && reportDate >= sixMonthsAgo && reportDate <= targetMonthDate) {
-                activePublishers.add(report.publisherId);
-            }
-        });
-        summary.activeInLast6Months = activePublishers.size;
-        
-        const resultsHTML = `
-            <h3>Summary for ${selectedMonthStr} (and late reports)</h3>
-            <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
-                <tr><td style="width:80%;">1. Active publishers in the last 6 months:</td><td style="text-align:right;"><b>${summary.activeInLast6Months}</b></td></tr>
-                <tr><td>2. Count of Publishers who shared in ministry:</td><td style="text-align:right;"><b>${summary.publishersReported}</b></td></tr>
-                <tr><td>3. Total Bible Studies from Publishers:</td><td style="text-align:right;"><b>${summary.publishersStudies}</b></td></tr>
-                <tr><td>4. Count of Auxiliary Pioneers reporting time:</td><td style="text-align:right;"><b>${summary.auxPioneersReported}</b></td></tr>
-                <tr><td>5. Total Hours from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersHours}</b></td></tr>
-                <tr><td>6. Total Bible Studies from Auxiliary Pioneers:</td><td style="text-align:right;"><b>${summary.auxPioneersStudies}</b></td></tr>
-                <tr><td>7. Count of Regular/Special Pioneers & Missionaries reporting time:</td><td style="text-align:right;"><b>${summary.fullTimePioneersReported}</b></td></tr>
-                <tr><td>8. Total Hours from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersHours}</b></td></tr>
-                <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
-            </table>
-        `;
-        summaryResults.innerHTML = resultsHTML;
-
-    } catch (error) {
-        console.error("Error generating summary:", error);
-        summaryResults.innerHTML = `<p style="color:red;">An error occurred while generating the summary. Please check the console.</p>`;
-    }
-}   
+    }   
 function clearSummaryPage() {
     serviceYearSummary.value = "";
     monthSummary.innerHTML = '<option value="">-- Select Month --</option>';
