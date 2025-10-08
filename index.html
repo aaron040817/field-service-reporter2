@@ -2074,6 +2074,7 @@ async function generateSummaryReport() {
             fullTimePioneersStudies: 0,
         };
 
+        const publishersReportedNames = [];
         const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
 
         for (const report of reportsToSummarize) {
@@ -2106,6 +2107,7 @@ async function generateSummaryReport() {
                     if (report.sharedInMinistry) {
                         summary.publishersReported++;
                         summary.publishersStudies += report.bibleStudies;
+                        publishersReportedNames.push(report.publisherFullName);
                     }
                 }
             }
@@ -2142,6 +2144,8 @@ async function generateSummaryReport() {
         });
         summary.activeInLast6Months = activePublishersIds.size;
         
+        publishersReportedNames.sort();
+
         const resultsHTML = `
             <h3>Summary for ${selectedMonthStr}</h3>
             <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
@@ -2155,6 +2159,9 @@ async function generateSummaryReport() {
                 <tr><td>8. Total Hours from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersHours}</b></td></tr>
                 <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
             </table>
+            <hr>
+            <h4>List of ${summary.publishersReported} Publishers Counted for Item #2:</h4>
+            <pre>${publishersReportedNames.join('\n')}</pre>
         `;
         summaryResults.innerHTML = resultsHTML;
 
