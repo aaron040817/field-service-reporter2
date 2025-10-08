@@ -2075,6 +2075,8 @@ async function generateSummaryReport() {
         };
 
         const publishersReportedNames = [];
+        const auxPioneersReportedNames = [];
+        const fullTimePioneersReportedNames = [];
         const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
 
         for (const report of reportsToSummarize) {
@@ -2085,12 +2087,14 @@ async function generateSummaryReport() {
                     summary.fullTimePioneersReported++;
                     summary.fullTimePioneersHours += report.hours;
                     summary.fullTimePioneersStudies += report.bibleStudies;
+                    fullTimePioneersReportedNames.push(report.publisherFullName);
                 }
             } else if (privilege === "Continuous Auxiliary Pioneer") {
                  if (report.hours > 0) {
                     summary.auxPioneersReported++;
                     summary.auxPioneersHours += report.hours;
                     summary.auxPioneersStudies += report.bibleStudies;
+                    auxPioneersReportedNames.push(report.publisherFullName);
                 }
             } else if (privilege === "Publisher/Auxi") {
                 const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
@@ -2102,6 +2106,7 @@ async function generateSummaryReport() {
                         summary.auxPioneersReported++;
                         summary.auxPioneersHours += report.hours;
                         summary.auxPioneersStudies += report.bibleStudies;
+                        auxPioneersReportedNames.push(report.publisherFullName);
                     }
                 } else {
                     if (report.sharedInMinistry) {
@@ -2145,6 +2150,8 @@ async function generateSummaryReport() {
         summary.activeInLast6Months = activePublishersIds.size;
         
         publishersReportedNames.sort();
+        auxPioneersReportedNames.sort();
+        fullTimePioneersReportedNames.sort();
 
         const resultsHTML = `
             <h3>Summary for ${selectedMonthStr}</h3>
@@ -2162,6 +2169,9 @@ async function generateSummaryReport() {
             <hr>
             <h4>List of ${summary.publishersReported} Publishers Counted for Item #2:</h4>
             <pre>${publishersReportedNames.join('\n')}</pre>
+            <hr>
+            <h4>List of ${summary.fullTimePioneersReported} Pioneers/Missionaries Counted for Item #7:</h4>
+            <pre>${fullTimePioneersReportedNames.join('\n')}</pre>
         `;
         summaryResults.innerHTML = resultsHTML;
 
