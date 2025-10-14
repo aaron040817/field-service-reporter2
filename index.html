@@ -2074,9 +2074,9 @@ async function generateSummaryReport() {
             fullTimePioneersStudies: 0,
         };
 
-        const publishersReportedNames = [];
-        const auxPioneersReportedNames = [];
-        const fullTimePioneersReportedNames = [];
+        const publishersReportedList = [];
+        const auxPioneersReportedList = [];
+        const fullTimePioneersReportedList = [];
         const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
 
         for (const report of reportsToSummarize) {
@@ -2087,14 +2087,14 @@ async function generateSummaryReport() {
                     summary.fullTimePioneersReported++;
                     summary.fullTimePioneersHours += report.hours;
                     summary.fullTimePioneersStudies += report.bibleStudies;
-                    fullTimePioneersReportedNames.push(report.publisherFullName);
+                    fullTimePioneersReportedList.push({ name: report.publisherFullName, hours: report.hours, studies: report.bibleStudies });
                 }
             } else if (privilege === "Continuous Auxiliary Pioneer") {
                  if (report.hours > 0) {
                     summary.auxPioneersReported++;
                     summary.auxPioneersHours += report.hours;
                     summary.auxPioneersStudies += report.bibleStudies;
-                    auxPioneersReportedNames.push(report.publisherFullName);
+                    auxPioneersReportedList.push({ name: report.publisherFullName, hours: report.hours, studies: report.bibleStudies });
                 }
             } else if (privilege === "Publisher/Auxi") {
                 const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
@@ -2106,13 +2106,13 @@ async function generateSummaryReport() {
                         summary.auxPioneersReported++;
                         summary.auxPioneersHours += report.hours;
                         summary.auxPioneersStudies += report.bibleStudies;
-                        auxPioneersReportedNames.push(report.publisherFullName);
+                        auxPioneersReportedList.push({ name: report.publisherFullName, hours: report.hours, studies: report.bibleStudies });
                     }
                 } else {
                     if (report.sharedInMinistry) {
                         summary.publishersReported++;
                         summary.publishersStudies += report.bibleStudies;
-                        publishersReportedNames.push(report.publisherFullName);
+                        publishersReportedList.push({ name: report.publisherFullName, studies: report.bibleStudies });
                     }
                 }
             }
@@ -2149,9 +2149,14 @@ async function generateSummaryReport() {
         });
         summary.activeInLast6Months = activePublishersIds.size;
         
-        publishersReportedNames.sort();
-        auxPioneersReportedNames.sort();
-        fullTimePioneersReportedNames.sort();
+        const activePublishersNames = Array.from(activePublishersIds).map(id => {
+            const pub = publisherList.find(p => p.id === id);
+            return pub ? pub.fullName : 'Unknown Publisher';
+        }).sort();
+
+        publishersReportedList.sort((a, b) => a.name.localeCompare(b.name));
+        auxPioneersReportedList.sort((a, b) => a.name.localeCompare(b.name));
+        fullTimePioneersReportedList.sort((a, b) => a.name.localeCompare(b.name));
 
         const resultsHTML = `
             <h3>Summary for ${selectedMonthStr}</h3>
@@ -2167,14 +2172,17 @@ async function generateSummaryReport() {
                 <tr><td>9. Total Bible Studies from Regular/Special Pioneers & Missionaries:</td><td style="text-align:right;"><b>${summary.fullTimePioneersStudies}</b></td></tr>
             </table>
             <hr>
-            <h4>List of ${summary.publishersReported} Publishers Counted for Item #2:</h4>
-            <pre>${publishersReportedNames.join('\n')}</pre>
+            <h4>List of ${activePublishersNames.length} Active Publishers (Item #1):</h4>
+            <pre>${activePublishersNames.join('\n')}</pre>
             <hr>
-            <h4>List of ${summary.auxPioneersReported} Auxiliary Pioneers Counted for Item #4:</h4>
-            <pre>${auxPioneersReportedNames.join('\n')}</pre>
+            <h4>List of ${publishersReportedList.length} Publishers (Item #2 & #3):</h4>
+            <pre>${publishersReportedList.map(p => `${p.name} (BS: ${p.studies})`).join('\n')}</pre>
             <hr>
-            <h4>List of ${summary.fullTimePioneersReported} Pioneers/Missionaries Counted for Item #7:</h4>
-            <pre>${fullTimePioneersReportedNames.join('\n')}</pre>
+            <h4>List of ${auxPioneersReportedList.length} Auxiliary Pioneers (Item #4, #5, #6):</h4>
+            <pre>${auxPioneersReportedList.map(p => `${p.name} (Hrs: ${p.hours}, BS: ${p.studies})`).join('\n')}</pre>
+            <hr>
+            <h4>List of ${fullTimePioneersReportedList.length} Pioneers/Missionaries (Item #7, #8, #9):</h4>
+            <pre>${fullTimePioneersReportedList.map(p => `${p.name} (Hrs: ${p.hours}, BS: ${p.studies})`).join('\n')}</pre>
         `;
         summaryResults.innerHTML = resultsHTML;
 
