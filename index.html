@@ -1552,18 +1552,20 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
     populateMonths(consolidateMonthRequest, consolidateYearRequest.value);
 
     const today = new Date();
+    const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
     const prevMonthDate = new Date();
     prevMonthDate.setMonth(today.getMonth() - 1);
     const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
     const prevMonthYear = prevMonthDate.getFullYear();
 
-    consolidateYearRequest.value = currentYear;
+    let consolidateToServiceYear = (currentMonth >= 9) ? currentYear + 1 : currentYear;
+    consolidateYearRequest.value = consolidateToServiceYear;
     consolidateYearRequest.disabled = true;
-    populateMonths(consolidateMonthRequest, currentYear);
+    populateMonths(consolidateMonthRequest, consolidateToServiceYear);
     consolidateMonthRequest.value = `${prevMonthName} ${prevMonthYear}`;
     consolidateMonthRequest.disabled = true;
-    
+
     const handlePublisherSelection = () => {
         const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownRequest.value);
         if(selectedPublisher) {
@@ -2100,7 +2102,7 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
         opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
         publisherNameDropdown.appendChild(opt);
     });
-    
+
     populateServiceYears(serviceYearDropdown);
     populateMonths(monthYearDropdown, serviceYearDropdown.value);
     populateServiceYears(consolidateYearReport);
@@ -2115,23 +2117,26 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
 
     if (currentUser.role === 'user') {
         const today = new Date();
+        const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
+
         const prevMonthDate = new Date();
         prevMonthDate.setMonth(today.getMonth() - 1);
         const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
         const prevMonthYear = prevMonthDate.getFullYear();
-        
-        let serviceYear = (prevMonthDate.getMonth() >= 8) ? prevMonthDate.getFullYear() + 1 : prevMonthDate.getFullYear();
-        
-        serviceYearDropdown.value = serviceYear;
+
+        let mainServiceYear = (prevMonthDate.getMonth() >= 8) ? prevMonthDate.getFullYear() + 1 : prevMonthDate.getFullYear();
+
+        serviceYearDropdown.value = mainServiceYear;
         serviceYearDropdown.disabled = true;
-        populateMonths(monthYearDropdown, serviceYear);
+        populateMonths(monthYearDropdown, mainServiceYear);
         monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
         monthYearDropdown.disabled = true;
 
-        consolidateYearReport.value = currentYear;
+        let consolidateToServiceYear = (currentMonth >= 9) ? currentYear + 1 : currentYear;
+        consolidateYearReport.value = consolidateToServiceYear;
         consolidateYearReport.disabled = true;
-        populateMonths(consolidateMonthReport, currentYear);
+        populateMonths(consolidateMonthReport, consolidateToServiceYear);
         consolidateMonthReport.value = `${prevMonthName} ${prevMonthYear}`;
         consolidateMonthReport.disabled = true;
 
