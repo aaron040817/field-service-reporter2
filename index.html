@@ -1475,32 +1475,37 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
         }
     }
     async function updateReport() {
-        if (!currentReportId) { alert("Error: No report is loaded to update."); return; }
-        if (!confirm("Are you sure you want to update this record?")) return;
-        
-        let hoursVal = parseInt(fieldHoursUpdate.value) || 0;
-        fieldHoursUpdate.value = hoursVal;
-        let studiesVal = parseInt(bibleStudiesUpdate.value) || 0;
-        bibleStudiesUpdate.value = studiesVal;
-        
-        const updatedData = {
-            hours: hoursVal,
-            bibleStudies: studiesVal,
-            sharedInMinistry: sharedMinistryUpdate.checked,
-            wasAuxiliaryPioneer: auxiliaryPioneerCheckboxUpdate.checked,
-            comments: commentsUpdate.value,
-            lastModifiedBy: currentUser.email,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        try {
-            await db.collection("reports").doc(currentReportId).update(updatedData);
-            alert("Report updated successfully!");
-            clearUpdateReportForm();
-        } catch (error) {
-            console.error("Error updating report:", error);
-            alert("Failed to update report.");
-        }
+    if (!currentReportId) { alert("Error: No report is loaded to update."); return; }
+    if (!consolidateYearUpdate.value || !consolidateMonthUpdate.value) {
+        alert("Validation Error: 'Consolidate Report to' is a mandatory field.");
+        return;
     }
+    if (!confirm("Are you sure you want to update this record?")) return;
+    
+    let hoursVal = parseInt(fieldHoursUpdate.value) || 0;
+    fieldHoursUpdate.value = hoursVal;
+    let studiesVal = parseInt(bibleStudiesUpdate.value) || 0;
+    bibleStudiesUpdate.value = studiesVal;
+    
+    const updatedData = {
+        hours: hoursVal,
+        bibleStudies: studiesVal,
+        sharedInMinistry: sharedMinistryUpdate.checked,
+        wasAuxiliaryPioneer: auxiliaryPioneerCheckboxUpdate.checked,
+        comments: commentsUpdate.value,
+        consolidateToMonth: consolidateMonthUpdate.value,
+        lastModifiedBy: currentUser.email,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+        await db.collection("reports").doc(currentReportId).update(updatedData);
+        alert("Report updated successfully!");
+        clearUpdateReportForm();
+    } catch (error) {
+        console.error("Error updating report:", error);
+        alert("Failed to update report.");
+    }
+}
     async function deleteReport() {
         if (!currentReportId) {
             alert("Error: No report is loaded to delete.");
@@ -2041,13 +2046,15 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
     const publisherId = publisherNameDropdown.value;
     const serviceYear = serviceYearDropdown.value;
     const month = monthYearDropdown.value;
+    const consolidateTo = consolidateMonthReport.value;
+
     if (!publisherId || !serviceYear || !month) { alert("Please select publisher, year, and month."); return; }
+    if (!consolidateTo) { alert("Validation Error: 'Consolidate Report to' is a mandatory field."); return; }
 
     let hoursVal = parseInt(fieldHoursInput.value) || 0;
     fieldHoursInput.value = hoursVal;
     let studiesVal = parseInt(bibleStudiesInput.value) || 0;
     bibleStudiesInput.value = studiesVal;
-
     const privilege = privilege2ReportInput.value;
     let isAuxThisMonth = false;
     if (privilege === 'Publisher/Auxi') {
@@ -2061,14 +2068,12 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
     } else if (["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"].includes(privilege)) {
         isAuxThisMonth = true;
     }
-
     if ((isAuxThisMonth || auxiliaryPioneerCheckbox.checked) && hoursVal <= 0) {
         alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
     }
     if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryCheckbox.checked) {
         alert("Validation Error: 'Shared in Ministry' must be checked for this report."); return;
     }
-
     const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
     const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
     const reportRef = db.collection("reports").doc(reportId);
@@ -2076,8 +2081,8 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
         const doc = await reportRef.get();
         if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
         const reportData = {
-            publisherId, publisherFullName, serviceYear, month,
-            consolidateToMonth: consolidateMonthReport.value, 
+            publisherId, publisherFullName, serviceYear, month, 
+            consolidateToMonth: consolidateTo, 
             fieldServiceGroup: fieldGroupInput.value, 
             privilege2AtTimeOfReport: privilege2ReportInput.value, 
             hours: hoursVal, 
