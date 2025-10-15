@@ -679,12 +679,50 @@ deathMonth = document.getElementById('deathMonth');
     else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
 }
     function handleRouteChange() {
-        if (currentUser) {
-            showPage('homePage');
-        } else {
-            showPage('loginPage');
-        }
+    if (!currentUser) {
+        showPage('loginPage');
+        return;
     }
+    const path = window.location.pathname;
+    const isAdminOrAssistant = currentUser.role === 'admin' || currentUser.role === 'assistant_admin';
+
+    switch (path) {
+        case '/': 
+        case '/home': 
+            showPage('homePage'); 
+            break;
+        case '/add-report': 
+            showPage('addReportPage'); 
+            break;
+        case '/submit-request': 
+            showPage('submitRequestPage'); 
+            break;
+        case '/manage-publisher':
+        case '/update-report':
+        case '/review-approvals':
+        case '/manage-auxiliary':
+        case '/view-summary':
+            if (isAdminOrAssistant) {
+                showPage(path.substring(1).replace('-', '') + 'Page');
+            } else {
+                alert("Access denied.");
+                showPage('homePage');
+            }
+            break;
+        case '/upload-reports':
+        case '/upload-publishers':
+            if (currentUser.role === 'admin') {
+                showPage(path.substring(1).replace('-', '') + 'Page');
+            } else {
+                alert("Access denied.");
+                showPage('homePage');
+            }
+            break;
+        default: 
+            showPage('homePage'); 
+            break;
+    }
+}
     async function login() {
         const email = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
@@ -800,28 +838,40 @@ deathMonth = document.getElementById('deathMonth');
         }
     }
     async function updateHomePage() {
-        if (currentUser) {
-            loggedInUser.textContent = currentUser.email;
+    if (currentUser) {
+        loggedInUser.textContent = currentUser.email;
+
+        adminButtons.classList.add('hidden');
+        userButtons.classList.add('hidden');
+        adminSection.classList.add('hidden');
+        
+        document.getElementById('uploadReportsBtn').style.display = 'none';
+        document.getElementById('uploadPublishersBtn').style.display = 'none';
+
+        if (currentUser.role === 'admin' || currentUser.role === 'assistant_admin') {
+            adminButtons.classList.remove('hidden');
+
             const reviewApprovalsBtn = document.getElementById('reviewApprovalsBtn');
-            if (currentUser.role === 'admin') {
-                adminButtons.classList.remove('hidden');
-                adminSection.classList.remove('hidden');
-                userButtons.classList.add('hidden');
-                fetchAdminPassword();
-                try {
-                    const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
-                    reviewApprovalsBtn.textContent = `Review Approvals ${snapshot.size > 0 ? `(${snapshot.size})` : ''}`;
-                } catch(e) {
-                    console.error("Could not fetch request count", e);
-                    reviewApprovalsBtn.textContent = "Review Approvals";
-                }
-            } else { 
-                adminButtons.classList.add('hidden');
-                adminSection.classList.add('hidden');
-                userButtons.classList.remove('hidden');
+            try {
+                const snapshot = await db.collection('updateRequests').where('status', '==', 'pending').get();
+                const count = snapshot.size;
+                reviewApprovalsBtn.textContent = `Review Approvals ${count > 0 ? `(${count})` : ''}`;
+            } catch(e) {
+                console.error("Could not fetch request count", e);
+                reviewApprovalsBtn.textContent = "Review Approvals";
             }
         }
+
+        if (currentUser.role === 'admin') {
+            document.getElementById('uploadReportsBtn').style.display = '';
+            document.getElementById('uploadPublishersBtn').style.display = '';
+            adminSection.classList.remove('hidden');
+            fetchAdminPassword();
+        } else if (currentUser.role === 'user') {
+            userButtons.classList.remove('hidden');
+        }
     }
+}
         async function loadPublishers() {
         try {
             const snapshot = await db.collection("publishers").orderBy("fullName", "asc").get();
