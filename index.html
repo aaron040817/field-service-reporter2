@@ -118,6 +118,9 @@
         <select id="serviceYearDropdown"></select>
         <label for="monthYearDropdown">Month:</label>
         <select id="monthYearDropdown"></select>
+        <label for="consolidateYearReport">Consolidate Report to:</label>
+        <select id="consolidateYearReport"></select>
+        <select id="consolidateMonthReport"></select>
         <div id="fieldHoursContainer" class="hidden">
             <label for="fieldHours">Field Hours:</label>
             <input type="number" id="fieldHours" min="1">
@@ -161,6 +164,9 @@
         <select id="serviceYearDropdownUpdate"></select>
         <label for="monthYearDropdownUpdate">Month:</label>
         <select id="monthYearDropdownUpdate"></select>
+        <label for="consolidateYearUpdate">Consolidate Report to:</label>
+        <select id="consolidateYearUpdate"></select>
+        <select id="consolidateMonthUpdate"></select>
         <hr style="margin: 20px 0;">
         <div id="updateReportFields" style="display: none;">
             <div id="fieldHoursContainerUpdate" class="hidden">
@@ -306,6 +312,9 @@
         <select id="serviceYearRequest"></select>
         <label for="monthYearRequest">Month:</label>
         <select id="monthYearRequest"></select>
+        <label for="consolidateYearRequest">Consolidate Report to:</label>
+        <select id="consolidateYearRequest"></select>
+        <select id="consolidateMonthRequest"></select>
         <div id="requestFields" style="display: none;">
             </div>
         <button id="submitRequestApprovalBtn">Submit Request for Admin Approval</button>
@@ -416,6 +425,7 @@
     let serviceYearSummary, monthSummary, generateSummaryBtn, summaryResults, backHomeFromSummaryBtn;
     let clearSummaryBtn;
     let publisherStatus, transferDateContainer, transferYear, transferMonth, deathDateContainer, deathYear, deathMonth;
+    let consolidateYearReport, consolidateMonthReport, consolidateYearUpdate, consolidateMonthUpdate, consolidateYearRequest, consolidateMonthRequest;
     
     document.addEventListener("DOMContentLoaded", initializeApp);
     async function initializeApp() {
@@ -580,6 +590,12 @@ transferMonth = document.getElementById('transferMonth');
 deathDateContainer = document.getElementById('deathDateContainer');
 deathYear = document.getElementById('deathYear');
 deathMonth = document.getElementById('deathMonth');
+    consolidateYearReport = document.getElementById('consolidateYearReport');
+consolidateMonthReport = document.getElementById('consolidateMonthReport');
+consolidateYearUpdate = document.getElementById('consolidateYearUpdate');
+consolidateMonthUpdate = document.getElementById('consolidateMonthUpdate');
+consolidateYearRequest = document.getElementById('consolidateYearRequest');
+consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
         }
     function toggleStatusDateFields() {
     const status = publisherStatus.value;
@@ -1501,69 +1517,90 @@ deathMonth = document.getElementById('deathMonth');
         }
     }
     function clearUpdateReportForm(clearAll = true) {
-        if (clearAll) {
-            publisherNameDropdownUpdate.value = "";
-            serviceYearDropdownUpdate.value = "";
-            monthYearDropdownUpdate.innerHTML = '<option value="">-- Select Month --</option>';
-            searchPublisherUpdate.value = "";
-            fieldGroupUpdate.value = "";
-            privilege2Update.value = "";
-        }
-        if(fieldHoursUpdate) fieldHoursUpdate.value = "";
-        if(bibleStudiesUpdate) bibleStudiesUpdate.value = "";
-        if(sharedMinistryUpdate) sharedMinistryUpdate.checked = false;
-        if(auxiliaryPioneerCheckboxUpdate) auxiliaryPioneerCheckboxUpdate.checked = false;
-        if(commentsUpdate) commentsUpdate.value = "";
-        if(lastModifiedByUpdate) lastModifiedByUpdate.textContent = "";
-        updateReportFieldsDiv.style.display = 'none';
-        currentReportId = null;
+    if (clearAll) {
+        publisherNameDropdownUpdate.value = "";
+        serviceYearDropdownUpdate.value = "";
+        monthYearDropdownUpdate.innerHTML = '<option value="">-- Select Month --</option>';
+        searchPublisherUpdate.value = "";
+        fieldGroupUpdate.value = "";
+        privilege2Update.value = "";
+        consolidateYearUpdate.value = "";
+        consolidateMonthUpdate.innerHTML = '<option value="">-- Select Month --</option>';
     }
+    if(fieldHoursUpdate) fieldHoursUpdate.value = "";
+    if(bibleStudiesUpdate) bibleStudiesUpdate.value = "";
+    if(sharedMinistryUpdate) sharedMinistryUpdate.checked = false;
+    if(auxiliaryPioneerCheckboxUpdate) auxiliaryPioneerCheckboxUpdate.checked = false;
+    if(commentsUpdate) commentsUpdate.value = "";
+    if(lastModifiedByUpdate) lastModifiedByUpdate.textContent = "";
+    updateReportFieldsDiv.style.display = 'none';
+    currentReportId = null;
+}
         function setupSubmitRequestPage() {
-        clearSubmitRequestForm();
-        publisherNameDropdownRequest.innerHTML = '<option value="">-- Select Publisher --</option>';
-        publisherList.forEach(pub => {
-            const opt = document.createElement("option");
-            opt.value = pub.id;
-            opt.textContent = pub.fullName;
-            publisherNameDropdownRequest.appendChild(opt);
-        });
-        populateServiceYears(serviceYearRequest);
-        const handlePublisherSelection = () => {
-            const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownRequest.value);
-            if(selectedPublisher) {
-                fieldGroupRequest.value = selectedPublisher.fieldServiceGroup || '';
-                privilege2Request.value = selectedPublisher.privilege2 || '';
-            } else {
-                fieldGroupRequest.value = '';
-                privilege2Request.value = '';
-            }
-            fetchReportDataForRequest();
+    clearSubmitRequestForm();
+    publisherNameDropdownRequest.innerHTML = '<option value="">-- Select Publisher --</option>';
+    publisherList.forEach(pub => {
+        const opt = document.createElement("option");
+        opt.value = pub.id;
+        opt.textContent = pub.fullName;
+        publisherNameDropdownRequest.appendChild(opt);
+    });
+
+    populateServiceYears(serviceYearRequest);
+    populateMonths(monthYearRequest, serviceYearRequest.value);
+    populateServiceYears(consolidateYearRequest);
+    populateMonths(consolidateMonthRequest, consolidateYearRequest.value);
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const prevMonthDate = new Date();
+    prevMonthDate.setMonth(today.getMonth() - 1);
+    const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+    const prevMonthYear = prevMonthDate.getFullYear();
+
+    consolidateYearRequest.value = currentYear;
+    consolidateYearRequest.disabled = true;
+    populateMonths(consolidateMonthRequest, currentYear);
+    consolidateMonthRequest.value = `${prevMonthName} ${prevMonthYear}`;
+    consolidateMonthRequest.disabled = true;
+    
+    const handlePublisherSelection = () => {
+        const selectedPublisher = publisherList.find(p => p.id === publisherNameDropdownRequest.value);
+        if(selectedPublisher) {
+            fieldGroupRequest.value = selectedPublisher.fieldServiceGroup || '';
+            privilege2Request.value = selectedPublisher.privilege2 || '';
+        } else {
+            fieldGroupRequest.value = '';
+            privilege2Request.value = '';
         }
-        searchPublisherRequest.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxRequest.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach(pub => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = pub.fullName;
-                    suggestionBoxRequest.innerHTML = "";
-                    publisherNameDropdownRequest.value = pub.id;
-                    publisherNameDropdownRequest.dispatchEvent(new Event('change'));
-                });
-                suggestionBoxRequest.appendChild(div);
+        fetchReportDataForRequest();
+    };
+    searchPublisherRequest.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        suggestionBoxRequest.innerHTML = "";
+        if (!query) return;
+        const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+        matches.forEach(pub => {
+            const div = document.createElement("div");
+            div.textContent = pub.fullName;
+            div.classList.add("suggestion-item");
+            div.addEventListener("click", () => {
+                this.value = pub.fullName;
+                suggestionBoxRequest.innerHTML = "";
+                publisherNameDropdownRequest.value = pub.id;
+                publisherNameDropdownRequest.dispatchEvent(new Event('change'));
             });
+            suggestionBoxRequest.appendChild(div);
         });
-        publisherNameDropdownRequest.addEventListener('change', handlePublisherSelection);
-        serviceYearRequest.addEventListener('change', () => {
-            populateMonths(monthYearRequest, serviceYearRequest.value);
-            fetchReportDataForRequest();
-        });
-        monthYearRequest.addEventListener('change', fetchReportDataForRequest);
-    }
+    });
+    publisherNameDropdownRequest.addEventListener('change', handlePublisherSelection);
+    serviceYearRequest.addEventListener('change', () => {
+        populateMonths(monthYearRequest, serviceYearRequest.value);
+        fetchReportDataForRequest();
+    });
+    monthYearRequest.addEventListener('change', fetchReportDataForRequest);
+    consolidateYearRequest.addEventListener('change', () => populateMonths(consolidateMonthRequest, consolidateYearRequest.value));
+}
     async function setupReviewApprovalsPage() {
         pendingRequestsList.innerHTML = '';
         noPendingRequestsLabel.classList.remove('hidden'); 
@@ -1599,15 +1636,17 @@ deathMonth = document.getElementById('deathMonth');
         }
     }
     function clearSubmitRequestForm() {
-        publisherNameDropdownRequest.value = "";
-        serviceYearRequest.value = "";
-        monthYearRequest.innerHTML = '<option value="">-- Select Month --</option>';
-        searchPublisherRequest.value = "";
-        fieldGroupRequest.value = "";
-        privilege2Request.value = "";
-        requestFields.innerHTML = "";
-        requestFields.style.display = 'none';
-    }
+    publisherNameDropdownRequest.value = "";
+    serviceYearRequest.value = "";
+    monthYearRequest.innerHTML = '<option value="">-- Select Month --</option>';
+    searchPublisherRequest.value = "";
+    fieldGroupRequest.value = "";
+    privilege2Request.value = "";
+    requestFields.innerHTML = "";
+    requestFields.style.display = 'none';
+    consolidateYearRequest.value = "";
+    consolidateMonthRequest.innerHTML = '<option value="">-- Select Month --</option>';
+}
     async function fetchReportDataForRequest() {
     const publisherId = publisherNameDropdownRequest.value;
     const serviceYear = serviceYearRequest.value;
@@ -1681,30 +1720,74 @@ deathMonth = document.getElementById('deathMonth');
     }
 }
     async function submitRequestForApproval() {
-        const publisherId = publisherNameDropdownRequest.value;
-        const serviceYear = serviceYearRequest.value;
-        const month = monthYearRequest.value;
-        if (!publisherId || !serviceYear || !month) { alert("Please select the publisher, service year, and month of the report."); return; }
-        const originalReportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-        const hoursInput = document.getElementById('fieldHoursRequest');
-        if (!hoursInput) { alert("No report data loaded. Please select a valid period with an existing report."); return; }
-        const studiesInput = document.getElementById('bibleStudiesRequest');
-        const sharedMinistryInput = document.getElementById('sharedMinistryRequest');
-        const auxPioneerInput = document.getElementById('auxiliaryPioneerRequest');
-        const commentsInput = document.getElementById('commentsRequest');
-        if (hoursInput.parentElement.classList.contains('hidden') === false && !hoursInput.value) { alert("Validation Error: Please enter the number of hours."); return; }
-        if (studiesInput.parentElement.classList.contains('hidden') === false && !studiesInput.value) { alert("Validation Error: Please enter the number of bible studies."); return; }
-        if (sharedMinistryInput.parentElement.classList.contains('hidden') === false && !sharedMinistryInput.checked) { alert("Validation Error: The 'Shared in Ministry' box must be checked."); return; }
-        if (auxPioneerInput && auxPioneerInput.parentElement.classList.contains('hidden') === false && !auxPioneerInput.checked) { alert("Validation Error: The 'Auxiliary Pioneer' box must be checked."); return; }
-        const wasAuxPioneerThisMonth = (auxPioneerInput && !auxPioneerInput.parentElement.classList.contains('hidden') && auxPioneerInput.checked);
-        const requestedChanges = { hours: parseInt(hoursInput.value) || 0, bibleStudies: parseInt(studiesInput.value) || 0, sharedInMinistry: sharedMinistryInput.checked, wasAuxiliaryPioneer: wasAuxPioneerThisMonth, comments: commentsInput.value, lastModifiedBy: currentUser.email, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
-        const requestData = { requestingUserUid: currentUser.uid, requestingUserEmail: currentUser.email, publisherToUpdateId: publisherId, publisherToUpdateName: publisherNameDropdownRequest.options[publisherNameDropdownRequest.selectedIndex].text, originalReportId: originalReportId, serviceYear: serviceYear, month: month, requestedChanges: requestedChanges, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp() };
-        try {
-            await db.collection('updateRequests').add(requestData);
-            alert("Request Submitted. Please wait for the admin approval to take effect the changes.");
-            clearSubmitRequestForm();
-        } catch (error) { console.error("Error submitting request:", error); alert("Failed to submit request. Please check security rules and console."); }
+    const publisherId = publisherNameDropdownRequest.value;
+    const serviceYear = serviceYearRequest.value;
+    const month = monthYearRequest.value;
+    if (!publisherId || !serviceYear || !month) {
+        alert("Please select the publisher, service year, and month of the report.");
+        return;
     }
+    const originalReportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+    const hoursInput = document.getElementById('fieldHoursRequest');
+    if (!hoursInput) {
+        alert("No report data loaded. Please select a valid period with an existing report.");
+        return;
+    }
+    const studiesInput = document.getElementById('bibleStudiesRequest');
+    const sharedMinistryInput = document.getElementById('sharedMinistryRequest');
+    const auxPioneerInput = document.getElementById('auxiliaryPioneerRequest');
+    const commentsInput = document.getElementById('commentsRequest');
+
+    const privilege = privilege2Request.value;
+    let isAuxThisMonth = false;
+    if (privilege === 'Publisher/Auxi') {
+         try {
+            const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+            const docSnap = await db.collection("auxiliary_status").doc(docId).get();
+            if (docSnap.exists && docSnap.data().isAuxiliary) { isAuxThisMonth = true; }
+        } catch (e) { console.error("Error checking aux status on submit", e); }
+    }
+
+    if (isAuxThisMonth && (parseInt(hoursInput.value) || 0) <= 0) {
+         alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
+    }
+    if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryInput.checked) {
+        alert("Validation Error: The 'Shared in Ministry' box must be checked."); return;
+    }
+
+    const wasAuxPioneerThisMonth = (auxPioneerInput && !auxPioneerInput.parentElement.classList.contains('hidden') && auxPioneerInput.checked);
+
+    const requestedChanges = {
+        hours: parseInt(hoursInput.value) || 0,
+        bibleStudies: parseInt(studiesInput.value) || 0,
+        sharedInMinistry: sharedMinistryInput.checked,
+        wasAuxiliaryPioneer: wasAuxPioneerThisMonth,
+        comments: commentsInput.value,
+        consolidateToMonth: consolidateMonthRequest.value,
+        lastModifiedBy: currentUser.email,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const requestData = {
+        requestingUserUid: currentUser.uid,
+        requestingUserEmail: currentUser.email,
+        publisherToUpdateId: publisherId,
+        publisherToUpdateName: publisherNameDropdownRequest.options[publisherNameDropdownRequest.selectedIndex].text,
+        originalReportId: originalReportId,
+        serviceYear: serviceYear,
+        month: month,
+        requestedChanges: requestedChanges,
+        status: 'pending',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+        await db.collection('updateRequests').add(requestData);
+        alert("Request Submitted. Please wait for the admin approval to take effect the changes.");
+        clearSubmitRequestForm();
+    } catch (error) {
+        console.error("Error submitting request:", error);
+        alert("Failed to submit request. Please check security rules and console.");
+    }
+}
     async function approveRequest(requestId) {
     if(!confirm("Are you sure you want to approve these changes?")) return;
     try {
@@ -1953,121 +2036,135 @@ deathMonth = document.getElementById('deathMonth');
         }
     }
         async function saveReport() {
-        const publisherId = publisherNameDropdown.value;
-        const serviceYear = serviceYearDropdown.value;
-        const month = monthYearDropdown.value;
-        if (!publisherId || !serviceYear || !month) { alert("Please select publisher, year, and month."); return; }
-        let hoursVal = parseInt(fieldHoursInput.value) || 0;
-        fieldHoursInput.value = hoursVal;
-        let studiesVal = parseInt(bibleStudiesInput.value) || 0;
-        bibleStudiesInput.value = studiesVal;
-        const privilege = privilege2ReportInput.value;
-        let isAuxThisMonth = false;
-        if (privilege === 'Publisher/Auxi') {
-            const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-            try {
-                const docSnap = await db.collection("auxiliary_status").doc(docId).get();
-                if (docSnap.exists && docSnap.data().isAuxiliary) {
-                    isAuxThisMonth = true;
-                }
-            } catch (e) { console.error("Error checking aux status on save", e); }
-        } else if (["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"].includes(privilege)) {
-            isAuxThisMonth = true;
-        }
-        if ((isAuxThisMonth || auxiliaryPioneerCheckbox.checked) && hoursVal <= 0) {
-            alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
-        }
-        if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryCheckbox.checked) {
-            alert("Validation Error: 'Shared in Ministry' must be checked for this report."); return;
-        }
-        const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
-        const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-        const reportRef = db.collection("reports").doc(reportId);
+    const publisherId = publisherNameDropdown.value;
+    const serviceYear = serviceYearDropdown.value;
+    const month = monthYearDropdown.value;
+    if (!publisherId || !serviceYear || !month) { alert("Please select publisher, year, and month."); return; }
+
+    let hoursVal = parseInt(fieldHoursInput.value) || 0;
+    fieldHoursInput.value = hoursVal;
+    let studiesVal = parseInt(bibleStudiesInput.value) || 0;
+    bibleStudiesInput.value = studiesVal;
+
+    const privilege = privilege2ReportInput.value;
+    let isAuxThisMonth = false;
+    if (privilege === 'Publisher/Auxi') {
+        const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
         try {
-            const doc = await reportRef.get();
-            if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
-            const reportData = {
-                publisherId, publisherFullName, serviceYear, month, 
-                fieldServiceGroup: fieldGroupInput.value, 
-                privilege2AtTimeOfReport: privilege2ReportInput.value, 
-                hours: hoursVal, 
-                bibleStudies: studiesVal, 
-                sharedInMinistry: sharedMinistryCheckbox.checked, 
-                wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked, 
-                comments: commentsAdd.value,
-                lastModifiedBy: currentUser.email,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            await reportRef.set(reportData);
-            alert("Report saved successfully!");
-            clearAddReportForm();
-        } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
+            const docSnap = await db.collection("auxiliary_status").doc(docId).get();
+            if (docSnap.exists && docSnap.data().isAuxiliary) {
+                isAuxThisMonth = true;
+            }
+        } catch (e) { console.error("Error checking aux status on save", e); }
+    } else if (["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"].includes(privilege)) {
+        isAuxThisMonth = true;
     }
-    function setupAddReportPage() {
+
+    if ((isAuxThisMonth || auxiliaryPioneerCheckbox.checked) && hoursVal <= 0) {
+        alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
+    }
+    if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryCheckbox.checked) {
+        alert("Validation Error: 'Shared in Ministry' must be checked for this report."); return;
+    }
+
+    const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
+    const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+    const reportRef = db.collection("reports").doc(reportId);
+    try {
+        const doc = await reportRef.get();
+        if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
+        const reportData = {
+            publisherId, publisherFullName, serviceYear, month,
+            consolidateToMonth: consolidateMonthReport.value, 
+            fieldServiceGroup: fieldGroupInput.value, 
+            privilege2AtTimeOfReport: privilege2ReportInput.value, 
+            hours: hoursVal, 
+            bibleStudies: studiesVal, 
+            sharedInMinistry: sharedMinistryCheckbox.checked, 
+            wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked, 
+            comments: commentsAdd.value,
+            lastModifiedBy: currentUser.email,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await reportRef.set(reportData);
+        alert("Report saved successfully!");
         clearAddReportForm();
-        serviceYearDropdown.disabled = false;
-        monthYearDropdown.disabled = false;
-        publisherNameDropdown.disabled = false;
-        searchPublisherReport.classList.remove('hidden');
-        publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
-        publisherList.forEach(pub => {
-            const opt = document.createElement("option");
-            opt.value = pub.id;
-            opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
-            publisherNameDropdown.appendChild(opt);
-        });
-        populateServiceYears(serviceYearDropdown);
-        populateMonths(monthYearDropdown, serviceYearDropdown.value);
+    } catch (error) { console.error("Error saving report: ", error); alert("An error occurred while saving the report."); }
+}
+    function setupAddReportPage() {
+    clearAddReportForm();
+    publisherNameDropdown.innerHTML = '<option value="">-- Select Publisher --</option>';
+    publisherList.forEach(pub => {
+        const opt = document.createElement("option");
+        opt.value = pub.id;
+        opt.textContent = pub.fullName || `${pub.lastName}, ${pub.firstName}`;
+        publisherNameDropdown.appendChild(opt);
+    });
+    
+    populateServiceYears(serviceYearDropdown);
+    populateMonths(monthYearDropdown, serviceYearDropdown.value);
+    populateServiceYears(consolidateYearReport);
+    populateMonths(consolidateMonthReport, consolidateYearReport.value);
 
-        if (currentUser.role === 'user') {
-            publisherNameDropdown.disabled = false;
-            searchPublisherReport.classList.remove('hidden');
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            
-            let serviceYear = (currentMonth >= 9) ? currentYear + 1 : currentYear;
-            
-            serviceYearDropdown.value = serviceYear;
-            serviceYearDropdown.disabled = true;
-            
-            populateMonths(monthYearDropdown, serviceYear);
-            
-            const prevMonthDate = new Date();
-            prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-            const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
-            const prevMonthYear = prevMonthDate.getFullYear();
-            monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
-            monthYearDropdown.disabled = true;
-            
-            autofillPublisherDetails(publisherNameDropdown.value);
-        }
+    consolidateYearReport.addEventListener('change', () => populateMonths(consolidateMonthReport, consolidateYearReport.value));
 
-        searchPublisherReportInput.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
-            suggestionBoxReport.innerHTML = "";
-            if (!query) return;
-            const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
-            matches.forEach(pub => {
-                const div = document.createElement("div");
-                div.textContent = pub.fullName;
-                div.classList.add("suggestion-item");
-                div.addEventListener("click", () => {
-                    this.value = pub.fullName;
-                    suggestionBoxReport.innerHTML = "";
-                    publisherNameDropdown.value = pub.id;
-                    autofillPublisherDetails(pub.id);
-                });
-                suggestionBoxReport.appendChild(div);
-            });
-        });
-        publisherNameDropdown.addEventListener("change", async () => await autofillPublisherDetails(publisherNameDropdown.value));
-        serviceYearDropdown.addEventListener("change", async () => {
-            populateMonths(monthYearDropdown, serviceYearDropdown.value);
-            await updateReportFieldsVisibility();
-        });
-        monthYearDropdown.addEventListener("change", async () => await updateReportFieldsVisibility());
+    serviceYearDropdown.disabled = false;
+    monthYearDropdown.disabled = false;
+    publisherNameDropdown.disabled = false;
+    searchPublisherReport.classList.remove('hidden');
+
+    if (currentUser.role === 'user') {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const prevMonthDate = new Date();
+        prevMonthDate.setMonth(today.getMonth() - 1);
+        const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+        const prevMonthYear = prevMonthDate.getFullYear();
+        
+        let serviceYear = (prevMonthDate.getMonth() >= 8) ? prevMonthDate.getFullYear() + 1 : prevMonthDate.getFullYear();
+        
+        serviceYearDropdown.value = serviceYear;
+        serviceYearDropdown.disabled = true;
+        populateMonths(monthYearDropdown, serviceYear);
+        monthYearDropdown.value = `${prevMonthName} ${prevMonthYear}`;
+        monthYearDropdown.disabled = true;
+
+        consolidateYearReport.value = currentYear;
+        consolidateYearReport.disabled = true;
+        populateMonths(consolidateMonthReport, currentYear);
+        consolidateMonthReport.value = `${prevMonthName} ${prevMonthYear}`;
+        consolidateMonthReport.disabled = true;
+
+    } else {
+        consolidateYearReport.disabled = false;
+        consolidateMonthReport.disabled = false;
     }
+
+    searchPublisherReportInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        suggestionBoxReport.innerHTML = "";
+        if (!query) return;
+        const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+        matches.forEach(pub => {
+            const div = document.createElement("div");
+            div.textContent = pub.fullName;
+            div.classList.add("suggestion-item");
+            div.addEventListener("click", () => {
+                this.value = pub.fullName;
+                suggestionBoxReport.innerHTML = "";
+                publisherNameDropdown.value = pub.id;
+                autofillPublisherDetails(pub.id);
+            });
+            suggestionBoxReport.appendChild(div);
+        });
+    });
+    publisherNameDropdown.addEventListener("change", async () => await autofillPublisherDetails(publisherNameDropdown.value));
+    serviceYearDropdown.addEventListener("change", async () => {
+        populateMonths(monthYearDropdown, serviceYearDropdown.value);
+        await updateReportFieldsVisibility();
+    });
+    monthYearDropdown.addEventListener("change", async () => await updateReportFieldsVisibility());
+}
     async function autofillPublisherDetails(publisherId) {
         const selectedPublisher = publisherList.find(pub => pub.id === publisherId);
         if (selectedPublisher) {
@@ -2080,19 +2177,21 @@ deathMonth = document.getElementById('deathMonth');
         await updateReportFieldsVisibility();
     }
     function clearAddReportForm() {
-        suggestionBoxReport.innerHTML = "";
-        fieldGroupInput.value = "";
-        privilege2ReportInput.value = "";
-        commentsAdd.value = "";
-        lastModifiedByAdd.textContent = "";
-        searchPublisherReportInput.value = "";
-        publisherNameDropdown.value = "";
-        if (currentUser.role === 'admin') {
-            serviceYearDropdown.value = "";
-            monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
-        }
-        updateReportFieldsVisibility();
+    suggestionBoxReport.innerHTML = "";
+    fieldGroupInput.value = "";
+    privilege2ReportInput.value = "";
+    commentsAdd.value = "";
+    lastModifiedByAdd.textContent = "";
+    searchPublisherReportInput.value = "";
+    publisherNameDropdown.value = "";
+    if (currentUser.role === 'admin' || currentUser.role === 'assistant_admin') {
+        serviceYearDropdown.value = "";
+        monthYearDropdown.innerHTML = '<option value="">-- Select Month --</option>';
+        consolidateYearReport.value = "";
+        consolidateMonthReport.innerHTML = '<option value="">-- Select Month --</option>';
     }
+    updateReportFieldsVisibility();
+}
     async function updateReportFieldsVisibility() {
         const publisherId = publisherNameDropdown.value;
         const serviceYear = serviceYearDropdown.value;
