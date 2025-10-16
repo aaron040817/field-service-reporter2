@@ -2550,125 +2550,141 @@ function setupAdvancedSummaryPage() {
     }
 
     async function generateAdvancedSummary() {
-        const selectedMonthStr = monthAdvancedSummary.value;
-        if (!selectedMonthStr) {
-            alert("Please select a month.");
-            return;
-        }
-        advancedSummaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
+    const selectedMonthStr = monthAdvancedSummary.value;
+    if (!selectedMonthStr) {
+        alert("Please select a month.");
+        return;
+    }
+    advancedSummaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
 
-        try {
-            const allReportsSnap = await db.collection("reports").get();
-            const allReports = allReportsSnap.docs.map(doc => doc.data());
+    try {
+        const allReportsSnap = await db.collection("reports").get();
+        const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
+        
+        const allReports = allReportsSnap.docs.map(doc => doc.data());
+        const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
 
-            const manualDataSnap = await db.collection("manual_summaries").doc(selectedMonthStr.replace(/\s+/g, '_')).get();
-            const manualData = manualDataSnap.exists ? manualDataSnap.data() : {};
-            
-            let summaryData = {
-                publishers: { actual: {count: 0, bs: 0}, lateIn: {count: 0, bs: 0}, lateOut: {count: 0, bs: 0} },
-                auxi: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
-                rp: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
-            };
-            
-            const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"];
+        const manualDataSnap = await db.collection("manual_summaries").doc(selectedMonthStr.replace(/\s+/g, '_')).get();
+        const manualData = manualDataSnap.exists ? manualDataSnap.data() : {};
+        
+        let summaryData = {
+            publishers: { actual: {count: 0, bs: 0}, lateIn: {count: 0, bs: 0}, lateOut: {count: 0, bs: 0} },
+            auxi: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
+            rp: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
+        };
+        
+        const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
 
-            for (const report of allReports) {
-                const reportMonth = report.month;
-                const consolidateMonth = report.consolidateToMonth || report.month;
-                let category = null;
+        for (const report of allReports) {
+            const reportMonth = report.month;
+            const consolidateMonth = report.consolidateToMonth || report.month;
+            let category = null;
 
-                if (reportMonth === selectedMonthStr) {
-                    category = 'actual';
-                } else if (consolidateMonth === selectedMonthStr) {
-                    category = 'lateIn';
-                }
-                
-                if (reportMonth === selectedMonthStr && consolidateMonth !== selectedMonthStr) {
-                    category = 'lateOut';
-                }
+            if (reportMonth === selectedMonthStr && consolidateMonth === selectedMonthStr) {
+                category = 'actual';
+            } else if (reportMonth !== selectedMonthStr && consolidateMonth === selectedMonthStr) {
+                category = 'lateIn';
+            } else if (reportMonth === selectedMonthStr && consolidateMonth !== selectedMonthStr) {
+                category = 'lateOut';
+            }
 
-                if (category) {
-                    const privilege = report.privilege2AtTimeOfReport;
-                    if (fullTimePrivileges.includes(privilege)) {
-                        if (report.hours > 0) {
-                            summaryData.rp[category].count++;
-                            summaryData.rp[category].hours += report.hours;
-                            summaryData.rp[category].bs += report.bibleStudies;
-                        }
-                    } else if (report.wasAuxiliaryPioneer) {
+            if (category) {
+                const privilege = report.privilege2AtTimeOfReport;
+
+                if (fullTimePrivileges.includes(privilege)) {
+                    if (report.hours > 0) {
+                        summaryData.rp[category].count++;
+                        summaryData.rp[category].hours += report.hours;
+                        summaryData.rp[category].bs += report.bibleStudies;
+                    }
+                } else if (privilege === "Continuous Auxiliary Pioneer") {
+                     if (report.hours > 0) {
+                        summaryData.auxi[category].count++;
+                        summaryData.auxi[category].hours += report.hours;
+                        summaryData.auxi[category].bs += report.bibleStudies;
+                    }
+                } else if (privilege === "Publisher/Auxi") {
+                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
+                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
+                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
+
+                    if (isAux) {
                         if (report.hours > 0) {
                             summaryData.auxi[category].count++;
                             summaryData.auxi[category].hours += report.hours;
                             summaryData.auxi[category].bs += report.bibleStudies;
                         }
-                    } else if (report.sharedInMinistry) {
-                        summaryData.publishers[category].count++;
-                        summaryData.publishers[category].bs += report.bibleStudies;
-                    }
-                }
-            }
-
-            const targetMonthDate = parseMonthString(selectedMonthStr);
-            const sixMonthsAgo = new Date(targetMonthDate);
-            sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5, 1);
-            sixMonthsAgo.setHours(0,0,0,0);
-            const windowEnd = new Date(targetMonthDate);
-            windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
-            windowEnd.setHours(23,59,59,999);
-            const activePublishersIds = new Set();
-            allReports.forEach(report => {
-                if (!report.month || !report.publisherId) return;
-                const reportDate = parseMonthString(report.month);
-                if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
-                    if (report.sharedInMinistry === true) {
-                        const pub = publisherList.find(p => p.id === report.publisherId);
-                        if (pub && (pub.publisherStatus || "In the Congregation") === "In the Congregation") {
-                            activePublishersIds.add(report.publisherId);
+                    } else {
+                        if (report.sharedInMinistry) {
+                            summaryData.publishers[category].count++;
+                            summaryData.publishers[category].bs += report.bibleStudies;
                         }
                     }
                 }
-            });
-            const activePublishersCount = activePublishersIds.size;
-            
-            const resultsHTML = `
-            <table id="summaryTable" border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse; font-size: 12px;">
-                <thead>
-                    <tr>
-                        <th>Particulars</th>
-                        <th>Actual Total Report for This Month</th>
-                        <th>ADDITIONAL LATE from Previous Months</th>
-                        <th>Late Report Added to Next Months</th>
-                        <th>Manual Encoding</th>
-                        <th>Total Adjusted Report</th>
-                        <th>Total Reports Encoded in JW Hub</th>
-                        <th>Is Equal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>Active Publishers</td><td id="actual_active_publishers">${activePublishersCount}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
-                    <tr><td>Publishers Count:</td><td id="actual_publishers_count">${summaryData.publishers.actual.count}</td><td id="late_in_publishers_count">${summaryData.publishers.lateIn.count}</td><td id="late_out_publishers_count">${summaryData.publishers.lateOut.count}</td><td><input type="number" id="manual_publishers_count" value="${manualData.manual_publishers_count || 0}"></td><td id="adjusted_publishers_count"></td><td><input type="number" id="jwhub_publishers_count" value="${manualData.jwhub_publishers_count || 0}"></td><td id="isequal_publishers_count"></td></tr>
-                    <tr><td>BS:</td><td id="actual_publishers_bs">${summaryData.publishers.actual.bs}</td><td id="late_in_publishers_bs">${summaryData.publishers.lateIn.bs}</td><td id="late_out_publishers_bs">${summaryData.publishers.lateOut.bs}</td><td><input type="number" id="manual_publishers_bs" value="${manualData.manual_publishers_bs || 0}"></td><td id="adjusted_publishers_bs"></td><td><input type="number" id="jwhub_publishers_bs" value="${manualData.jwhub_publishers_bs || 0}"></td><td id="isequal_publishers_bs"></td></tr>
-                    <tr><td>Auxi Count:</td><td id="actual_auxi_count">${summaryData.auxi.actual.count}</td><td id="late_in_auxi_count">${summaryData.auxi.lateIn.count}</td><td id="late_out_auxi_count">${summaryData.auxi.lateOut.count}</td><td><input type="number" id="manual_auxi_count" value="${manualData.manual_auxi_count || 0}"></td><td id="adjusted_auxi_count"></td><td><input type="number" id="jwhub_auxi_count" value="${manualData.jwhub_auxi_count || 0}"></td><td id="isequal_auxi_count"></td></tr>
-                    <tr><td>FieldHours:</td><td id="actual_auxi_hours">${summaryData.auxi.actual.hours}</td><td id="late_in_auxi_hours">${summaryData.auxi.lateIn.hours}</td><td id="late_out_auxi_hours">${summaryData.auxi.lateOut.hours}</td><td><input type="number" id="manual_auxi_hours" value="${manualData.manual_auxi_hours || 0}"></td><td id="adjusted_auxi_hours"></td><td><input type="number" id="jwhub_auxi_hours" value="${manualData.jwhub_auxi_hours || 0}"></td><td id="isequal_auxi_hours"></td></tr>
-                    <tr><td>BS:</td><td id="actual_auxi_bs">${summaryData.auxi.actual.bs}</td><td id="late_in_auxi_bs">${summaryData.auxi.lateIn.bs}</td><td id="late_out_auxi_bs">${summaryData.auxi.lateOut.bs}</td><td><input type="number" id="manual_auxi_bs" value="${manualData.manual_auxi_bs || 0}"></td><td id="adjusted_auxi_bs"></td><td><input type="number" id="jwhub_auxi_bs" value="${manualData.jwhub_auxi_bs || 0}"></td><td id="isequal_auxi_bs"></td></tr>
-                    <tr><td>RP Count:</td><td id="actual_rp_count">${summaryData.rp.actual.count}</td><td id="late_in_rp_count">${summaryData.rp.lateIn.count}</td><td id="late_out_rp_count">${summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_rp_count" value="${manualData.manual_rp_count || 0}"></td><td id="adjusted_rp_count"></td><td><input type="number" id="jwhub_rp_count" value="${manualData.jwhub_rp_count || 0}"></td><td id="isequal_rp_count"></td></tr>
-                    <tr><td>FieldHours:</td><td id="actual_rp_hours">${summaryData.rp.actual.hours}</td><td id="late_in_rp_hours">${summaryData.rp.lateIn.hours}</td><td id="late_out_rp_hours">${summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_rp_hours" value="${manualData.manual_rp_hours || 0}"></td><td id="adjusted_rp_hours"></td><td><input type="number" id="jwhub_rp_hours" value="${manualData.jwhub_rp_hours || 0}"></td><td id="isequal_rp_hours"></td></tr>
-                    <tr><td>BS:</td><td id="actual_rp_bs">${summaryData.rp.actual.bs}</td><td id="late_in_rp_bs">${summaryData.rp.lateIn.bs}</td><td id="late_out_rp_bs">${summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_rp_bs" value="${manualData.manual_rp_bs || 0}"></td><td id="adjusted_rp_bs"></td><td><input type="number" id="jwhub_rp_bs" value="${manualData.jwhub_rp_bs || 0}"></td><td id="isequal_rp_bs"></td></tr>
-                    <tr><td>Total Count</td><td id="actual_total_count">${summaryData.publishers.actual.count + summaryData.auxi.actual.count + summaryData.rp.actual.count}</td><td id="late_in_total_count">${summaryData.publishers.lateIn.count + summaryData.auxi.lateIn.count + summaryData.rp.lateIn.count}</td><td id="late_out_total_count">${summaryData.publishers.lateOut.count + summaryData.auxi.lateOut.count + summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_total_count" value="${manualData.manual_total_count || 0}"></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" value="${manualData.jwhub_total_count || 0}"></td><td id="isequal_total_count"></td></tr>
-                    <tr><td>Total Field Hours</td><td id="actual_total_hours">${summaryData.auxi.actual.hours + summaryData.rp.actual.hours}</td><td id="late_in_total_hours">${summaryData.auxi.lateIn.hours + summaryData.rp.lateIn.hours}</td><td id="late_out_total_hours">${summaryData.auxi.lateOut.hours + summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_total_hours" value="${manualData.manual_total_hours || 0}"></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" value="${manualData.jwhub_total_hours || 0}"></td><td id="isequal_total_hours"></td></tr>
-                    <tr><td>Total BS</td><td id="actual_total_bs">${summaryData.publishers.actual.bs + summaryData.auxi.actual.bs + summaryData.rp.actual.bs}</td><td id="late_in_total_bs">${summaryData.publishers.lateIn.bs + summaryData.auxi.lateIn.bs + summaryData.rp.lateIn.bs}</td><td id="late_out_total_bs">${summaryData.publishers.lateOut.bs + summaryData.auxi.lateOut.bs + summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_total_bs" value="${manualData.manual_total_bs || 0}"></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" value="${manualData.jwhub_total_bs || 0}"></td><td id="isequal_total_bs"></td></tr>
-                </tbody>
-            </table>
-            `;
-            advancedSummaryResults.innerHTML = resultsHTML;
-            attachSummaryInputListeners();
-            const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
-            prefixes.forEach(prefix => recalculateSummaryRow(prefix));
-        } catch (error) {
-            console.error("Error generating summary:", error);
-            advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
+            }
         }
+
+        const targetMonthDate = parseMonthString(selectedMonthStr);
+        const sixMonthsAgo = new Date(targetMonthDate);
+        sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5, 1);
+        sixMonthsAgo.setHours(0,0,0,0);
+        const windowEnd = new Date(targetMonthDate);
+        windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
+        windowEnd.setHours(23,59,59,999);
+        const activePublishersIds = new Set();
+        allReports.forEach(report => {
+            if (!report.month || !report.publisherId) return;
+            const reportDate = parseMonthString(report.month);
+            if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
+                if (report.sharedInMinistry === true) {
+                    const pub = publisherList.find(p => p.id === report.publisherId);
+                    if (pub && (pub.publisherStatus || "In the Congregation") === "In the Congregation") {
+                        activePublishersIds.add(report.publisherId);
+                    }
+                }
+            }
+        });
+        const activePublishersCount = activePublishersIds.size;
+        
+        const resultsHTML = `
+        <table id="summaryTable" border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Particulars</th>
+                    <th>Actual Total Report for This Month</th>
+                    <th>ADDITIONAL LATE from Previous Months</th>
+                    <th>Late Report Added to Next Months</th>
+                    <th>Manual Encoding</th>
+                    <th>Total Adjusted Report</th>
+                    <th>Total Reports Encoded in JW Hub</th>
+                    <th>Is Equal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Active Publishers</td><td id="actual_active_publishers">${activePublishersCount}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
+                <tr><td>Publishers Count:</td><td id="actual_publishers_count">${summaryData.publishers.actual.count}</td><td id="late_in_publishers_count">${summaryData.publishers.lateIn.count}</td><td id="late_out_publishers_count">${summaryData.publishers.lateOut.count}</td><td><input type="number" id="manual_publishers_count" value="${manualData.manual_publishers_count || 0}"></td><td id="adjusted_publishers_count"></td><td><input type="number" id="jwhub_publishers_count" value="${manualData.jwhub_publishers_count || 0}"></td><td id="isequal_publishers_count"></td></tr>
+                <tr><td>BS:</td><td id="actual_publishers_bs">${summaryData.publishers.actual.bs}</td><td id="late_in_publishers_bs">${summaryData.publishers.lateIn.bs}</td><td id="late_out_publishers_bs">${summaryData.publishers.lateOut.bs}</td><td><input type="number" id="manual_publishers_bs" value="${manualData.manual_publishers_bs || 0}"></td><td id="adjusted_publishers_bs"></td><td><input type="number" id="jwhub_publishers_bs" value="${manualData.jwhub_publishers_bs || 0}"></td><td id="isequal_publishers_bs"></td></tr>
+                <tr><td>Auxi Count:</td><td id="actual_auxi_count">${summaryData.auxi.actual.count}</td><td id="late_in_auxi_count">${summaryData.auxi.lateIn.count}</td><td id="late_out_auxi_count">${summaryData.auxi.lateOut.count}</td><td><input type="number" id="manual_auxi_count" value="${manualData.manual_auxi_count || 0}"></td><td id="adjusted_auxi_count"></td><td><input type="number" id="jwhub_auxi_count" value="${manualData.jwhub_auxi_count || 0}"></td><td id="isequal_auxi_count"></td></tr>
+                <tr><td>FieldHours:</td><td id="actual_auxi_hours">${summaryData.auxi.actual.hours}</td><td id="late_in_auxi_hours">${summaryData.auxi.lateIn.hours}</td><td id="late_out_auxi_hours">${summaryData.auxi.lateOut.hours}</td><td><input type="number" id="manual_auxi_hours" value="${manualData.manual_auxi_hours || 0}"></td><td id="adjusted_auxi_hours"></td><td><input type="number" id="jwhub_auxi_hours" value="${manualData.jwhub_auxi_hours || 0}"></td><td id="isequal_auxi_hours"></td></tr>
+                <tr><td>BS:</td><td id="actual_auxi_bs">${summaryData.auxi.actual.bs}</td><td id="late_in_auxi_bs">${summaryData.auxi.lateIn.bs}</td><td id="late_out_auxi_bs">${summaryData.auxi.lateOut.bs}</td><td><input type="number" id="manual_auxi_bs" value="${manualData.manual_auxi_bs || 0}"></td><td id="adjusted_auxi_bs"></td><td><input type="number" id="jwhub_auxi_bs" value="${manualData.jwhub_auxi_bs || 0}"></td><td id="isequal_auxi_bs"></td></tr>
+                <tr><td>RP Count:</td><td id="actual_rp_count">${summaryData.rp.actual.count}</td><td id="late_in_rp_count">${summaryData.rp.lateIn.count}</td><td id="late_out_rp_count">${summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_rp_count" value="${manualData.manual_rp_count || 0}"></td><td id="adjusted_rp_count"></td><td><input type="number" id="jwhub_rp_count" value="${manualData.jwhub_rp_count || 0}"></td><td id="isequal_rp_count"></td></tr>
+                <tr><td>FieldHours:</td><td id="actual_rp_hours">${summaryData.rp.actual.hours}</td><td id="late_in_rp_hours">${summaryData.rp.lateIn.hours}</td><td id="late_out_rp_hours">${summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_rp_hours" value="${manualData.manual_rp_hours || 0}"></td><td id="adjusted_rp_hours"></td><td><input type="number" id="jwhub_rp_hours" value="${manualData.jwhub_rp_hours || 0}"></td><td id="isequal_rp_hours"></td></tr>
+                <tr><td>BS:</td><td id="actual_rp_bs">${summaryData.rp.actual.bs}</td><td id="late_in_rp_bs">${summaryData.rp.lateIn.bs}</td><td id="late_out_rp_bs">${summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_rp_bs" value="${manualData.manual_rp_bs || 0}"></td><td id="adjusted_rp_bs"></td><td><input type="number" id="jwhub_rp_bs" value="${manualData.jwhub_rp_bs || 0}"></td><td id="isequal_rp_bs"></td></tr>
+                <tr><td>Total Count</td><td id="actual_total_count">${summaryData.publishers.actual.count + summaryData.auxi.actual.count + summaryData.rp.actual.count}</td><td id="late_in_total_count">${summaryData.publishers.lateIn.count + summaryData.auxi.lateIn.count + summaryData.rp.lateIn.count}</td><td id="late_out_total_count">${summaryData.publishers.lateOut.count + summaryData.auxi.lateOut.count + summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_total_count" value="${manualData.manual_total_count || 0}"></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" value="${manualData.jwhub_total_count || 0}"></td><td id="isequal_total_count"></td></tr>
+                <tr><td>Total Field Hours</td><td id="actual_total_hours">${summaryData.auxi.actual.hours + summaryData.rp.actual.hours}</td><td id="late_in_total_hours">${summaryData.auxi.lateIn.hours + summaryData.rp.lateIn.hours}</td><td id="late_out_total_hours">${summaryData.auxi.lateOut.hours + summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_total_hours" value="${manualData.manual_total_hours || 0}"></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" value="${manualData.jwhub_total_hours || 0}"></td><td id="isequal_total_hours"></td></tr>
+                <tr><td>Total BS</td><td id="actual_total_bs">${summaryData.publishers.actual.bs + summaryData.auxi.actual.bs + summaryData.rp.actual.bs}</td><td id="late_in_total_bs">${summaryData.publishers.lateIn.bs + summaryData.auxi.lateIn.bs + summaryData.rp.lateIn.bs}</td><td id="late_out_total_bs">${summaryData.publishers.lateOut.bs + summaryData.auxi.lateOut.bs + summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_total_bs" value="${manualData.manual_total_bs || 0}"></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" value="${manualData.jwhub_total_bs || 0}"></td><td id="isequal_total_bs"></td></tr>
+            </tbody>
+        </table>
+        `;
+        advancedSummaryResults.innerHTML = resultsHTML;
+        attachSummaryInputListeners();
+        const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
+        prefixes.forEach(prefix => recalculateSummaryRow(prefix));
+    } catch (error) {
+        console.error("Error generating summary:", error);
+        advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
     }
+}
     </script>
 </body>
 </html>
