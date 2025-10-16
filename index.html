@@ -2520,10 +2520,29 @@ function setupAdvancedSummaryPage() {
     function recalculateColumnTotals(columnType) {
     const types = ['count', 'hours', 'bs'];
     types.forEach(type => {
-        const pubValue = parseFloat(document.getElementById(`${columnType}_publishers_${type}`)?.value) || 0;
-        const auxiValue = parseFloat(document.getElementById(`${columnType}_auxi_${type}`)?.value) || 0;
-        const rpValue = parseFloat(document.getElementById(`${columnType}_rp_${type}`)?.value) || 0;
-        
+        let pubValue = 0;
+        let auxiValue = 0;
+        let rpValue = 0;
+
+        if (type === 'count' || type === 'bs') {
+            const pubInput = document.getElementById(`${columnType}_publishers_${type}`);
+            if (pubInput) pubValue = parseFloat(pubInput.value) || 0;
+        }
+        if (type !== 'count') { // hours and bs apply to auxi and rp
+            const auxiInput = document.getElementById(`${columnType}_auxi_${type}`);
+            if (auxiInput) auxiValue = parseFloat(auxiInput.value) || 0;
+
+            const rpInput = document.getElementById(`${columnType}_rp_${type}`);
+            if (rpInput) rpValue = parseFloat(rpInput.value) || 0;
+        }
+        // Count for auxi and rp is separate
+        if (type === 'count') {
+             const auxiInput = document.getElementById(`${columnType}_auxi_count`);
+            if (auxiInput) auxiValue = parseFloat(auxiInput.value) || 0;
+             const rpInput = document.getElementById(`${columnType}_rp_count`);
+            if (rpInput) rpValue = parseFloat(rpInput.value) || 0;
+        }
+
         const totalInput = document.getElementById(`${columnType}_total_${type}`);
         if(totalInput) {
             totalInput.value = pubValue + auxiValue + rpValue;
@@ -2608,49 +2627,47 @@ function setupAdvancedSummaryPage() {
         for (const report of allReports) {
             const reportMonth = report.month;
             const consolidateMonth = report.consolidateToMonth || report.month;
-            let category = null;
-
-            if (reportMonth === selectedMonthStr) {
-                category = 'actual';
-            } else if (consolidateMonth === selectedMonthStr) {
-                category = 'lateIn';
-            }
             
-            if (reportMonth === selectedMonthStr && consolidateMonth !== selectedMonthStr) {
-                category = 'lateOut';
-            }
-
-            if (!category) continue;
-
-            const privilege = report.privilege2AtTimeOfReport;
-            if (fullTimePrivileges.includes(privilege)) {
-                if (report.hours > 0) {
-                    summaryData.rp[category].count++;
-                    summaryData.rp[category].hours += report.hours;
-                    summaryData.rp[category].bs += report.bibleStudies;
-                }
-            } else if (privilege === "Continuous Auxiliary Pioneer") {
-                 if (report.hours > 0) {
-                    summaryData.auxi[category].count++;
-                    summaryData.auxi[category].hours += report.hours;
-                    summaryData.auxi[category].bs += report.bibleStudies;
-                }
-            } else if (privilege === "Publisher/Auxi") {
-                const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
-                const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
-                const isAux = auxStatus ? auxStatus.isAuxiliary : false;
-                if (isAux) {
+            const processReport = (category) => {
+                const privilege = report.privilege2AtTimeOfReport;
+                if (fullTimePrivileges.includes(privilege)) {
                     if (report.hours > 0) {
+                        summaryData.rp[category].count++;
+                        summaryData.rp[category].hours += report.hours;
+                        summaryData.rp[category].bs += report.bibleStudies;
+                    }
+                } else if (privilege === "Continuous Auxiliary Pioneer") {
+                     if (report.hours > 0) {
                         summaryData.auxi[category].count++;
                         summaryData.auxi[category].hours += report.hours;
                         summaryData.auxi[category].bs += report.bibleStudies;
                     }
-                } else {
-                    if (report.sharedInMinistry) {
-                        summaryData.publishers[category].count++;
-                        summaryData.publishers[category].bs += report.bibleStudies;
+                } else if (privilege === "Publisher/Auxi") {
+                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
+                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
+                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
+                    if (isAux) {
+                        if (report.hours > 0) {
+                            summaryData.auxi[category].count++;
+                            summaryData.auxi[category].hours += report.hours;
+                            summaryData.auxi[category].bs += report.bibleStudies;
+                        }
+                    } else {
+                        if (report.sharedInMinistry) {
+                            summaryData.publishers[category].count++;
+                            summaryData.publishers[category].bs += report.bibleStudies;
+                        }
                     }
                 }
+            };
+
+            if (reportMonth === selectedMonthStr) {
+                processReport('actual');
+                if (consolidateMonth !== selectedMonthStr) {
+                    processReport('lateOut');
+                }
+            } else if (consolidateMonth === selectedMonthStr) {
+                processReport('lateIn');
             }
         }
 
@@ -2700,14 +2717,25 @@ function setupAdvancedSummaryPage() {
                 <tr><td>RP Count:</td><td id="actual_rp_count">${summaryData.rp.actual.count}</td><td id="late_in_rp_count">${summaryData.rp.lateIn.count}</td><td id="late_out_rp_count">${summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_rp_count" value="${manualData.manual_rp_count || 0}"></td><td id="adjusted_rp_count"></td><td><input type="number" id="jwhub_rp_count" value="${manualData.jwhub_rp_count || 0}"></td><td id="isequal_rp_count"></td></tr>
                 <tr><td>FieldHours:</td><td id="actual_rp_hours">${summaryData.rp.actual.hours}</td><td id="late_in_rp_hours">${summaryData.rp.lateIn.hours}</td><td id="late_out_rp_hours">${summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_rp_hours" value="${manualData.manual_rp_hours || 0}"></td><td id="adjusted_rp_hours"></td><td><input type="number" id="jwhub_rp_hours" value="${manualData.jwhub_rp_hours || 0}"></td><td id="isequal_rp_hours"></td></tr>
                 <tr><td>BS:</td><td id="actual_rp_bs">${summaryData.rp.actual.bs}</td><td id="late_in_rp_bs">${summaryData.rp.lateIn.bs}</td><td id="late_out_rp_bs">${summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_rp_bs" value="${manualData.manual_rp_bs || 0}"></td><td id="adjusted_rp_bs"></td><td><input type="number" id="jwhub_rp_bs" value="${manualData.jwhub_rp_bs || 0}"></td><td id="isequal_rp_bs"></td></tr>
-                <tr><td>Total Count</td><td id="actual_total_count"></td><td id="late_in_total_count"></td><td id="late_out_total_count"></td><td><input type="number" id="manual_total_count" value="${manualData.manual_total_count || 0}" disabled></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" value="${manualData.jwhub_total_count || 0}" disabled></td><td id="isequal_total_count"></td></tr>
-                <tr><td>Total Field Hours</td><td id="actual_total_hours"></td><td id="late_in_total_hours"></td><td id="late_out_total_hours"></td><td><input type="number" id="manual_total_hours" value="${manualData.manual_total_hours || 0}" disabled></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" value="${manualData.jwhub_total_hours || 0}" disabled></td><td id="isequal_total_hours"></td></tr>
-                <tr><td>Total BS</td><td id="actual_total_bs"></td><td id="late_in_total_bs"></td><td id="late_out_total_bs"></td><td><input type="number" id="manual_total_bs" value="${manualData.manual_total_bs || 0}" disabled></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" value="${manualData.jwhub_total_bs || 0}" disabled></td><td id="isequal_total_bs"></td></tr>
+                <tr><td>Total Count</td><td id="actual_total_count"></td><td id="late_in_total_count"></td><td id="late_out_total_count"></td><td><input type="number" id="manual_total_count" disabled></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" disabled></td><td id="isequal_total_count"></td></tr>
+                <tr><td>Total Field Hours</td><td id="actual_total_hours"></td><td id="late_in_total_hours"></td><td id="late_out_total_hours"></td><td><input type="number" id="manual_total_hours" disabled></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" disabled></td><td id="isequal_total_hours"></td></tr>
+                <tr><td>Total BS</td><td id="actual_total_bs"></td><td id="late_in_total_bs"></td><td id="late_out_total_bs"></td><td><input type="number" id="manual_total_bs" disabled></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" disabled></td><td id="isequal_total_bs"></td></tr>
             </tbody>
         </table>
         `;
         advancedSummaryResults.innerHTML = resultsHTML;
         attachSummaryInputListeners();
+
+        document.getElementById('actual_total_count').textContent = summaryData.publishers.actual.count + summaryData.auxi.actual.count + summaryData.rp.actual.count;
+        document.getElementById('late_in_total_count').textContent = summaryData.publishers.lateIn.count + summaryData.auxi.lateIn.count + summaryData.rp.lateIn.count;
+        document.getElementById('late_out_total_count').textContent = summaryData.publishers.lateOut.count + summaryData.auxi.lateOut.count + summaryData.rp.lateOut.count;
+        document.getElementById('actual_total_hours').textContent = summaryData.auxi.actual.hours + summaryData.rp.actual.hours;
+        document.getElementById('late_in_total_hours').textContent = summaryData.auxi.lateIn.hours + summaryData.rp.lateIn.hours;
+        document.getElementById('late_out_total_hours').textContent = summaryData.auxi.lateOut.hours + summaryData.rp.lateOut.hours;
+        document.getElementById('actual_total_bs').textContent = summaryData.publishers.actual.bs + summaryData.auxi.actual.bs + summaryData.rp.actual.bs;
+        document.getElementById('late_in_total_bs').textContent = summaryData.publishers.lateIn.bs + summaryData.auxi.lateIn.bs + summaryData.rp.lateIn.bs;
+        document.getElementById('late_out_total_bs').textContent = summaryData.publishers.lateOut.bs + summaryData.auxi.lateOut.bs + summaryData.rp.lateOut.bs;
+        
         const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
         prefixes.forEach(prefix => recalculateSummaryRow(prefix));
         recalculateColumnTotals('manual');
