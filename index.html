@@ -1463,9 +1463,13 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
             const consolidationMonthStr = data.consolidateToMonth || data.month;
             const consolidationDate = parseMonthString(consolidationMonthStr);
             if (consolidationDate) {
-                const consolidationYear = consolidationDate.getFullYear();
-                consolidateYearUpdate.value = consolidationYear;
-                populateMonths(consolidateMonthUpdate, consolidationYear);
+                const consolidationMonthIndex = consolidationDate.getMonth();
+                const consolidationCalendarYear = consolidationDate.getFullYear();
+
+                let correctServiceYearForConsolidation = (consolidationMonthIndex >= 8) ? consolidationCalendarYear + 1 : consolidationCalendarYear;
+                
+                consolidateYearUpdate.value = correctServiceYearForConsolidation;
+                populateMonths(consolidateMonthUpdate, correctServiceYearForConsolidation);
                 consolidateMonthUpdate.value = consolidationMonthStr;
             }
 
