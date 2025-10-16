@@ -58,7 +58,7 @@
     <button id="addReportBtnAdmin">Add Report</button>
     <button id="updateReportPageBtn">Update Report</button>
     <button id="reviewApprovalsBtn">Review Approvals</button>
-    <button id="viewSummaryBtn">View Summary Report</button>
+    <button id="advancedSummaryBtn">Advanced Summary Report</button> 
     <button id="exportExcelBtn">Export to Excel</button>
     <button id="uploadReportsBtn">Upload Reports</button>
     <button id="uploadPublishersBtn">Upload Publishers</button>
@@ -72,7 +72,22 @@
              <button id="clearAllDataBtn">Clear All Data</button>
              <p style="color: red; font-size: 12px; margin-top: 5px;">Warning: This will delete all publisher and report data.</p>
         </div>
+    </div> <div id="advancedSummaryPage" class="page-container hidden">
+    <h2>Advanced Monthly Summary</h2>
+    <label for="serviceYearAdvancedSummary">Service Year:</label>
+    <select id="serviceYearAdvancedSummary"></select>
+    <label for="monthAdvancedSummary">Month:</label>
+    <select id="monthAdvancedSummary"></select>
+    <button id="generateAdvancedSummaryBtn">Generate</button>
+    <button id="saveAdvancedSummaryBtn" class="approve-btn">Save Manual Data</button>
+    <hr>
+    <label for="summaryFilter">Filter Particulars:</label>
+    <input type="text" id="summaryFilter" placeholder="Type to filter rows...">
+    <div id="advancedSummaryResults" style="overflow-x: auto;">
+        <p>Select a month and click Generate.</p>
     </div>
+    <button id="backHomeFromAdvancedSummaryBtn" class="back-btn">Back to Home</button>
+</div>
     <div id="manageAuxiliaryPage" class="page-container hidden">
         <h2>Manage Auxiliary Pioneer Status</h2>
         <p>Select a "Publisher/Auxi" and the month to set their pioneer status.</p>
@@ -426,6 +441,7 @@
     let clearSummaryBtn;
     let publisherStatus, transferDateContainer, transferYear, transferMonth, deathDateContainer, deathYear, deathMonth;
     let consolidateYearReport, consolidateMonthReport, consolidateYearUpdate, consolidateMonthUpdate, consolidateYearRequest, consolidateMonthRequest;
+    let advancedSummaryPage, serviceYearAdvancedSummary, monthAdvancedSummary, generateAdvancedSummaryBtn, saveAdvancedSummaryBtn, summaryFilter, advancedSummaryResults, backHomeFromAdvancedSummaryBtn;
     
     document.addEventListener("DOMContentLoaded", initializeApp);
     async function initializeApp() {
@@ -596,6 +612,14 @@ consolidateYearUpdate = document.getElementById('consolidateYearUpdate');
 consolidateMonthUpdate = document.getElementById('consolidateMonthUpdate');
 consolidateYearRequest = document.getElementById('consolidateYearRequest');
 consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
+advancedSummaryPage = document.getElementById('advancedSummaryPage');
+serviceYearAdvancedSummary = document.getElementById('serviceYearAdvancedSummary');
+monthAdvancedSummary = document.getElementById('monthAdvancedSummary');
+generateAdvancedSummaryBtn = document.getElementById('generateAdvancedSummaryBtn');
+saveAdvancedSummaryBtn = document.getElementById('saveAdvancedSummaryBtn');
+summaryFilter = document.getElementById('summaryFilter');
+advancedSummaryResults = document.getElementById('advancedSummaryResults');
+backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSummaryBtn');
         }
     function toggleStatusDateFields() {
     const status = publisherStatus.value;
@@ -676,7 +700,12 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
     publisherStatus?.addEventListener('change', toggleStatusDateFields);
     transferYear?.addEventListener('change', () => populateMonths(transferMonth, transferYear.value));
     deathYear?.addEventListener('change', () => populateMonths(deathMonth, deathYear.value));
-}
+document.getElementById("advancedSummaryBtn")?.addEventListener("click", () => showPage('advancedSummaryPage'));
+generateAdvancedSummaryBtn?.addEventListener("click", generateAdvancedSummary);
+saveAdvancedSummaryBtn?.addEventListener("click", saveManualSummaryData);
+summaryFilter?.addEventListener('input', filterAdvancedSummaryTable);
+backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePage'));
+    }
         function showPage(pageId) {
     document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
     const targetPage = document.getElementById(pageId);
@@ -693,7 +722,8 @@ consolidateMonthRequest = document.getElementById('consolidateMonthRequest');
     else if (pageId === 'uploadPublishersPage') { setupUploadPublishersPage(); }
     else if (pageId === 'manageAuxiliaryPage') { setupManageAuxiliaryPage(); }
     else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
-}
+    else if (pageId === 'advancedSummaryPage') { setupAdvancedSummaryPage(); }
+        }
     function handleRouteChange() {
     if (!currentUser) {
         showPage('loginPage');
@@ -2436,6 +2466,209 @@ function clearSummaryPage() {
     monthSummary.innerHTML = '<option value="">-- Select Month --</option>';
     summaryResults.innerHTML = "<p>No summary generated yet.</p>";
 }
-</script>
+function setupAdvancedSummaryPage() {
+        populateServiceYears(serviceYearAdvancedSummary);
+        populateMonths(monthAdvancedSummary, serviceYearAdvancedSummary.value);
+        serviceYearAdvancedSummary.addEventListener('change', () => {
+            populateMonths(monthAdvancedSummary, serviceYearAdvancedSummary.value);
+        });
+        advancedSummaryResults.innerHTML = "<p>Select a month and click Generate.</p>";
+    }
+
+    function filterAdvancedSummaryTable() {
+        const filter = summaryFilter.value.toUpperCase();
+        const table = document.getElementById("summaryTable");
+        if (!table) return;
+        const tr = table.getElementsByTagName("tr");
+        for (let i = 1; i < tr.length; i++) { // Start from 1 to skip header
+            const td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+                const txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+    
+    function recalculateSummaryRow(prefix) {
+        const col1 = parseFloat(document.getElementById(`actual_${prefix}`).textContent) || 0;
+        const col2 = parseFloat(document.getElementById(`late_in_${prefix}`).textContent) || 0;
+        const col3 = parseFloat(document.getElementById(`late_out_${prefix}`).textContent) || 0;
+        const col4 = parseFloat(document.getElementById(`manual_${prefix}`).value) || 0;
+        const col5 = document.getElementById(`adjusted_${prefix}`);
+        const col6 = parseFloat(document.getElementById(`jwhub_${prefix}`).value) || 0;
+        const col7 = document.getElementById(`isequal_${prefix}`);
+
+        const totalAdjusted = col1 + col2 - col3 + col4;
+        col5.textContent = totalAdjusted;
+
+        if (totalAdjusted === col6) {
+            col7.textContent = "TRUE";
+            col7.style.color = "green";
+        } else {
+            col7.textContent = "FALSE";
+            col7.style.color = "red";
+        }
+    }
+    
+    function attachSummaryInputListeners() {
+        const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
+        prefixes.forEach(prefix => {
+            document.getElementById(`manual_${prefix}`)?.addEventListener('input', () => recalculateSummaryRow(prefix));
+            document.getElementById(`jwhub_${prefix}`)?.addEventListener('input', () => recalculateSummaryRow(prefix));
+        });
+    }
+
+    async function saveManualSummaryData() {
+        const selectedMonthStr = monthAdvancedSummary.value;
+        if (!selectedMonthStr) {
+            alert("Please select a month first.");
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to save the manual data for ${selectedMonthStr}?`)) return;
+
+        const docId = selectedMonthStr.replace(/\s+/g, '_');
+        const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
+        
+        const dataToSave = {};
+        prefixes.forEach(prefix => {
+            dataToSave[`manual_${prefix}`] = parseFloat(document.getElementById(`manual_${prefix}`).value) || 0;
+            dataToSave[`jwhub_${prefix}`] = parseFloat(document.getElementById(`jwhub_${prefix}`).value) || 0;
+        });
+
+        try {
+            await db.collection("manual_summaries").doc(docId).set(dataToSave, { merge: true });
+            alert("Manual data saved successfully!");
+        } catch (error) {
+            console.error("Error saving manual summary data:", error);
+            alert("An error occurred while saving. Please check the console.");
+        }
+    }
+
+    async function generateAdvancedSummary() {
+        const selectedMonthStr = monthAdvancedSummary.value;
+        if (!selectedMonthStr) {
+            alert("Please select a month.");
+            return;
+        }
+        advancedSummaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
+
+        try {
+            const allReportsSnap = await db.collection("reports").get();
+            const allReports = allReportsSnap.docs.map(doc => doc.data());
+
+            const manualDataSnap = await db.collection("manual_summaries").doc(selectedMonthStr.replace(/\s+/g, '_')).get();
+            const manualData = manualDataSnap.exists ? manualDataSnap.data() : {};
+            
+            let summaryData = {
+                publishers: { actual: {count: 0, bs: 0}, lateIn: {count: 0, bs: 0}, lateOut: {count: 0, bs: 0} },
+                auxi: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
+                rp: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
+            };
+            
+            const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"];
+
+            for (const report of allReports) {
+                const reportMonth = report.month;
+                const consolidateMonth = report.consolidateToMonth || report.month;
+                let category = null;
+
+                if (reportMonth === selectedMonthStr) {
+                    category = 'actual';
+                } else if (consolidateMonth === selectedMonthStr) {
+                    category = 'lateIn';
+                }
+                
+                if (reportMonth === selectedMonthStr && consolidateMonth !== selectedMonthStr) {
+                    category = 'lateOut';
+                }
+
+                if (category) {
+                    const privilege = report.privilege2AtTimeOfReport;
+                    if (fullTimePrivileges.includes(privilege)) {
+                        if (report.hours > 0) {
+                            summaryData.rp[category].count++;
+                            summaryData.rp[category].hours += report.hours;
+                            summaryData.rp[category].bs += report.bibleStudies;
+                        }
+                    } else if (report.wasAuxiliaryPioneer) {
+                        if (report.hours > 0) {
+                            summaryData.auxi[category].count++;
+                            summaryData.auxi[category].hours += report.hours;
+                            summaryData.auxi[category].bs += report.bibleStudies;
+                        }
+                    } else if (report.sharedInMinistry) {
+                        summaryData.publishers[category].count++;
+                        summaryData.publishers[category].bs += report.bibleStudies;
+                    }
+                }
+            }
+
+            const targetMonthDate = parseMonthString(selectedMonthStr);
+            const sixMonthsAgo = new Date(targetMonthDate);
+            sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5, 1);
+            sixMonthsAgo.setHours(0,0,0,0);
+            const windowEnd = new Date(targetMonthDate);
+            windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
+            windowEnd.setHours(23,59,59,999);
+            const activePublishersIds = new Set();
+            allReports.forEach(report => {
+                if (!report.month || !report.publisherId) return;
+                const reportDate = parseMonthString(report.month);
+                if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
+                    if (report.sharedInMinistry === true) {
+                        const pub = publisherList.find(p => p.id === report.publisherId);
+                        if (pub && (pub.publisherStatus || "In the Congregation") === "In the Congregation") {
+                            activePublishersIds.add(report.publisherId);
+                        }
+                    }
+                }
+            });
+            const activePublishersCount = activePublishersIds.size;
+            
+            const resultsHTML = `
+            <table id="summaryTable" border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th>Actual Total Report for This Month</th>
+                        <th>ADDITIONAL LATE from Previous Months</th>
+                        <th>Late Report Added to Next Months</th>
+                        <th>Manual Encoding</th>
+                        <th>Total Adjusted Report</th>
+                        <th>Total Reports Encoded in JW Hub</th>
+                        <th>Is Equal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Active Publishers</td><td id="actual_active_publishers">${activePublishersCount}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
+                    <tr><td>Publishers Count:</td><td id="actual_publishers_count">${summaryData.publishers.actual.count}</td><td id="late_in_publishers_count">${summaryData.publishers.lateIn.count}</td><td id="late_out_publishers_count">${summaryData.publishers.lateOut.count}</td><td><input type="number" id="manual_publishers_count" value="${manualData.manual_publishers_count || 0}"></td><td id="adjusted_publishers_count"></td><td><input type="number" id="jwhub_publishers_count" value="${manualData.jwhub_publishers_count || 0}"></td><td id="isequal_publishers_count"></td></tr>
+                    <tr><td>BS:</td><td id="actual_publishers_bs">${summaryData.publishers.actual.bs}</td><td id="late_in_publishers_bs">${summaryData.publishers.lateIn.bs}</td><td id="late_out_publishers_bs">${summaryData.publishers.lateOut.bs}</td><td><input type="number" id="manual_publishers_bs" value="${manualData.manual_publishers_bs || 0}"></td><td id="adjusted_publishers_bs"></td><td><input type="number" id="jwhub_publishers_bs" value="${manualData.jwhub_publishers_bs || 0}"></td><td id="isequal_publishers_bs"></td></tr>
+                    <tr><td>Auxi Count:</td><td id="actual_auxi_count">${summaryData.auxi.actual.count}</td><td id="late_in_auxi_count">${summaryData.auxi.lateIn.count}</td><td id="late_out_auxi_count">${summaryData.auxi.lateOut.count}</td><td><input type="number" id="manual_auxi_count" value="${manualData.manual_auxi_count || 0}"></td><td id="adjusted_auxi_count"></td><td><input type="number" id="jwhub_auxi_count" value="${manualData.jwhub_auxi_count || 0}"></td><td id="isequal_auxi_count"></td></tr>
+                    <tr><td>FieldHours:</td><td id="actual_auxi_hours">${summaryData.auxi.actual.hours}</td><td id="late_in_auxi_hours">${summaryData.auxi.lateIn.hours}</td><td id="late_out_auxi_hours">${summaryData.auxi.lateOut.hours}</td><td><input type="number" id="manual_auxi_hours" value="${manualData.manual_auxi_hours || 0}"></td><td id="adjusted_auxi_hours"></td><td><input type="number" id="jwhub_auxi_hours" value="${manualData.jwhub_auxi_hours || 0}"></td><td id="isequal_auxi_hours"></td></tr>
+                    <tr><td>BS:</td><td id="actual_auxi_bs">${summaryData.auxi.actual.bs}</td><td id="late_in_auxi_bs">${summaryData.auxi.lateIn.bs}</td><td id="late_out_auxi_bs">${summaryData.auxi.lateOut.bs}</td><td><input type="number" id="manual_auxi_bs" value="${manualData.manual_auxi_bs || 0}"></td><td id="adjusted_auxi_bs"></td><td><input type="number" id="jwhub_auxi_bs" value="${manualData.jwhub_auxi_bs || 0}"></td><td id="isequal_auxi_bs"></td></tr>
+                    <tr><td>RP Count:</td><td id="actual_rp_count">${summaryData.rp.actual.count}</td><td id="late_in_rp_count">${summaryData.rp.lateIn.count}</td><td id="late_out_rp_count">${summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_rp_count" value="${manualData.manual_rp_count || 0}"></td><td id="adjusted_rp_count"></td><td><input type="number" id="jwhub_rp_count" value="${manualData.jwhub_rp_count || 0}"></td><td id="isequal_rp_count"></td></tr>
+                    <tr><td>FieldHours:</td><td id="actual_rp_hours">${summaryData.rp.actual.hours}</td><td id="late_in_rp_hours">${summaryData.rp.lateIn.hours}</td><td id="late_out_rp_hours">${summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_rp_hours" value="${manualData.manual_rp_hours || 0}"></td><td id="adjusted_rp_hours"></td><td><input type="number" id="jwhub_rp_hours" value="${manualData.jwhub_rp_hours || 0}"></td><td id="isequal_rp_hours"></td></tr>
+                    <tr><td>BS:</td><td id="actual_rp_bs">${summaryData.rp.actual.bs}</td><td id="late_in_rp_bs">${summaryData.rp.lateIn.bs}</td><td id="late_out_rp_bs">${summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_rp_bs" value="${manualData.manual_rp_bs || 0}"></td><td id="adjusted_rp_bs"></td><td><input type="number" id="jwhub_rp_bs" value="${manualData.jwhub_rp_bs || 0}"></td><td id="isequal_rp_bs"></td></tr>
+                    <tr><td>Total Count</td><td id="actual_total_count">${summaryData.publishers.actual.count + summaryData.auxi.actual.count + summaryData.rp.actual.count}</td><td id="late_in_total_count">${summaryData.publishers.lateIn.count + summaryData.auxi.lateIn.count + summaryData.rp.lateIn.count}</td><td id="late_out_total_count">${summaryData.publishers.lateOut.count + summaryData.auxi.lateOut.count + summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_total_count" value="${manualData.manual_total_count || 0}"></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" value="${manualData.jwhub_total_count || 0}"></td><td id="isequal_total_count"></td></tr>
+                    <tr><td>Total Field Hours</td><td id="actual_total_hours">${summaryData.auxi.actual.hours + summaryData.rp.actual.hours}</td><td id="late_in_total_hours">${summaryData.auxi.lateIn.hours + summaryData.rp.lateIn.hours}</td><td id="late_out_total_hours">${summaryData.auxi.lateOut.hours + summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_total_hours" value="${manualData.manual_total_hours || 0}"></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" value="${manualData.jwhub_total_hours || 0}"></td><td id="isequal_total_hours"></td></tr>
+                    <tr><td>Total BS</td><td id="actual_total_bs">${summaryData.publishers.actual.bs + summaryData.auxi.actual.bs + summaryData.rp.actual.bs}</td><td id="late_in_total_bs">${summaryData.publishers.lateIn.bs + summaryData.auxi.lateIn.bs + summaryData.rp.lateIn.bs}</td><td id="late_out_total_bs">${summaryData.publishers.lateOut.bs + summaryData.auxi.lateOut.bs + summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_total_bs" value="${manualData.manual_total_bs || 0}"></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" value="${manualData.jwhub_total_bs || 0}"></td><td id="isequal_total_bs"></td></tr>
+                </tbody>
+            </table>
+            `;
+            advancedSummaryResults.innerHTML = resultsHTML;
+            attachSummaryInputListeners();
+            const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
+            prefixes.forEach(prefix => recalculateSummaryRow(prefix));
+        } catch (error) {
+            console.error("Error generating summary:", error);
+            advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
+        }
+    }
+    </script>
 </body>
 </html>
