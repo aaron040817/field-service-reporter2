@@ -2645,7 +2645,7 @@ async function generateAdvancedSummary() {
                         summaryData.rp[category].count++;
                         summaryData.rp[category].hours += report.hours;
                         summaryData.rp[category].bs += report.bibleStudies;
-  _                     // --- START UPDATE ---
+                       // --- START UPDATE ---
                         // Idagdag lang sa listahan kung para sa "Actual" month
                         if (category === 'actual') {
                             publisherNames.rp.push(publisherName);
@@ -2659,7 +2659,7 @@ async function generateAdvancedSummary() {
                         summaryData.auxi[category].bs += report.bibleStudies;
                         // --- START UPDATE ---
                         if (category === 'actual') {
-              _             publisherNames.auxi.push(publisherName);
+                           publisherNames.auxi.push(publisherName);
                         }
                         // --- END UPDATE ---
                     }
@@ -2716,7 +2716,7 @@ async function generateAdvancedSummary() {
             if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
                 if (report.sharedInMinistry === true) {
                     const pub = publisherList.find(p => p.id === report.publisherId);
-s                     if (pub && (pub.publisherStatus || "In the Congregation") === "In the Congregation") {
+                     if (pub && (pub.publisherStatus || "In the Congregation") === "In the Congregation") {
                         activePublishersIds.add(report.publisherId);
                     }
                 }
@@ -2750,7 +2750,7 @@ s                     if (pub && (pub.publisherStatus || "In the Congr
                     <th>Total Reports Encoded in JW Hub</th>
                     <th>Is Equal</th>
                 </tr>
-s           </thead>
+           </thead>
             <tbody>
                 <tr><td>Active Publishers</td><td id="actual_active_publishers">${activePublishersCount}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
                 <tr><td>Publishers Count:</td><td id="actual_publishers_count">${summaryData.publishers.actual.count}</td><td id="late_in_publishers_count">${summaryData.publishers.lateIn.count}</td><td id="late_out_publishers_count">${summaryData.publishers.lateOut.count}</td><td><input type="number" id="manual_publishers_count" value="${manualData.manual_publishers_count || 0}"></td><td id="adjusted_publishers_count"></td><td><input type="number" id="jwhub_publishers_count" value="${manualData.jwhub_publishers_count || 0}"></td><td id="isequal_publishers_count"></td></tr>
@@ -2762,7 +2762,7 @@ s           </thead>
                 <tr><td>FieldHours:</td><td id="actual_rp_hours">${summaryData.rp.actual.hours}</td><td id="late_in_rp_hours">${summaryData.rp.lateIn.hours}</td><td id="late_out_rp_hours">${summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_rp_hours" value="${manualData.manual_rp_hours || 0}"></td><td id="adjusted_rp_hours"></td><td><input type="number" id="jwhub_rp_hours" value="${manualData.jwhub_rp_hours || 0}"></td><td id="isequal_rp_hours"></td></tr>
                 <tr><td>BS:</td><td id="actual_rp_bs">${summaryData.rp.actual.bs}</td><td id="late_in_rp_bs">${summaryData.rp.lateIn.bs}</td><td id="late_out_rp_bs">${summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_rp_bs" value="${manualData.manual_rp_bs || 0}"></td><td id="adjusted_rp_bs"></td><td><input type="number" id="jwhub_rp_bs" value="${manualData.jwhub_rp_bs || 0}"></td><td id="isequal_rp_bs"></td></tr>
                 <tr><td>Total Count</td><td id="actual_total_count"></td><td id="late_in_total_count"></td><td id="late_out_total_count"></td><td><input type="number" id="manual_total_count" disabled></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" disabled></td><td id="isequal_total_count"></td></tr>
-s               <tr><td>Total Field Hours</td><td id="actual_total_hours"></td><td id="late_in_total_hours"></td><td id="late_out_total_hours"></td><td><input type="number" id="manual_total_hours" disabled></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" disabled></td><td id="isequal_total_hours"></td></tr>
+               <tr><td>Total Field Hours</td><td id="actual_total_hours"></td><td id="late_in_total_hours"></td><td id="late_out_total_hours"></td><td><input type="number" id="manual_total_hours" disabled></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" disabled></td><td id="isequal_total_hours"></td></tr>
                 <tr><td>Total BS</td><td id="actual_total_bs"></td><td id="late_in_total_bs"></td><td id="late_out_total_bs"></td><td><input type="number" id="manual_total_bs" disabled></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" disabled></td><td id="isequal_total_bs"></td></tr>
             </tbody>
         </table>
@@ -2781,7 +2781,7 @@ s               <tr><td>Total Field Hours</td><td id="actual_total_hours"
         <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.auxi.join('\n') || 'Walang listahan.'}</pre>
 
         <h4 style="margin-bottom: 5px;">RP Count (Total: ${publisherNames.rp.length})</h4>
-  _       <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.rp.join('\n') || 'Walang listahan.'}</pre>
+         <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.rp.join('\n') || 'Walang listahan.'}</pre>
                 `;
         advancedSummaryResults.innerHTML = resultsHTML;
         attachSummaryInputListeners();
@@ -2789,7 +2789,7 @@ s               <tr><td>Total Field Hours</td><td id="actual_total_hours"
         document.getElementById('actual_total_count').textContent = summaryData.publishers.actual.count + summaryData.auxi.actual.count + summaryData.rp.actual.count;
         document.getElementById('late_in_total_count').textContent = summaryData.publishers.lateIn.count + summaryData.auxi.lateIn.count + summaryData.rp.lateIn.count;
         document.getElementById('late_out_total_count').textContent = summaryData.publishers.lateOut.count + summaryData.auxi.lateOut.count + summaryData.rp.lateOut.count;
-s       document.getElementById('actual_total_hours').textContent = summaryData.auxi.actual.hours + summaryData.rp.actual.hours;
+       document.getElementById('actual_total_hours').textContent = summaryData.auxi.actual.hours + summaryData.rp.actual.hours;
         document.getElementById('late_in_total_hours').textContent = summaryData.auxi.lateIn.hours + summaryData.rp.lateIn.hours;
         document.getElementById('late_out_total_hours').textContent = summaryData.auxi.lateOut.hours + summaryData.rp.lateOut.hours;
         document.getElementById('actual_total_bs').textContent = summaryData.publishers.actual.bs + summaryData.auxi.actual.bs + summaryData.rp.actual.bs;
@@ -2802,7 +2802,7 @@ s       document.getElementById('actual_total_hours').textContent = summaryDa
         recalculateColumnTotals('jwhub');
     } catch (error) {
         console.error("Error generating summary:", error);
-s       advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
+       advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
     }
 }
         </script>
