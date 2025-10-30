@@ -2624,50 +2624,60 @@ function setupAdvancedSummaryPage() {
         
         const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
 
+        const publishersReportedList = [];
+        const auxPioneersReportedList = [];
+        const fullTimePioneersReportedList = [];
+
         for (const report of allReports) {
             const reportMonth = report.month;
             const consolidateMonth = report.consolidateToMonth || report.month;
+            let category = null;
+
+            if (reportMonth === selectedMonthStr) {
+                category = 'actual';
+            } else if (consolidateMonth === selectedMonthStr) {
+                category = 'lateIn';
+            }
             
-            const processReport = (category) => {
-                const privilege = report.privilege2AtTimeOfReport;
-                if (fullTimePrivileges.includes(privilege)) {
+            if (reportMonth === selectedMonthStr && consolidateMonth !== selectedMonthStr) {
+                category = 'lateOut';
+            }
+
+            if (!category) continue;
+
+            const privilege = report.privilege2AtTimeOfReport;
+            if (fullTimePrivileges.includes(privilege)) {
+                if (report.hours > 0) {
+                    summaryData.rp[category].count++;
+                    summaryData.rp[category].hours += report.hours;
+                    summaryData.rp[category].bs += report.bibleStudies;
+                    if(category === 'actual') fullTimePioneersReportedList.push({ name: report.publisherFullName, hours: report.hours, studies: report.bibleStudies });
+                }
+            } else if (privilege === "Continuous Auxiliary Pioneer") {
+                 if (report.hours > 0) {
+                    summaryData.auxi[category].count++;
+                    summaryData.auxi[category].hours += report.hours;
+                    summaryData.auxi[category].bs += report.bibleStudies;
+                    if(category === 'actual') auxPioneersReportedList.push({ name: report.publisherFullName, hours: report.hours, studies: report.bibleStudies });
+                }
+            } else if (privilege === "Publisher/Auxi") {
+                const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
+                const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
+                const isAux = auxStatus ? auxStatus.isAuxiliary : false;
+                if (isAux) {
                     if (report.hours > 0) {
-                        summaryData.rp[category].count++;
-                        summaryData.rp[category].hours += report.hours;
-                        summaryData.rp[category].bs += report.bibleStudies;
-                    }
-                } else if (privilege === "Continuous Auxiliary Pioneer") {
-                     if (report.hours > 0) {
                         summaryData.auxi[category].count++;
                         summaryData.auxi[category].hours += report.hours;
                         summaryData.auxi[category].bs += report.bibleStudies;
+                        if(category === 'actual') auxPioneersReportedList.push({ name: report.publisherFullName, hours: report.hours, studies: report.bibleStudies });
                     }
-                } else if (privilege === "Publisher/Auxi") {
-                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
-                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
-                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
-                    if (isAux) {
-                        if (report.hours > 0) {
-                            summaryData.auxi[category].count++;
-                            summaryData.auxi[category].hours += report.hours;
-                            summaryData.auxi[category].bs += report.bibleStudies;
-                        }
-                    } else {
-                        if (report.sharedInMinistry) {
-                            summaryData.publishers[category].count++;
-                            summaryData.publishers[category].bs += report.bibleStudies;
-                        }
+                } else {
+                    if (report.sharedInMinistry) {
+                        summaryData.publishers[category].count++;
+                        summaryData.publishers[category].bs += report.bibleStudies;
+                        if(category === 'actual') publishersReportedList.push({ name: report.publisherFullName, studies: report.bibleStudies });
                     }
                 }
-            };
-
-            if (reportMonth === selectedMonthStr) {
-                processReport('actual');
-                if (consolidateMonth !== selectedMonthStr) {
-                    processReport('lateOut');
-                }
-            } else if (consolidateMonth === selectedMonthStr) {
-                processReport('lateIn');
             }
         }
 
@@ -2678,21 +2688,33 @@ function setupAdvancedSummaryPage() {
         const windowEnd = new Date(targetMonthDate);
         windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
         windowEnd.setHours(23,59,59,999);
+        
         const activePublishersIds = new Set();
+        const activePublishersList = [];
+
         allReports.forEach(report => {
             if (!report.month || !report.publisherId) return;
             const reportDate = parseMonthString(report.month);
+            
             if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
                 if (report.sharedInMinistry === true) {
                     const pub = publisherList.find(p => p.id === report.publisherId);
                     if (pub && (pub.publisherStatus || "In the Congregation") === "In the Congregation") {
-                        activePublishersIds.add(report.publisherId);
+                        if (!activePublishersIds.has(report.publisherId)) {
+                            activePublishersIds.add(report.publisherId);
+                            activePublishersList.push(pub.fullName);
+                        }
                     }
                 }
             }
         });
-        const activePublishersCount = activePublishersIds.size;
+        summary.activeInLast6Months = activePublishersIds.size;
         
+        activePublishersList.sort();
+        publishersReportedList.sort((a, b) => a.name.localeCompare(b.name));
+        auxPioneersReportedList.sort((a, b) => a.name.localeCompare(b.name));
+        fullTimePioneersReportedList.sort((a, b) => a.name.localeCompare(b.name));
+
         const resultsHTML = `
         <table id="summaryTable" border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse; font-size: 12px;">
             <thead>
@@ -2708,7 +2730,7 @@ function setupAdvancedSummaryPage() {
                 </tr>
             </thead>
             <tbody>
-                <tr><td>Active Publishers</td><td id="actual_active_publishers">${activePublishersCount}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
+                <tr><td>Active Publishers</td><td id="actual_active_publishers">${summary.activeInLast6Months}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
                 <tr><td>Publishers Count:</td><td id="actual_publishers_count">${summaryData.publishers.actual.count}</td><td id="late_in_publishers_count">${summaryData.publishers.lateIn.count}</td><td id="late_out_publishers_count">${summaryData.publishers.lateOut.count}</td><td><input type="number" id="manual_publishers_count" value="${manualData.manual_publishers_count || 0}"></td><td id="adjusted_publishers_count"></td><td><input type="number" id="jwhub_publishers_count" value="${manualData.jwhub_publishers_count || 0}"></td><td id="isequal_publishers_count"></td></tr>
                 <tr><td>BS:</td><td id="actual_publishers_bs">${summaryData.publishers.actual.bs}</td><td id="late_in_publishers_bs">${summaryData.publishers.lateIn.bs}</td><td id="late_out_publishers_bs">${summaryData.publishers.lateOut.bs}</td><td><input type="number" id="manual_publishers_bs" value="${manualData.manual_publishers_bs || 0}"></td><td id="adjusted_publishers_bs"></td><td><input type="number" id="jwhub_publishers_bs" value="${manualData.jwhub_publishers_bs || 0}"></td><td id="isequal_publishers_bs"></td></tr>
                 <tr><td>Auxi Count:</td><td id="actual_auxi_count">${summaryData.auxi.actual.count}</td><td id="late_in_auxi_count">${summaryData.auxi.lateIn.count}</td><td id="late_out_auxi_count">${summaryData.auxi.lateOut.count}</td><td><input type="number" id="manual_auxi_count" value="${manualData.manual_auxi_count || 0}"></td><td id="adjusted_auxi_count"></td><td><input type="number" id="jwhub_auxi_count" value="${manualData.jwhub_auxi_count || 0}"></td><td id="isequal_auxi_count"></td></tr>
@@ -2722,6 +2744,18 @@ function setupAdvancedSummaryPage() {
                 <tr><td>Total BS</td><td id="actual_total_bs"></td><td id="late_in_total_bs"></td><td id="late_out_total_bs"></td><td><input type="number" id="manual_total_bs" disabled></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" disabled></td><td id="isequal_total_bs"></td></tr>
             </tbody>
         </table>
+        <hr>
+        <h4>List of ${activePublishersList.length} Active Publishers (Item #1):</h4>
+        <pre>${activePublishersList.join('\n')}</pre>
+        <hr>
+        <h4>List of ${publishersReportedList.length} Publishers (Item #2 & #3):</h4>
+        <pre>${publishersReportedList.map(p => `${p.name} (BS: ${p.studies})`).join('\n')}</pre>
+        <hr>
+        <h4>List of ${auxPioneersReportedList.length} Auxiliary Pioneers (Item #4, #5, #6):</h4>
+        <pre>${auxPioneersReportedList.map(p => `${p.name} (Hrs: ${p.hours}, BS: ${p.studies})`).join('\n')}</pre>
+        <hr>
+        <h4>List of ${fullTimePioneersReportedList.length} Pioneers/Missionaries (Item #7, #8, #9):</h4>
+        <pre>${fullTimePioneersReportedList.map(p => `${p.name} (Hrs: ${p.hours}, BS: ${p.studies})`).join('\n')}</pre>
         `;
         advancedSummaryResults.innerHTML = resultsHTML;
         attachSummaryInputListeners();
