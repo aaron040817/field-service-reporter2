@@ -3155,11 +3155,11 @@ function formatS21Card(publisher, reports, serviceYear) {
                 <td class="hours-col">${formatHours(hours)}</td>
                 <td class="remarks-col">${remarks}</td>
             </tr>
-        `;
+        ;
     }).join('');
 
     // Ang HTML para sa buong S-21 card
-    return `
+    return 
     <div id="s21-card">
         <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
         <h3 style="text-align: center; margin-bottom: 10px;">CONGREGATION'S PUBLISHER RECORD</h3> 
@@ -3211,7 +3211,7 @@ function formatS21Card(publisher, reports, serviceYear) {
             </tfoot>
         </table>
     </div>
-    `;
+    ;
 }
 
 async function generateSummaryTotalsCard() {
@@ -3300,7 +3300,7 @@ async function generateSummaryTotalsCard() {
                     <td style="padding: 8px; text-align: right;"><strong>${totals.fieldMissionaries}</strong></td>
                 </tr>
             </table>
-        `;
+        ;
 
     } catch (error) {
         console.error("Error generating summary totals:", error);
