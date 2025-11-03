@@ -44,6 +44,132 @@
         width: 80px;
         box-sizing: border-box;
 }
+    /* 👇 IDAGDAG ANG MGA STYLES NA ITO SA DULO NG IYONG <style> TAG 👇 */
+#advancedSummaryResults input[type="number"] {
+        width: 80px;
+        box-sizing: border-box;
+}
+
+/* Print-specific Styles for S-21 Card */
+@media print {
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #fff;
+        margin: 0;
+        padding: 0;
+    }
+    /* Itago ang lahat maliban sa S-21 card */
+    .page-container, #homePage, #loginPage, #addReportPage, #publisherPage, 
+    #updateReportPage, #submitRequestPage, #reviewApprovalsPage, 
+    #uploadPage, #uploadPublishersPage, #manageAuxiliaryPage, 
+    #summaryReportPage, #advancedSummaryPage {
+        display: none !important;
+        visibility: hidden;
+    }
+
+    /* Itago ang mga button sa loob ng #viewRecordsPage */
+    #viewRecordsPage fieldset,
+    #viewRecordsPage h2,
+    #viewRecordsPage button,
+    #viewRecordsPage label,
+    #viewRecordsPage input,
+    #viewRecordsPage select,
+    #viewRecordsPage .suggestion-box,
+    #viewRecordsPage hr,
+    #summaryTotalsResult {
+        display: none !important;
+        visibility: hidden;
+    }
+
+    /* Ipakita lang ang individual record result at ang S-21 card */
+    #viewRecordsPage,
+    #individualRecordResult,
+    #s21-card {
+        display: block !important;
+        visibility: visible;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+    }
+    
+    /* Itago ang "Print" button kapag nag-print na */
+    #printS21Btn {
+        display: none !important;
+    }
+
+    /* Siguraduhin na ang page ay hindi maputol */
+    #s21-card {
+        page-break-inside: avoid;
+    }
+
+    /* I-style ang S-21 table para sa print */
+    #s21-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10pt;
+    }
+    #s21-table th, #s21-table td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
+    }
+    #s21-table th {
+        background-color: #eee;
+    }
+    #s21-table .month-col {
+        text-align: left;
+        width: 20%;
+    }
+    #s21-table .check-col { width: 10%; }
+    #s21-table .bs-col { width: 15%; }
+    #s21-table .aux-col { width: 10%; }
+    #s21-table .hours-col { width: 15%; }
+    #s21-table .remarks-col { width: 30%; }
+    #s21-table .total-row td {
+        font-weight: bold;
+    }
+    .check-box-display {
+        font-family: "Courier New", Courier, monospace;
+        font-weight: bold;
+        font-size: 14pt;
+    }
+}
+
+/* Non-print styles for S-21 Card */
+#s21-card {
+    border: 1px solid #aaa;
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #fdfdfd;
+}
+#s21-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 15px;
+}
+#s21-table th, #s21-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: center;
+}
+#s21-table th {
+    background-color: #f4f4f4;
+}
+#s21-table .month-col { text-align: left; }
+#s21-table .total-row td {
+    font-weight: bold;
+    background-color: #f9f9f9;
+}
+.check-box-display {
+    font-family: "Courier New", Courier, monospace;
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+}
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -66,6 +192,7 @@
     <button id="exportExcelBtn">Export to Excel</button>
     <button id="uploadReportsBtn">Upload Reports</button>
     <button id="uploadPublishersBtn">Upload Publishers</button>
+    <button id="viewRecordsBtn">View/Print S-21 Records</button>
 </div>
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
@@ -390,6 +517,47 @@
         </div>
         <button id="backHomeFromSummaryBtn" class="back-btn">Back to Home</button>
     </div>
+    <div id="viewRecordsPage" class="page-container hidden">
+    <h2>View/Print S-21 Records</h2>
+
+    <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <legend style="padding: 0 5px; font-weight: bold;">Individual Publisher Record (S-21)</legend>
+        
+        <label for="searchPublisherS21">Search Publisher:</label>
+        <input type="text" id="searchPublisherS21" placeholder="Search by Last Name, First Name...">
+        <div id="suggestionBoxS21" class="suggestion-box"></div>
+        
+        <label for="publisherNameDropdownS21">Publisher Name:</label>
+        <select id="publisherNameDropdownS21"></select>
+
+        <label for="serviceYearS21">Service Year:</label>
+        <select id="serviceYearS21"></select>
+        
+        <button id="generateS21Btn">Generate Preview</button>
+        <hr style="margin: 20px 0;">
+        <div id="individualRecordResult">
+            <p>Please select a publisher and service year.</p>
+        </div>
+    </fieldset>
+
+    <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+        <legend style="padding: 0 5px; font-weight: bold;">Summary Totals by Category</legend>
+        
+        <label for="serviceYearSummaryCat">Service Year:</label>
+        <select id="serviceYearSummaryCat"></select>
+        
+        <label for="monthSummaryCat">Month:</label>
+        <select id="monthSummaryCat"></select>
+        
+        <button id="generateSummaryCatBtn">Generate Summary</button>
+        <hr style="margin: 20px 0;">
+        <div id="summaryTotalsResult">
+            <p>Please select a service year and month.</p>
+        </div>
+    </fieldset>
+
+    <button id="backHomeFromViewRecordsBtn" class="back-btn" style="margin-top: 20px;">Back to Home</button>
+</div>
    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -446,6 +614,12 @@
     let publisherStatus, transferDateContainer, transferYear, transferMonth, deathDateContainer, deathYear, deathMonth;
     let consolidateYearReport, consolidateMonthReport, consolidateYearUpdate, consolidateMonthUpdate, consolidateYearRequest, consolidateMonthRequest;
     let advancedSummaryPage, serviceYearAdvancedSummary, monthAdvancedSummary, generateAdvancedSummaryBtn, saveAdvancedSummaryBtn, summaryFilter, advancedSummaryResults, backHomeFromAdvancedSummaryBtn;
+    //... (iba pang variables)
+    let advancedSummaryPage, serviceYearAdvancedSummary, monthAdvancedSummary, generateAdvancedSummaryBtn, saveAdvancedSummaryBtn, summaryFilter, advancedSummaryResults, backHomeFromAdvancedSummaryBtn;
+    
+// 👇 IDAGDAG ANG MGA BAGONG VARIABLES NA ITO 👇
+    let viewRecordsPage, searchPublisherS21, suggestionBoxS21, publisherNameDropdownS21, serviceYearS21, generateS21Btn, individualRecordResult;
+    let serviceYearSummaryCat, monthSummaryCat, generateSummaryCatBtn, summaryTotalsResult, backHomeFromViewRecordsBtn;
     
     document.addEventListener("DOMContentLoaded", initializeApp);
     async function initializeApp() {
@@ -624,6 +798,23 @@ saveAdvancedSummaryBtn = document.getElementById('saveAdvancedSummaryBtn');
 summaryFilter = document.getElementById('summaryFilter');
 advancedSummaryResults = document.getElementById('advancedSummaryResults');
 backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSummaryBtn');
+        //... (iba pang elements)
+advancedSummaryResults = document.getElementById('advancedSummaryResults');
+backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSummaryBtn');
+
+// 👇 IDAGDAG ANG MGA BAGONG ELEMENTS NA ITO SA DULO NG FUNCTION 👇
+    viewRecordsPage = document.getElementById('viewRecordsPage');
+    searchPublisherS21 = document.getElementById('searchPublisherS21');
+    suggestionBoxS21 = document.getElementById('suggestionBoxS21');
+    publisherNameDropdownS21 = document.getElementById('publisherNameDropdownS21');
+    serviceYearS21 = document.getElementById('serviceYearS21');
+    generateS21Btn = document.getElementById('generateS21Btn');
+    individualRecordResult = document.getElementById('individualRecordResult');
+    serviceYearSummaryCat = document.getElementById('serviceYearSummaryCat');
+    monthSummaryCat = document.getElementById('monthSummaryCat');
+    generateSummaryCatBtn = document.getElementById('generateSummaryCatBtn');
+    summaryTotalsResult = document.getElementById('summaryTotalsResult');
+    backHomeFromViewRecordsBtn = document.getElementById('backHomeFromViewRecordsBtn');
         }
     function toggleStatusDateFields() {
     const status = publisherStatus.value;
@@ -709,6 +900,15 @@ generateAdvancedSummaryBtn?.addEventListener("click", generateAdvancedSummary);
 saveAdvancedSummaryBtn?.addEventListener("click", saveManualSummaryData);
 summaryFilter?.addEventListener('input', filterAdvancedSummaryTable);
 backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePage'));
+    //... (iba pang listeners)
+summaryFilter?.addEventListener('input', filterAdvancedSummaryTable);
+backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePage'));
+
+// 👇 IDAGDAG ANG MGA BAGONG LISTENERS NA ITO SA DULO NG FUNCTION 👇
+    document.getElementById("viewRecordsBtn")?.addEventListener("click", () => showPage('viewRecordsPage'));
+    generateS21Btn?.addEventListener("click", generatePublisherRecordCard);
+    generateSummaryCatBtn?.addEventListener("click", generateSummaryTotalsCard);
+    backHomeFromViewRecordsBtn?.addEventListener("click", () => showPage('homePage'));
     }
         function showPage(pageId) {
     document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
@@ -727,6 +927,12 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
     else if (pageId === 'manageAuxiliaryPage') { setupManageAuxiliaryPage(); }
     else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
     else if (pageId === 'advancedSummaryPage') { setupAdvancedSummaryPage(); }
+        //... (iba pang page checks)
+    else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
+    else if (pageId === 'advancedSummaryPage') { setupAdvancedSummaryPage(); }
+
+// 👇 IDAGDAG ANG BAGONG "ELSE IF" NA ITO 👇
+    else if (pageId === 'viewRecordsPage') { setupViewRecordsPage(); }
         }
     function handleRouteChange() {
     if (!currentUser) {
@@ -2805,6 +3011,313 @@ async function generateAdvancedSummary() {
        advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
     }
 }
-        </script>
+      // 👇 IDAGDAG ANG LAHAT NG FUNCTIONS NA ITO SA DULO NG IYONG SCRIPT 👇
+
+function setupViewRecordsPage() {
+    // Linisin ang mga form
+    individualRecordResult.innerHTML = "<p>Please select a publisher and service year.</p>";
+    summaryTotalsResult.innerHTML = "<p>Please select a service year and month.</p>";
+    searchPublisherS21.value = "";
+    suggestionBoxS21.innerHTML = "";
+    
+    // I-populate ang Publisher Dropdown
+    publisherNameDropdownS21.innerHTML = '<option value="">-- Select Publisher --</option>';
+    publisherList.forEach(pub => {
+        const opt = document.createElement("option");
+        opt.value = pub.id;
+        opt.textContent = pub.fullName;
+        publisherNameDropdownS21.appendChild(opt);
+    });
+
+    // I-populate ang mga Service Year dropdowns
+    populateServiceYears(serviceYearS21);
+    populateServiceYears(serviceYearSummaryCat);
+    
+    // I-link ang mga dropdowns
+    serviceYearSummaryCat.addEventListener('change', () => {
+        populateMonths(monthSummaryCat, serviceYearSummaryCat.value);
+    });
+    populateMonths(monthSummaryCat, serviceYearSummaryCat.value); // Initial populate
+
+    // I-setup ang search para sa S-21
+    searchPublisherS21.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        suggestionBoxS21.innerHTML = "";
+        if (!query) return;
+        const matches = publisherList.filter(pub => pub.fullName.toLowerCase().includes(query));
+        matches.forEach(pub => {
+            const div = document.createElement("div");
+            div.textContent = pub.fullName;
+            div.classList.add("suggestion-item");
+            div.addEventListener("click", () => {
+                this.value = pub.fullName;
+                suggestionBoxS21.innerHTML = "";
+                publisherNameDropdownS21.value = pub.id;
+            });
+            suggestionBoxS21.appendChild(div);
+        });
+    });
+}
+
+async function generatePublisherRecordCard() {
+    const publisherId = publisherNameDropdownS21.value;
+    const serviceYear = serviceYearS21.value;
+
+    if (!publisherId || !serviceYear) {
+        alert("Please select both a publisher and a service year.");
+        return;
+    }
+
+    individualRecordResult.innerHTML = "<p>Fetching records... Please wait.</p>";
+
+    try {
+        const publisher = publisherList.find(p => p.id === publisherId);
+        if (!publisher) {
+            individualRecordResult.innerHTML = "<p style='color:red;'>Error: Publisher not found.</p>";
+            return;
+        }
+
+        // Kunin lahat ng reports para sa publisher na 'yon at sa service year na 'yon
+        const reportsSnap = await db.collection("reports")
+            .where("publisherId", "==", publisherId)
+            .where("serviceYear", "==", serviceYear)
+            .get();
+        
+        const reports = reportsSnap.docs.map(doc => doc.data());
+        
+        // I-format ang HTML na kamukha ng S-21 Card
+        const cardHTML = formatS21Card(publisher, reports, serviceYear);
+        individualRecordResult.innerHTML = cardHTML;
+
+        // Idagdag ang listener para sa print button
+        document.getElementById("printS21Btn").addEventListener("click", () => {
+            window.print();
+        });
+
+    } catch (error) {
+        console.error("Error generating S-21 card:", error);
+        individualRecordResult.innerHTML = `<p style='color:red;'>An error occurred: ${error.message}</p>`;
+    }
+}
+
+function formatS21Card(publisher, reports, serviceYear) {
+    // Helper para sa checkboxes
+    const check = (val) => `<span class="check-box-display">${val ? '✓' : ''}</span>`;
+    const formatHours = (val) => (val > 0 ? val : '');
+
+    // Kunin ang publisher details
+    const name = publisher.fullName || '';
+    const birthdate = publisher.birthdate || ''; [cite: 3]
+    const isMale = publisher.gender === 'Male'; [cite: 4]
+    const isFemale = publisher.gender === 'Female'; [cite: 8]
+    const baptismDate = publisher.baptismDate || ''; [cite: 5]
+    const isOtherSheep = publisher.hope === 'Other Sheep'; [cite: 7]
+    const isAnointed = publisher.hope === 'Anointed'; [cite: 6]
+    const isElder = publisher.privilege === 'Elder'; [cite: 9]
+    const isMS = publisher.privilege === 'Ministerial Servant'; [cite: 10]
+    const isRegPio = publisher.privilege2 === 'Regular Pioneer'; [cite: 11]
+    const isSpecPio = publisher.privilege2 === 'Special Pioneer'; [cite: 11]
+    const isFieldMiss = publisher.privilege2 === 'Field Missionary'; [cite: 12]
+
+    // Buuin ang 12 months ng service year
+    const months = [];
+    let currentMonth = new Date(parseInt(serviceYear) - 1, 8); // Start from September
+    for (let i = 0; i < 12; i++) {
+        const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
+        const year = currentMonth.getFullYear();
+        months.push(`${monthName} ${year}`);
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+    
+    let totalBibleStudies = 0;
+    let totalHours = 0;
+
+    // Buuin ang table rows
+    const tableRows = months.map(monthStr => {
+        const report = reports.find(r => r.month === monthStr);
+        
+        let shared = false;
+        let studies = 0;
+        let aux = false;
+        let hours = 0;
+        let remarks = report ? (report.comments || '') : 'No Report';
+
+        if (report) {
+            shared = report.sharedInMinistry; [cite: 13]
+            studies = report.bibleStudies || 0; [cite: 13]
+            aux = report.wasAuxiliaryPioneer; [cite: 13]
+            
+            // Ang oras ay para lang sa pioneers
+            if (isRegPio || isSpecPio || isFieldMiss || aux) {
+                 hours = report.hours || 0; [cite: 13]
+            }
+            
+            totalBibleStudies += studies;
+            totalHours += hours;
+            remarks = report.comments || '';
+        }
+
+        return `
+            <tr>
+                <td class="month-col">${monthStr.split(' ')[0]}</td>
+                <td class="check-col">${check(shared)}</td>
+                <td class="bs-col">${studies > 0 ? studies : ''}</td>
+                <td class="aux-col">${check(aux)}</td>
+                <td class="hours-col">${formatHours(hours)}</td>
+                <td class="remarks-col">${remarks}</td>
+            </tr>
+        `;
+    }).join('');
+
+    // Ang HTML para sa buong S-21 card
+    return `
+    <div id="s21-card">
+        <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
+        <h3 style="text-align: center; margin-bottom: 10px;">CONGREGATION'S PUBLISHER RECORD</h3> 
+        
+        <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
+            <tr>
+                <td style="width: 60%;"><strong>Name:</strong> ${name}</td> [cite: 2]
+                <td style="width: 40%;"><strong>Date of birth:</strong> ${birthdate}</td> [cite: 3]
+            </tr>
+            <tr>
+                <td><strong>Date of baptism:</strong> ${baptismDate}</td> [cite: 5]
+                <td>${check(isMale)} Male [cite: 4] ${check(isFemale)} Female [cite: 8]</td>
+            </tr>
+            <tr>
+                <td>${check(isAnointed)} Anointed [cite: 6] ${check(isOtherSheep)} Other sheep [cite: 7]</td>
+                <td>${check(isElder)} Elder [cite: 9] ${check(isMS)} Ministerial servant [cite: 10]</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    ${check(isRegPio)} Regular pioneer [cite: 11]
+                    ${check(isSpecPio)} Special pioneer [cite: 11]
+                    ${check(isFieldMiss)} Field missionary [cite: 12]
+                </td>
+            </tr>
+        </table>
+
+        <table id="s21-table">
+            <thead>
+                <tr>
+                    <th class="month-col">Service Year: ${serviceYear}</th>
+                    <th class="check-col">Shared in Ministry</th> [cite: 13]
+                    <th class="bs-col">Bible Studies</th> [cite: 13]
+                    <th class="aux-col">Auxiliary Pioneer</th> [cite: 13]
+                    <th class="hours-col">Hours</th> [cite: 13]
+                    <th class="remarks-col">Remarks</th> [cite: 13]
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2"><strong>Total</strong></td> [cite: 13]
+                    <td><strong>${totalBibleStudies}</strong></td>
+                    <td></td>
+                    <td><strong>${totalHours}</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    `;
+}
+
+async function generateSummaryTotalsCard() {
+    const serviceYear = serviceYearSummaryCat.value;
+    const month = monthSummaryCat.value;
+
+    if (!serviceYear || !month) {
+        alert("Please select both a service year and a month.");
+        return;
+    }
+
+    summaryTotalsResult.innerHTML = "<p>Calculating totals... Please wait.</p>";
+
+    try {
+        // Kunin lahat ng kailangan
+        const reportsSnap = await db.collection("reports").where("month", "==", month).get();
+        const auxStatusesSnap = await db.collection("auxiliary_status").where("month", "==", month).get();
+
+        const reports = reportsSnap.docs.map(doc => doc.data());
+        const auxStatuses = {};
+        auxStatusesSnap.docs.forEach(doc => {
+            const data = doc.data();
+            auxStatuses[data.publisherId] = data.isAuxiliary;
+        });
+
+        let totals = {
+            publishers: 0,
+            auxPioneers: 0,
+            regPioneers: 0,
+            specPioneers: 0,
+            fieldMissionaries: 0
+        };
+
+        for (const report of reports) {
+            const pub = publisherList.find(p => p.id === report.publisherId);
+            if (!pub) continue; // Skip if publisher not found
+
+            const privilege = pub.privilege2; // Gamitin ang *current* privilege ng publisher
+            
+            // Check para sa Auxiliary Pioneer
+            // Ito ay (1) "Publisher/Auxi" na naka-"Yes" sa Manage Aux, O (2) "Continuous Auxiliary Pioneer"
+            const isManagedAux = (privilege === "Publisher/Auxi" && auxStatuses[pub.id] === true);
+            const isContinuousAux = (privilege === "Continuous Auxiliary Pioneer");
+            
+            if ((isManagedAux || isContinuousAux) && report.hours > 0) {
+                totals.auxPioneers++;
+            } 
+            // Check para sa regular publishers
+            else if (privilege === "Publisher/Auxi" && !isManagedAux && report.sharedInMinistry) {
+                totals.publishers++;
+            }
+            // Check para sa full-time
+            else if (privilege === "Regular Pioneer" && report.hours > 0) {
+                totals.regPioneers++;
+            }
+            else if (privilege === "Special Pioneer" && report.hours > 0) {
+                totals.specPioneers++;
+            }
+            else if (privilege === "Field Missionary" && report.hours > 0) {
+                totals.fieldMissionaries++;
+            }
+        }
+        
+        // Ipakita ang resulta
+        summaryTotalsResult.innerHTML = `
+            <h4 style="margin-bottom: 10px;">Summary for ${month}</h4>
+            <table style="width: 100%; max-width: 400px; border-collapse: collapse; font-size: 14px;">
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">1. Publisher/Auxi (Non-Pioneer):</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.publishers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">2. Auxiliary Pioneers (Total):</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.auxPioneers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">3. Regular Pioneers:</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.regPioneers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">4. Special Pioneers:</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.specPioneers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">5. Field Missionaries:</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.fieldMissionaries}</strong></td>
+                </tr>
+            </table>
+        `;
+
+    } catch (error) {
+        console.error("Error generating summary totals:", error);
+        summaryTotalsResult.innerHTML = `<p style='color:red;'>An error occurred: ${error.message}</p>`;
+    }
+}  
+    </script>
 </body>
 </html>
