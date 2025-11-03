@@ -44,11 +44,7 @@
         width: 80px;
         box-sizing: border-box;
 }
-    /* 👇 IDAGDAG ANG MGA STYLES NA ITO SA DULO NG IYONG <style> TAG 👇 */
-#advancedSummaryResults input[type="number"] {
-        width: 80px;
-        box-sizing: border-box;
-}
+    
 
 /* Print-specific Styles for S-21 Card */
 @media print {
@@ -58,33 +54,15 @@
         margin: 0;
         padding: 0;
     }
-    /* Itago ang lahat maliban sa S-21 card */
-    .page-container, #homePage, #loginPage, #addReportPage, #publisherPage, 
-    #updateReportPage, #submitRequestPage, #reviewApprovalsPage, 
-    #uploadPage, #uploadPublishersPage, #manageAuxiliaryPage, 
-    #summaryReportPage, #advancedSummaryPage {
+
+    /* 1. Itago ang lahat ng elemento sa body by default */
+    body > * {
         display: none !important;
         visibility: hidden;
     }
 
-    /* Itago ang mga button sa loob ng #viewRecordsPage */
-    #viewRecordsPage fieldset,
-    #viewRecordsPage h2,
-    #viewRecordsPage button,
-    #viewRecordsPage label,
-    #viewRecordsPage input,
-    #viewRecordsPage select,
-    #viewRecordsPage .suggestion-box,
-    #viewRecordsPage hr,
-    #summaryTotalsResult {
-        display: none !important;
-        visibility: hidden;
-    }
-
-    /* Ipakita lang ang individual record result at ang S-21 card */
-    #viewRecordsPage,
-    #individualRecordResult,
-    #s21-card {
+    /* 2. Ipakita (i-override) ang #viewRecordsPage */
+    #viewRecordsPage {
         display: block !important;
         visibility: visible;
         width: 100%;
@@ -95,42 +73,59 @@
         border: none;
     }
     
-    /* Itago ang "Print" button kapag nag-print na */
+    /* 3. Sa loob ng #viewRecordsPage, itago ang lahat ng direct children... */
+    #viewRecordsPage > * {
+        display: none !important;
+        visibility: hidden;
+    }
+
+    /* 4. ...MALIBAN sa UNANG fieldset (na kinalalagyan ng S-21 card) */
+    #viewRecordsPage > fieldset:first-of-type {
+        display: block !important;
+        visibility: visible;
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* 5. Sa loob ng unang fieldset na 'yon, itago ang lahat... */
+    #viewRecordsPage > fieldset:first-of-type > * {
+        display: none !important;
+        visibility: hidden;
+    }
+
+    /* 6. ...MALIBAN sa #individualRecordResult (at ang laman nito, ang #s21-card) */
+    #viewRecordsPage #individualRecordResult,
+    #viewRecordsPage #individualRecordResult > * {
+        display: block !important;
+        visibility: visible;
+    }
+
+    /* 7. Itago ang print button mismo */
     #printS21Btn {
         display: none !important;
     }
-
-    /* Siguraduhin na ang page ay hindi maputol */
-    #s21-card {
-        page-break-inside: avoid;
-    }
-
-    /* I-style ang S-21 table para sa print */
+    
+    /* 8. I-style ang table for printing */
     #s21-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 10pt;
+        page-break-inside: avoid;
     }
     #s21-table th, #s21-table td {
         border: 1px solid #000;
         padding: 4px;
         text-align: center;
     }
-    #s21-table th {
-        background-color: #eee;
-    }
-    #s21-table .month-col {
-        text-align: left;
-        width: 20%;
-    }
+    #s21-table th { background-color: #eee; }
+    #s21-table .month-col { text-align: left; width: 20%; }
     #s21-table .check-col { width: 10%; }
     #s21-table .bs-col { width: 15%; }
     #s21-table .aux-col { width: 10%; }
     #s21-table .hours-col { width: 15%; }
     #s21-table .remarks-col { width: 30%; }
-    #s21-table .total-row td {
-        font-weight: bold;
-    }
+    #s21-table .total-row td { font-weight: bold; }
     .check-box-display {
         font-family: "Courier New", Courier, monospace;
         font-weight: bold;
