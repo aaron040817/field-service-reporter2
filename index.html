@@ -614,9 +614,7 @@
     let publisherStatus, transferDateContainer, transferYear, transferMonth, deathDateContainer, deathYear, deathMonth;
     let consolidateYearReport, consolidateMonthReport, consolidateYearUpdate, consolidateMonthUpdate, consolidateYearRequest, consolidateMonthRequest;
     let advancedSummaryPage, serviceYearAdvancedSummary, monthAdvancedSummary, generateAdvancedSummaryBtn, saveAdvancedSummaryBtn, summaryFilter, advancedSummaryResults, backHomeFromAdvancedSummaryBtn;
-    //... (iba pang variables)
-    let advancedSummaryPage, serviceYearAdvancedSummary, monthAdvancedSummary, generateAdvancedSummaryBtn, saveAdvancedSummaryBtn, summaryFilter, advancedSummaryResults, backHomeFromAdvancedSummaryBtn;
-    
+        
 // 👇 IDAGDAG ANG MGA BAGONG VARIABLES NA ITO 👇
     let viewRecordsPage, searchPublisherS21, suggestionBoxS21, publisherNameDropdownS21, serviceYearS21, generateS21Btn, individualRecordResult;
     let serviceYearSummaryCat, monthSummaryCat, generateSummaryCatBtn, summaryTotalsResult, backHomeFromViewRecordsBtn;
@@ -798,9 +796,6 @@ saveAdvancedSummaryBtn = document.getElementById('saveAdvancedSummaryBtn');
 summaryFilter = document.getElementById('summaryFilter');
 advancedSummaryResults = document.getElementById('advancedSummaryResults');
 backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSummaryBtn');
-        //... (iba pang elements)
-advancedSummaryResults = document.getElementById('advancedSummaryResults');
-backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSummaryBtn');
 
 // 👇 IDAGDAG ANG MGA BAGONG ELEMENTS NA ITO SA DULO NG FUNCTION 👇
     viewRecordsPage = document.getElementById('viewRecordsPage');
@@ -900,9 +895,6 @@ generateAdvancedSummaryBtn?.addEventListener("click", generateAdvancedSummary);
 saveAdvancedSummaryBtn?.addEventListener("click", saveManualSummaryData);
 summaryFilter?.addEventListener('input', filterAdvancedSummaryTable);
 backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePage'));
-    //... (iba pang listeners)
-summaryFilter?.addEventListener('input', filterAdvancedSummaryTable);
-backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePage'));
 
 // 👇 IDAGDAG ANG MGA BAGONG LISTENERS NA ITO SA DULO NG FUNCTION 👇
     document.getElementById("viewRecordsBtn")?.addEventListener("click", () => showPage('viewRecordsPage'));
@@ -927,9 +919,6 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
     else if (pageId === 'manageAuxiliaryPage') { setupManageAuxiliaryPage(); }
     else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
     else if (pageId === 'advancedSummaryPage') { setupAdvancedSummaryPage(); }
-        //... (iba pang page checks)
-    else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
-    else if (pageId === 'advancedSummaryPage') { setupAdvancedSummaryPage(); }
 
 // 👇 IDAGDAG ANG BAGONG "ELSE IF" NA ITO 👇
     else if (pageId === 'viewRecordsPage') { setupViewRecordsPage(); }
