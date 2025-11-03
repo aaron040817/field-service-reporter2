@@ -3214,97 +3214,97 @@ function formatS21Card(publisher, reports, serviceYear) {
     `;
 }
 async function generateSummaryTotalsCard() {
-    const serviceYear = serviceYearSummaryCat.value;
-    const month = monthSummaryCat.value;
+    const serviceYear = serviceYearSummaryCat.value;
+    const month = monthSummaryCat.value;
 
-    if (!serviceYear || !month) {
-        alert("Please select both a service year and a month.");
-        return;
-    }
+    if (!serviceYear || !month) {
+        alert("Please select both a service year and a month.");
+        return;
+    }
 
-    summaryTotalsResult.innerHTML = "<p>Calculating totals... Please wait.</p>";
+    summaryTotalsResult.innerHTML = "<p>Calculating totals... Please wait.</p>";
 
-    try {
-        // Kunin lahat ng kailangan
-        const reportsSnap = await db.collection("reports").where("month", "==", month).get();
-        const auxStatusesSnap = await db.collection("auxiliary_status").where("month", "==", month).get();
+    try {
+        // Kunin lahat ng kailangan
+        const reportsSnap = await db.collection("reports").where("month", "==", month).get();
+        const auxStatusesSnap = await db.collection("auxiliary_status").where("month", "==", month).get();
 
-        const reports = reportsSnap.docs.map(doc => doc.data());
-        const auxStatuses = {};
-        auxStatusesSnap.docs.forEach(doc => {
-            const data = doc.data();
-            auxStatuses[data.publisherId] = data.isAuxiliary;
-        });
+        const reports = reportsSnap.docs.map(doc => doc.data());
+        const auxStatuses = {};
+        auxStatusesSnap.docs.forEach(doc => {
+            const data = doc.data();
+            auxStatuses[data.publisherId] = data.isAuxiliary;
+        });
 
-        let totals = {
-            publishers: 0,
-            auxPioneers: 0,
-            regPioneers: 0,
-            specPioneers: 0,
-            fieldMissionaries: 0
-        };
+        let totals = {
+            publishers: 0,
+            auxPioneers: 0,
+            regPioneers: 0,
+            specPioneers: 0,
+            fieldMissionaries: 0
+        };
 
-        for (const report of reports) {
-            const pub = publisherList.find(p => p.id === report.publisherId);
-            if (!pub) continue; // Skip if publisher not found
+        for (const report of reports) {
+            const pub = publisherList.find(p => p.id === report.publisherId);
+            if (!pub) continue; // Skip if publisher not found
 
-            const privilege = pub.privilege2; // Gamitin ang *current* privilege ng publisher
-            
-            // Check para sa Auxiliary Pioneer
-            // Ito ay (1) "Publisher/Auxi" na naka-"Yes" sa Manage Aux, O (2) "Continuous Auxiliary Pioneer"
-            const isManagedAux = (privilege === "Publisher/Auxi" && auxStatuses[pub.id] === true);
-            const isContinuousAux = (privilege === "Continuous Auxiliary Pioneer");
-            
-            if ((isManagedAux || isContinuousAux) && report.hours > 0) {
-                totals.auxPioneers++;
-            } 
-            // Check para sa regular publishers
-            else if (privilege === "Publisher/Auxi" && !isManagedAux && report.sharedInMinistry) {
-                totals.publishers++;
-            }
-            // Check para sa full-time
-            else if (privilege === "Regular Pioneer" && report.hours > 0) {
-                totals.regPioneers++;
-            }
-            else if (privilege === "Special Pioneer" && report.hours > 0) {
-                totals.specPioneers++;
-            }
-            else if (privilege === "Field Missionary" && report.hours > 0) {
-                totals.fieldMissionaries++;
-            }
-        }
-        
-        // Ipakita ang resulta
-        summaryTotalsResult.innerHTML = `
-            <h4 style="margin-bottom: 10px;">Summary for ${month}</h4>
-            <table style="width: 100%; max-width: 400px; border-collapse: collapse; font-size: 14px;">
-                <tr style="border-bottom: 1px solid #ccc;">
-                    <td style="padding: 8px;">1. Publisher/Auxi (Non-Pioneer):</td>
-                    <td style="padding: 8px; text-align: right;"><strong>${totals.publishers}</strong></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #ccc;">
-                    <td style="padding: 8px;">2. Auxiliary Pioneers (Total):</td>
-                    <td style="padding: 8px; text-align: right;"><strong>${totals.auxPioneers}</strong></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #ccc;">
-                    <td style="padding: 8px;">3. Regular Pioneers:</td>
-                    <td style="padding: 8px; text-align: right;"><strong>${totals.regPioneers}</strong></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #ccc;">
-                    <td style="padding: 8px;">4. Special Pioneers:</td>
-                    <td style="padding: 8px; text-align: right;"><strong>${totals.specPioneers}</strong></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #ccc;">
-                    <td style="padding: 8px;">5. Field Missionaries:</td>
-                    <td style="padding: 8px; text-align: right;"><strong>${totals.fieldMissionaries}</strong></td>
-                </tr>
-            </table>
-        ;
+            const privilege = pub.privilege2; // Gamitin ang *current* privilege ng publisher
+            
+            // Check para sa Auxiliary Pioneer
+            // Ito ay (1) "Publisher/Auxi" na naka-"Yes" sa Manage Aux, O (2) "Continuous Auxiliary Pioneer"
+            const isManagedAux = (privilege === "Publisher/Auxi" && auxStatuses[pub.id] === true);
+            const isContinuousAux = (privilege === "Continuous Auxiliary Pioneer");
+            
+            if ((isManagedAux || isContinuousAux) && report.hours > 0) {
+                totals.auxPioneers++;
+            } 
+            // Check para sa regular publishers
+            else if (privilege === "Publisher/Auxi" && !isManagedAux && report.sharedInMinistry) {
+                totals.publishers++;
+            }
+            // Check para sa full-time
+            else if (privilege === "Regular Pioneer" && report.hours > 0) {
+                totals.regPioneers++;
+            }
+            else if (privilege === "Special Pioneer" && report.hours > 0) {
+                totals.specPioneers++;
+            }
+            else if (privilege === "Field Missionary" && report.hours > 0) {
+                totals.fieldMissionaries++;
+          _ }
+        }
+        
+        // Ipakita ang resulta
+        summaryTotalsResult.innerHTML = `
+            <h4 style="margin-bottom: 10px;">Summary for ${month}</h4>
+            <table style="width: 100%; max-width: 400px; border-collapse: collapse; font-size: 14px;">
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">1. Publisher/Auxi (Non-Pioneer):</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.publishers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">2. Auxiliary Pioneers (Total):</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.auxPioneers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">3. Regular Pioneers:</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.regPioneers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">4. Special Pioneers:</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.specPioneers}</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">5. Field Missionaries:</td>
+                    <td style="padding: 8px; text-align: right;"><strong>${totals.fieldMissionaries}</strong></td>
+nbsp;           </tr>
+            </table>
+        `; // <-- *** ITO ANG INAYOS: Pinalitan ko ang semicolon (;) ng backtick (`) ***
 
-    } catch (error) {
-        console.error("Error generating summary totals:", error);
-        summaryTotalsResult.innerHTML = `<p style='color:red;'>An error occurred: ${error.message}</p>`;
-    }
+    } catch (error) {
+        console.error("Error generating summary totals:", error);
+        summaryTotalsResult.innerHTML = `<p style='color:red;'>An error occurred: ${error.message}</p>`;
+    }
 }  
     </script>
 </body>
