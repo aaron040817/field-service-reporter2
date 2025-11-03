@@ -3090,128 +3090,129 @@ async function generatePublisherRecordCard() {
 }
 
 function formatS21Card(publisher, reports, serviceYear) {
-    // Helper para sa checkboxes
-    const check = (val) => `<span class="check-box-display">${val ? '✓' : ''}</span>`;
-    const formatHours = (val) => (val > 0 ? val : '');
+    // Helper para sa checkboxes
+    const check = (val) => `<span class="check-box-display">${val ? '✓' : ''}</span>`;
+    const formatHours = (val) => (val > 0 ? val : '');
 
-    // Kunin ang publisher details
-    const name = publisher.fullName || '';
-    const birthdate = publisher.birthdate || ''; [cite: 3]
-    const isMale = publisher.gender === 'Male'; [cite: 4]
-    const isFemale = publisher.gender === 'Female'; [cite: 8]
-    const baptismDate = publisher.baptismDate || ''; [cite: 5]
-    const isOtherSheep = publisher.hope === 'Other Sheep'; [cite: 7]
-    const isAnointed = publisher.hope === 'Anointed'; [cite: 6]
-    const isElder = publisher.privilege === 'Elder'; [cite: 9]
-    const isMS = publisher.privilege === 'Ministerial Servant'; [cite: 10]
-    const isRegPio = publisher.privilege2 === 'Regular Pioneer'; [cite: 11]
-    const isSpecPio = publisher.privilege2 === 'Special Pioneer'; [cite: 11]
-    const isFieldMiss = publisher.privilege2 === 'Field Missionary'; [cite: 12]
+    // Kunin ang publisher details
+    const name = publisher.fullName || '';
+    const birthdate = publisher.birthdate || [cite_start]''; [cite: 3]
+    [cite_start]const isMale = publisher.gender === 'Male'; [cite: 4]
+    [cite_start]const isFemale = publisher.gender === 'Female'; [cite: 8]
+    const baptismDate = publisher.baptismDate || [cite_start]''; [cite: 5]
+    [cite_start]const isOtherSheep = publisher.hope === 'Other Sheep'; [cite: 7]
+    [cite_start]const isAnointed = publisher.hope === 'Anointed'; [cite: 6]
+    [cite_start]const isElder = publisher.privilege === 'Elder'; [cite: 9]
+    [cite_start]const isMS = publisher.privilege === 'Ministerial Servant'; [cite: 10]
+    [cite_start]const isRegPio = publisher.privilege2 === 'Regular Pioneer'; [cite: 11]
+    [cite_start]const isSpecPio = publisher.privilege2 === 'Special Pioneer'; [cite: 11]
+    [cite_start]const isFieldMiss = publisher.privilege2 === 'Field Missionary'; [cite: 12]
 
-    // Buuin ang 12 months ng service year
-    const months = [];
-    let currentMonth = new Date(parseInt(serviceYear) - 1, 8); // Start from September
-    for (let i = 0; i < 12; i++) {
-        const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
-        const year = currentMonth.getFullYear();
-        months.push(`${monthName} ${year}`);
-        currentMonth.setMonth(currentMonth.getMonth() + 1);
-    }
-    
-    let totalBibleStudies = 0;
-    let totalHours = 0;
+    // Buuin ang 12 months ng service year
+    const months = [];
+    let currentMonth = new Date(parseInt(serviceYear) - 1, 8); // Start from September
+    for (let i = 0; i < 12; i++) {
+        const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
+        const year = currentMonth.getFullYear();
+        months.push(`${monthName} ${year}`);
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+    
+    let totalBibleStudies = 0;
+    let totalHours = 0;
 
-    // Buuin ang table rows
-    const tableRows = months.map(monthStr => {
-        const report = reports.find(r => r.month === monthStr);
-        
-        let shared = false;
-        let studies = 0;
-        let aux = false;
-        let hours = 0;
-        let remarks = report ? (report.comments || '') : 'No Report';
+    // Buuin ang table rows
+    const tableRows = months.map(monthStr => {
+        const report = reports.find(r => r.month === monthStr);
+        
+        let shared = false;
+        let studies = 0;
+        let aux = false;
+        let hours = 0;
+        let remarks = report ? (report.comments || '') : 'No Report';
 
-        if (report) {
-            shared = report.sharedInMinistry; [cite: 13]
-            studies = report.bibleStudies || 0; [cite: 13]
-            aux = report.wasAuxiliaryPioneer; [cite: 13]
-            
-            // Ang oras ay para lang sa pioneers
-            if (isRegPio || isSpecPio || isFieldMiss || aux) {
-                 hours = report.hours || 0; [cite: 13]
-            }
-            
-            totalBibleStudies += studies;
-            totalHours += hours;
-            remarks = report.comments || '';
-        }
+        if (report) {
+[cite_start]            shared = report.sharedInMinistry; [cite: 13]
+            studies = report.bibleStudies || [cite_start]0; [cite: 13]
+            [cite_start]aux = report.wasAuxiliaryPioneer; [cite: 13]
+            
+            // Ang oras ay para lang sa pioneers
+            if (isRegPio || isSpecPio || isFieldMiss || aux) {
+                 hours = report.hours || [cite_start]0; [cite: 13]
+            }
+            
+            totalBibleStudies += studies;
+            totalHours += hours;
+            remarks = report.comments || '';
+        }
 
-        return `
-            <tr>
-                <td class="month-col">${monthStr.split(' ')[0]}</td>
-                <td class="check-col">${check(shared)}</td>
-                <td class="bs-col">${studies > 0 ? studies : ''}</td>
-                <td class="aux-col">${check(aux)}</td>
-                <td class="hours-col">${formatHours(hours)}</td>
-                <td class="remarks-col">${remarks}</td>
-            </tr>
-        ;
-    }).join('');
+        return `
+            <tr>
+                <td class="month-col">${monthStr.split(' ')[0]}</td>
+                <td class="check-col">${check(shared)}</td>
+                <td class="bs-col">${studies > 0 ? studies : ''}</td>
+                <td class="aux-col">${check(aux)}</td>
+                <td class="hours-col">${formatHours(hours)}</td>
+                <td class="remarks-col">${remarks}</td>
+            </tr>
+        `;
+    }).join('');
 
-    // Ang HTML para sa buong S-21 card
-    return 
-    <div id="s21-card">
-        <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
-        <h3 style="text-align: center; margin-bottom: 10px;">CONGREGATION'S PUBLISHER RECORD</h3> 
-        
-        <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-            <tr>
-                <td style="width: 60%;"><strong>Name:</strong> ${name}</td> [cite: 2]
-                <td style="width: 40%;"><strong>Date of birth:</strong> ${birthdate}</td> [cite: 3]
-            </tr>
-            <tr>
-                <td><strong>Date of baptism:</strong> ${baptismDate}</td> [cite: 5]
-                <td>${check(isMale)} Male [cite: 4] ${check(isFemale)} Female [cite: 8]</td>
-            </tr>
-            <tr>
-                <td>${check(isAnointed)} Anointed [cite: 6] ${check(isOtherSheep)} Other sheep [cite: 7]</td>
-                <td>${check(isElder)} Elder [cite: 9] ${check(isMS)} Ministerial servant [cite: 10]</td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    ${check(isRegPio)} Regular pioneer [cite: 11]
-                    ${check(isSpecPio)} Special pioneer [cite: 11]
-                    ${check(isFieldMiss)} Field missionary [cite: 12]
-                </td>
-            </tr>
-        </table>
+    // Ang HTML para sa buong S-21 card
+    // *** ITO ANG INAYOS: Idinikit ko ang backtick (`) sa return statement ***
+    return `
+    <div id="s21-card">
+        <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
+[cite_start]        <h3 style="text-align: center; margin-bottom: 10px;">CONGREGATION'S PUBLISHER RECORD</h3> [cite: 1]
+        
+        <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
+            <tr>
+[cite_start]                <td style="width: 60%;"><strong>Name:</strong> ${name}</td> [cite: 2]
+                [cite_start]<td style="width: 40%;"><strong>Date of birth:</strong> ${birthdate}</td> [cite: 3]
+            </tr>
+            <tr>
+[cite_start]                <td><strong>Date of baptism:</strong> ${baptismDate}</td> [cite: 5]
+                [cite_start]<td>${check(isMale)} Male [cite: 4] [cite_start]${check(isFemale)} Female [cite: 8]</td>
+            </tr>
+            <tr>
+[cite_start]                <td>${check(isAnointed)} Anointed [cite: 6] [cite_start]${check(isOtherSheep)} Other sheep [cite: 7]</td>
+[cite_start]                <td>${check(isElder)} Elder [cite: 9] [cite_start]${check(isMS)} Ministerial servant [cite: 10]</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+[cite_start]                    ${check(isRegPio)} Regular pioneer [cite: 11]
+                    [cite_start]${check(isSpecPio)} Special pioneer [cite: 11]
+                    [cite_start]${check(isFieldMiss)} Field missionary [cite: 12]
+                </td>
+            </tr>
+        </table>
 
-        <table id="s21-table">
-            <thead>
-                <tr>
-                    <th class="month-col">Service Year: ${serviceYear}</th>
-                    <th class="check-col">Shared in Ministry</th> [cite: 13]
-                    <th class="bs-col">Bible Studies</th> [cite: 13]
-                    <th class="aux-col">Auxiliary Pioneer</th> [cite: 13]
-                    <th class="hours-col">Hours</th> [cite: 13]
-                    <th class="remarks-col">Remarks</th> [cite: 13]
-                </tr>
-            </thead>
-            <tbody>
-                ${tableRows}
-            </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="2"><strong>Total</strong></td> [cite: 13]
-                    <td><strong>${totalBibleStudies}</strong></td>
-                    <td></td>
-                    <td><strong>${totalHours}</strong></td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    ;
+        <table id="s21-table">
+            <thead>
+                <tr>
+                    <th class="month-col">Service Year: ${serviceYear}</th>
+[cite_start]                    <th class="check-col">Shared in Ministry</th> [cite: 13]
+                    [cite_start]<th class="bs-col">Bible Studies</th> [cite: 13]
+                    [cite_start]<th class="aux-col">Auxiliary Pioneer</th> [cite: 13]
+                    [cite_start]<th class="hours-col">Hours</th> [cite: 13]
+                    [cite_start]<th class="remarks-col">Remarks</th> [cite: 13]
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+[cite_start]                    <td colspan="2"><strong>Total</strong></td> [cite: 13]
+                    <td><strong>${totalBibleStudies}</strong></td>
+                    <td></td>
+                    <td><strong>${totalHours}</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    `;
 }
 
 async function generateSummaryTotalsCard() {
