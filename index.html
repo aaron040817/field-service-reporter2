@@ -3096,17 +3096,17 @@ function formatS21Card(publisher, reports, serviceYear) {
 
     // Kunin ang publisher details
     const name = publisher.fullName || '';
-    const birthdate = publisher.birthdate || [cite_start]''; [cite: 3]
-    [cite_start]const isMale = publisher.gender === 'Male'; [cite: 4]
-    [cite_start]const isFemale = publisher.gender === 'Female'; [cite: 8]
-    const baptismDate = publisher.baptismDate || [cite_start]''; [cite: 5]
-    [cite_start]const isOtherSheep = publisher.hope === 'Other Sheep'; [cite: 7]
-    [cite_start]const isAnointed = publisher.hope === 'Anointed'; [cite: 6]
-    [cite_start]const isElder = publisher.privilege === 'Elder'; [cite: 9]
-    [cite_start]const isMS = publisher.privilege === 'Ministerial Servant'; [cite: 10]
-    [cite_start]const isRegPio = publisher.privilege2 === 'Regular Pioneer'; [cite: 11]
-    [cite_start]const isSpecPio = publisher.privilege2 === 'Special Pioneer'; [cite: 11]
-    [cite_start]const isFieldMiss = publisher.privilege2 === 'Field Missionary'; [cite: 12]
+    const birthdate = publisher.birthdate || '';
+    const isMale = publisher.gender === 'Male';
+    const isFemale = publisher.gender === 'Female';
+    const baptismDate = publisher.baptismDate || '';
+    const isOtherSheep = publisher.hope === 'Other Sheep';
+    const isAnointed = publisher.hope === 'Anointed';
+    const isElder = publisher.privilege === 'Elder';
+    const isMS = publisher.privilege === 'Ministerial Servant';
+    const isRegPio = publisher.privilege2 === 'Regular Pioneer';
+    const isSpecPio = publisher.privilege2 === 'Special Pioneer';
+    const isFieldMiss = publisher.privilege2 === 'Field Missionary';
 
     // Buuin ang 12 months ng service year
     const months = [];
@@ -3132,13 +3132,13 @@ function formatS21Card(publisher, reports, serviceYear) {
         let remarks = report ? (report.comments || '') : 'No Report';
 
         if (report) {
-[cite_start]            shared = report.sharedInMinistry; [cite: 13]
-            studies = report.bibleStudies || [cite_start]0; [cite: 13]
-            [cite_start]aux = report.wasAuxiliaryPioneer; [cite: 13]
+            shared = report.sharedInMinistry;
+            studies = report.bibleStudies || 0;
+            aux = report.wasAuxiliaryPioneer;
             
             // Ang oras ay para lang sa pioneers
             if (isRegPio || isSpecPio || isFieldMiss || aux) {
-                 hours = report.hours || [cite_start]0; [cite: 13]
+                 hours = report.hours || 0;
             }
             
             totalBibleStudies += studies;
@@ -3159,30 +3159,29 @@ function formatS21Card(publisher, reports, serviceYear) {
     }).join('');
 
     // Ang HTML para sa buong S-21 card
-    // *** ITO ANG INAYOS: Idinikit ko ang backtick (`) sa return statement ***
     return `
     <div id="s21-card">
         <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
-[cite_start]        <h3 style="text-align: center; margin-bottom: 10px;">CONGREGATION'S PUBLISHER RECORD</h3> [cite: 1]
+        <h3 style="text-align: center; margin-bottom: 10px;">CONGREGATION'S PUBLISHER RECORD</h3>
         
         <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
             <tr>
-[cite_start]                <td style="width: 60%;"><strong>Name:</strong> ${name}</td> [cite: 2]
-                [cite_start]<td style="width: 40%;"><strong>Date of birth:</strong> ${birthdate}</td> [cite: 3]
+                <td style="width: 60%;"><strong>Name:</strong> ${name}</td>
+                <td style="width: 40%;"><strong>Date of birth:</strong> ${birthdate}</td>
             </tr>
             <tr>
-[cite_start]                <td><strong>Date of baptism:</strong> ${baptismDate}</td> [cite: 5]
-                [cite_start]<td>${check(isMale)} Male [cite: 4] [cite_start]${check(isFemale)} Female [cite: 8]</td>
+                <td><strong>Date of baptism:</strong> ${baptismDate}</td>
+                <td>${check(isMale)} Male ${check(isFemale)} Female</td>
             </tr>
             <tr>
-[cite_start]                <td>${check(isAnointed)} Anointed [cite: 6] [cite_start]${check(isOtherSheep)} Other sheep [cite: 7]</td>
-[cite_start]                <td>${check(isElder)} Elder [cite: 9] [cite_start]${check(isMS)} Ministerial servant [cite: 10]</td>
+                <td>${check(isAnointed)} Anointed ${check(isOtherSheep)} Other sheep</td>
+                <td>${check(isElder)} Elder ${check(isMS)} Ministerial servant</td>
             </tr>
             <tr>
                 <td colspan="2">
-[cite_start]                    ${check(isRegPio)} Regular pioneer [cite: 11]
-                    [cite_start]${check(isSpecPio)} Special pioneer [cite: 11]
-                    [cite_start]${check(isFieldMiss)} Field missionary [cite: 12]
+                    ${check(isRegPio)} Regular pioneer
+                    ${check(isSpecPio)} Special pioneer
+                    ${check(isFieldMiss)} Field missionary
                 </td>
             </tr>
         </table>
@@ -3191,11 +3190,11 @@ function formatS21Card(publisher, reports, serviceYear) {
             <thead>
                 <tr>
                     <th class="month-col">Service Year: ${serviceYear}</th>
-[cite_start]                    <th class="check-col">Shared in Ministry</th> [cite: 13]
-                    [cite_start]<th class="bs-col">Bible Studies</th> [cite: 13]
-                    [cite_start]<th class="aux-col">Auxiliary Pioneer</th> [cite: 13]
-                    [cite_start]<th class="hours-col">Hours</th> [cite: 13]
-                    [cite_start]<th class="remarks-col">Remarks</th> [cite: 13]
+                    <th class="check-col">Shared in Ministry</th>
+                    <th class="bs-col">Bible Studies</th>
+                    <th class="aux-col">Auxiliary Pioneer</th>
+                    <th class="hours-col">Hours</th>
+                    <th class="remarks-col">Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -3203,7 +3202,7 @@ function formatS21Card(publisher, reports, serviceYear) {
             </tbody>
             <tfoot>
                 <tr class="total-row">
-[cite_start]                    <td colspan="2"><strong>Total</strong></td> [cite: 13]
+                    <td colspan="2"><strong>Total</strong></td>
                     <td><strong>${totalBibleStudies}</strong></td>
                     <td></td>
                     <td><strong>${totalHours}</strong></td>
@@ -3214,7 +3213,6 @@ function formatS21Card(publisher, reports, serviceYear) {
     </div>
     `;
 }
-
 async function generateSummaryTotalsCard() {
     const serviceYear = serviceYearSummaryCat.value;
     const month = monthSummaryCat.value;
