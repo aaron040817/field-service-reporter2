@@ -64,9 +64,11 @@
 /* Ito ang bago mong CSS */
 #s21-info-table td {
     border: none; 
-    padding: 1px 2px; /* Nagdagdag ng 1px top/bottom padding */
+    padding: 0 2px;  /* Inalis ang top/bottom padding */
 }
-/* (Burahin na ang #s21-info-table div rule) */
+#s21-info-table div {
+    margin: 0; /* Tinitiyak na WALANG margin ang div */
+}
         
 /* Ito ang bago mong CSS */
 .info-col-1 { width: 40%; }
@@ -164,11 +166,14 @@
         border: none;
     }
     /* Ito ang bago mong CSS sa loob ng @media print */
+/* Ito ang bago mong CSS sa loob ng @media print */
 #s21-info-table td {
     border: none;
-    padding: 1px 2px; /* 1px top/bottom padding */
+    padding: 0 2px;  /* Inalis ang top/bottom padding */
 }
-/* (Burahin na ang #s21-info-table div rule sa loob ng print) */
+#s21-info-table div {
+    margin: 0; /* Tinitiyak na WALANG margin ang div */
+}
     
     /* Ito ang bago mong CSS sa loob ng @media print */
 .info-col-1 { width: 40%; }
