@@ -3208,7 +3208,7 @@ function formatS21Card(publisher, reports, serviceYear) {
                 <td class="bs-col">${studies > 0 ? studies : ''}</td>
                 <td class="aux-col">${check(aux)}</td>
                 <td class="hours-col">${formatHours(hours)}</td>
-              <td class="remarks-col">${remarks}</td>
+                <td class="remarks-col">${remarks}</td>
             </tr>
         `;
     }).join('');
@@ -3222,8 +3222,12 @@ function formatS21Card(publisher, reports, serviceYear) {
                 <table id="s21-info-table">
             <tbody>
                                 <tr style="vertical-align: top;">
-                    <td class="info-col-1"><strong>Name:</strong>&nbsp; ${name}</td>
-                    <td class="info-col-2"><strong>Date of birth:</strong>&nbsp; ${birthdate}</td>
+                    <td class="info-col-1">
+                        <div><strong>Name:</strong>&nbsp; ${name}</div>
+                        <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
+                    </td>
+                    <td class="info-col-2">
+                        </td>
                     <td class="info-col-3">${check(isMale)} Male &nbsp;&nbsp; ${check(isFemale)} Female</td>
                 </tr>
                                 <tr style="vertical-align: top;">
@@ -3236,7 +3240,7 @@ function formatS21Card(publisher, reports, serviceYear) {
                         ${check(isElder)} Elder &nbsp;&nbsp;
                         ${check(isMS)} Ministerial servant &nbsp;&nbsp;
                         ${check(isRegPio)} Regular pioneer &nbsp;&nbsp;
-S                     ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
+                        ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
                         ${check(isFieldMiss)} Field missionary
                     </td>
                 </tr>
@@ -3247,7 +3251,7 @@ S                     ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
             <thead>
                 <tr>
                     <th class="month-col" style="font-weight:normal;">Service Year</th>
-a                 <th class="check-col">Shared in<br>Ministry</th>
+                    <th class="check-col">Shared in<br>Ministry</th>
                     <th class="bs-col">Bible<br>Studies</th>
                     <th class="aux-col">Auxiliary<br>Pioneer</th>
                     <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
@@ -3256,16 +3260,16 @@ a                 <th class="check-col">Shared in<br>Ministry</th>
             </thead>
             <tbody>
                 ${tableRows}
-            </tbody>
+A         </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td> E               <td></td>                 </tr>
+                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td> A               <td></td>                 </tr>
             </tfoot>
         </table>
         
         <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px; font-family: Arial, sans-serif;">
             S-21-E 11/23
-        </div>
+  S </div>
     </div>
     `;
 }
