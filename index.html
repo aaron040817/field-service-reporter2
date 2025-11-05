@@ -70,8 +70,8 @@
 }
 /* Ito ang bago mong CSS */
 .info-col-1 { width: 40%; }
-.info-col-2 { width: 30%; }
-.info-col-3 { width: 30%; }
+.info-col-2 { width: 10%; }
+.info-col-3 { width: 50%; }
 
 #s21-table {
     width: 100%;
@@ -172,8 +172,8 @@
     }
     /* Ito ang bago mong CSS sa loob ng @media print */
 .info-col-1 { width: 40%; }
-.info-col-2 { width: 30%; }
-.info-col-3 { width: 30%; }
+.info-col-2 { width: 10%; }
+.info-col-3 { width: 50%; }
     
     /* 5. I-style ang Main Table para sa print */
     #s21-table {
@@ -3205,7 +3205,7 @@ function formatS21Card(publisher, reports, serviceYear) {
             <tr>
                 <td class="month-col">${monthStr.split(' ')[0]}</td>
                 <td class="check-col">${check(shared)}</td>
-                <td class="bs-col">${studies > 0 ? studies : ''}</td>
+          S   <td class="bs-col">${studies > 0 ? studies : ''}</td>
                 <td class="aux-col">${check(aux)}</td>
                 <td class="hours-col">${formatHours(hours)}</td>
                 <td class="remarks-col">${remarks}</td>
@@ -3224,22 +3224,22 @@ function formatS21Card(publisher, reports, serviceYear) {
                                 <tr style="vertical-align: top;">
                     <td class="info-col-1">
                         <div><strong>Name:</strong>&nbsp; ${name}</div>
-      _         </td>
+                    </td>
                     <td class="info-col-2"></td>
                     <td class="info-col-3"></td>
                 </tr>
                                 <tr style="vertical-align: top;">
                     <td class="info-col-1">
-M                   <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
+                        <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
                     </td>
                     <td class="info-col-2"></td>
-section         <td class="info-col-3">${check(isMale)} Male &nbsp;&nbsp; ${check(isFemale)} Female</td>
+                    <td class="info-col-3">${check(isMale)} Male &nbsp;&nbsp; ${check(isFemale)} Female</td>
                 </tr>
                                 <tr style="vertical-align: top;">
                     <td class="info-col-1"><strong>Date of baptism:</strong>&nbsp; ${baptismDate}</td>
-                    <td class="info-col-2">${check(isOtherSheep)} Other sheep</td>
-                    <td class="info-col-3">${check(isAnointed)} Anointed</td>
-s             </tr>
+                    <td class="info-col-2"></td>
+                    <td class="info-col-3">${check(isOtherSheep)} Other sheep &nbsp;&nbsp; ${check(isAnointed)} Anointed</td>
+                </tr>
                                 <tr style="vertical-align: top;">
                     <td colspan="3" style="padding-top: 5px;">
                         ${check(isElder)} Elder &nbsp;&nbsp;
@@ -3254,27 +3254,27 @@ s             </tr>
 
         <table id="s21-table">
             <thead>
-      _       <tr>
+                <tr>
                     <th class="month-col" style="font-weight:normal;">Service Year</th>
                     <th class="check-col">Shared in<br>Ministry</th>
                     <th class="bs-col">Bible<br>Studies</th>
                     <th class="aux-col">Auxiliary<br>Pioneer</th>
-                    <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
+                S <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
                     <th class="remarks-col">Remarks</th>
                 </tr>
             </thead>
             <tbody>
                 ${tableRows}
-            </tbody>
+A         </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td> D               <td></td>                 </tr>
+                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td> Yes             <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
             </tfoot>
         </table>
         
         <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px; font-family: Arial, sans-serif;">
             S-21-E 11/23
-        </div>
+  Pos </div>
     </div>
     `;
 }
