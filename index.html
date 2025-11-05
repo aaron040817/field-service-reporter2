@@ -52,69 +52,105 @@
     padding: 20px;
     border-radius: 5px;
     background-color: #fdfdfd;
+    font-family: Arial, sans-serif; /* Itugma ang font */
 }
 #s21-info-table {
     width: 100%;
-    font-size: 12px; 
+    font-size: 11pt; /* Pinalaki ng kaunti para tumugma */
     border-collapse: collapse; 
     margin-bottom: 10px;
-    border: none; /* Idagdag o siguraduhin na ito ay 'none' */
+    border: none; /* Walang border */
+}
+#s21-info-table td {
+    border: none; /* Walang border */
+    padding: 0 2px;
 }
 #s21-info-table div {
-    margin-bottom: 4px; /* Spacing sa info block */
+    margin-bottom: 4px; /* Spacing */
 }
+.info-col-1 { width: 40%; }
+.info-col-2 { width: 35%; }
+.info-col-3 { width: 25%; }
+
 #s21-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 10pt;
     margin-top: 15px;
 }
 #s21-table th, #s21-table td {
     border: 1px solid #ccc;
     padding: 6px;
     text-align: center;
-    height: 20px; /* Nagdagdag ng fixed height */
+    height: 20px; 
 }
 #s21-table th {
     background-color: #f4f4f4;
     font-weight: bold;
-    vertical-align: top; /* Para sa multi-line header */
+    vertical-align: middle; /* Gitna para sa 2-line headers */
+    font-size: 9pt; /* Mas maliit ang header font */
+    line-height: 1.3;
 }
-#s21-table .month-col { text-align: left; }
+#s21-table .month-col { 
+    text-align: left; 
+    padding-left: 10px; /* Dagdag padding para sa buwan */
+}
 #s21-table .total-row td {
     font-weight: bold;
     background-color: #f9f9f9;
 }
-
 #s21-page-footer {
     font-size: 10pt; 
     margin-top: 5px;
     color: #555;
+    font-family: Arial, sans-serif;
 }
 
 /* Print-specific Styles for S-21 Card */
 @media print {
-    /* 1. Itago ang lahat ng bagay sa page */
-    body > * {
-        display: none !important;
-        visibility: hidden;
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #fff;
+        margin: 0;
+        padding: 0;
+        font-size: 10pt;
+    }
+
+    /* Tanggalin ang browser headers/footers */
+    @page {
+        size: auto;
+        margin: 0.5in; /* Pwede mong i-adjust ito */
+        padding: 0;
+        
+        @top-center { content: ""; }
+        @top-left { content: ""; }
+        @top-right { content: ""; }
+        @bottom-center { content: ""; }
+        @bottom-left { content: ""; }
+        @bottom-right { content: ""; }
     }
 
-    /* 2. Ipakita ang S-21 card at ang mga "magulang" (ancestors) nito */
-    #viewRecordsPage,
-    #viewRecordsPage > fieldset:first-of-type,
-    #viewRecordsPage #individualRecordResult,
-    #viewRecordsPage #s21-card {
-        display: block !important;
-        visibility: visible;
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-        padding: 0;
-        box-shadow: none;
-        border: none;
-        background-color: #fff; /* Siguraduhin na puti ang background */
-    }
+    /* 1. Itago ang lahat */
+    body > * {
+        display: none !important;
+        visibility: hidden;
+    }
+
+    /* 2. Ipakita ang S-21 card at ang mga "magulang" (ancestors) nito */
+    #viewRecordsPage,
+    #viewRecordsPage > fieldset:first-of-type,
+    #viewRecordsPage #individualRecordResult,
+    #viewRecordsPage #s21-card {
+        display: block !important;
+        visibility: visible;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+        background-color: #fff;
+    }
 
     /* 3. Itago ang lahat ng HINDI kailangan sa loob ng #viewRecordsPage */
     #viewRecordsPage > h2,
@@ -132,69 +168,65 @@
         visibility: hidden;
     }
 
-    /* 4. Tanggalin ang default browser headers/footers (Date, URL, Title) */
-    @page {
-        size: auto;   /* auto is the initial value */
-        margin: 0.5in;  /* Pwede mong i-adjust ito (e.g., 0.5in) */
-        padding: 0;
-        
-        /* Subukang tanggalin ang headers at footers */
-        @top-center { content: ""; }
-        @top-left { content: ""; }
-        @top-right { content: ""; }
-        @bottom-center { content: ""; }
-        @bottom-left { content: ""; }
-        @bottom-right { content: ""; }
-    }
-    
-    body {
-        font-family: Arial, sans-serif;
-        font-size: 10pt;
-        margin: 0;
-        padding: 0;
-    }
-
-    /* 5. I-style ang Info Table para sa print */
+    /* 4. I-style ang Info Table para sa print */
     #s21-info-table {
-        font-size: 10pt;
+        width: 100%;
+        font-size: 11pt;
         margin-bottom: 10px;
-        border: none; /* Idagdag o siguraduhin na ito ay 'none' */
+        border: none;
     }
-    #s21-info-table div {
+    #s21-info-table td {
+        border: none;
+        padding: 0 2px;
+    }
+     #s21-info-table div {
         margin-bottom: 4px;
     }
+    .info-col-1 { width: 40%; }
+    .info-col-2 { width: 35%; }
+    .info-col-3 { width: 25%; }
     
-    /* 6. I-style ang Main Table para sa print */
-    #s21-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10pt;
-        page-break-inside: avoid;
-    }
-    #s21-table th, #s21-table td {
-        border: 1px solid #000;
-        padding: 4px;
-        text-align: center;
+    /* 5. I-style ang Main Table para sa print */
+    #s21-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10pt;
+        page-break-inside: avoid;
+    }
+    #s21-table th, #s21-table td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
         height: 18px;
     }
-    #s21-table th { 
-        background-color: #fff;
+    #s21-table th { 
+        background-color: #fff; /* Blangko ang background */
         font-weight: bold; 
-        vertical-align: top; 
+        vertical-align: middle; 
+        font-size: 9pt;
+        line-height: 1.3;
     }
-    #s21-table .month-col { text-align: left; width: 18%; }
-    #s21-table .check-col { width: 10%; }
-    #s21-table .bs-col { width: 10%; }
-    #s21-table .aux-col { width: 10%; }
-    #s21-table .hours-col { width: 12%; }
-    #s21-table .remarks-col { width: 40%; }
-    #s21-table .total-row td { font-weight: bold; }
+    #s21-table .month-col { 
+        text-align: left; 
+        width: 18%; 
+        padding-left: 10px;
+    }
+    #s21-table .check-col { width: 10%; }
+    #s21-table .bs-col { width: 10%; }
+    #s21-table .aux-col { width: 10%; }
+    #s21-table .hours-col { width: 12%; }
+    #s21-table .remarks-col { width: 40%; }
+    #s21-table .total-row td { 
+        font-weight: bold; 
+        background-color: #fff; /* Blangko ang background */
+    }
     
-    /* 7. I-style ang page footer */
+    /* 6. I-style ang page footer */
     #s21-page-footer {
         font-size: 10pt; 
         margin-top: 5px;
         color: #000;
+        font-family: Arial, sans-serif;
     }
 }
     </style>
@@ -3118,8 +3150,8 @@ async function generatePublisherRecordCard() {
 
 function formatS21Card(publisher, reports, serviceYear) {
     // Helper para sa checkboxes
-    // *** ITO ANG MALAKING PAGBABAGO: Gumamit ng literal Unicode characters ***
-    const check = (val) => val ? '☑' : '☐'; // '☑' (checked) o '☐' (empty)
+    // *** GUMAGAMIT NA NG UNICODE CHARACTERS (tulad ng S-21 original) ***
+    const check = (val) => val ? '☑' : '☐'; 
 
     const formatHours = (val) => (val > 0 ? val : '');
 
@@ -3165,7 +3197,6 @@ function formatS21Card(publisher, reports, serviceYear) {
             studies = report.bibleStudies || 0;
             aux = report.wasAuxiliaryPioneer;
             
-            // Ang oras ay para lang sa pioneers
             if (isRegPio || isSpecPio || isFieldMiss || aux) {
                  hours = report.hours || 0;
             }
@@ -3173,8 +3204,7 @@ function formatS21Card(publisher, reports, serviceYear) {
             totalBibleStudies += studies;
             totalHours += hours;
             remarks = report.comments || '';
-       } else {
-            // Walang laman ang remarks kung "No Report"
+        } else {
             remarks = '';
         }
 
@@ -3194,44 +3224,40 @@ function formatS21Card(publisher, reports, serviceYear) {
     return `
     <div id="s21-card">
         <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
-        <h3 style="text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 14pt;">CONGREGATION'S PUBLISHER RECORD</h3>
+        <h3 style="text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 14pt; font-family: Arial, sans-serif;">CONGREGATION'S PUBLISHER RECORD</h3>
 
                 <table id="s21-info-table">
             <tbody>
                 <tr style="vertical-align: top;">
-                                        <td style="width: 45%;">
+                                        <td class="info-col-1">
                         <div><strong>Name:</strong>&nbsp; ${name}</div>
-                        <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
                         <div><strong>Date of baptism:</strong>&nbsp; ${baptismDate}</div>
-                    </td>
-                                        <td style="width: 30%;">
-                        <div>${check(isMale)} Male</div>
-                        <div>${check(isOtherSheep)} Other sheep</div>
                         <div>${check(isElder)} Elder</div>
-                        <div>${check(isRegPio)} Regular pioneer</div>
                     </td>
-                                        <td style="width: 25%;">
-                        <div>${check(isFemale)} Female</div>
-                        <div>${check(isAnointed)} Anointed</div>
+                                        <td class="info-col-2">
+                        <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
+                        <div>${check(isOtherSheep)} Other sheep</div>
                         <div>${check(isMS)} Ministerial servant</div>
+                    </td>
+                                        <td class="info-col-3">
+                        <div>${check(isMale)} Male &nbsp;&nbsp; ${check(isFemale)} Female</div>
+                        <div>${check(isAnointed)} Anointed</div>
+                        <div style="margin-top: 19px;">${check(isRegPio)} Regular pioneer</div> 
                         <div>${check(isSpecPio)} Special pioneer</div>
                         <div>${check(isFieldMiss)} Field missionary</div>
                     </td>
                 </tr>
-                <tr style="vertical-align: top;">
-                    <td colspan="3" style="padding-top: 5px;">
-                    </td>
-                </tr>
             </tbody>
-        </table>
-                <table id="s21-table">
+        </table>
+
+        <table id="s21-table">
             <thead>
                 <tr>
                     <th class="month-col" style="font-weight:normal;">Service Year</th>
-                    <th class="check-col">Shared in Ministry</th>
-                  <th class="bs-col">Bible Studies</th>
-                    <th class="aux-col">Auxiliary Pioneer</th>
-                    <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field<br>missionary)</span></th>
+                    <th class="check-col">Shared in<br>Ministry</th>
+                    <th class="bs-col">Bible<br>Studies</th>
+                    <th class="aux-col">Auxiliary<br>Pioneer</th>
+                    <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
                     <th class="remarks-col">Remarks</th>
                 </tr>
             </thead>
@@ -3240,14 +3266,14 @@ function formatS21Card(publisher, reports, serviceYear) {
             </tbody>
             <tfoot>
                                 <tr class="total-row">
-                    <td></td>                     <td></td>                     <td><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
+                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>         _           <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
             </tfoot>
         </table>
         
-                <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px;">
+        <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px; font-family: Arial, sans-serif;">
             S-21-E 11/23
         </div>
-            </div>
+    </div>
     `;
 }
 async function generateSummaryTotalsCard() {
