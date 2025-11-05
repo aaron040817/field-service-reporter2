@@ -3224,15 +3224,20 @@ function formatS21Card(publisher, reports, serviceYear) {
                                 <tr style="vertical-align: top;">
                     <td class="info-col-1">
                         <div><strong>Name:</strong>&nbsp; ${name}</div>
+                    </td>
+                    <td class="info-col-2"></td>
+                    <td class="info-col-3"></td>
+                </tr>
+                                <tr style="vertical-align: top;">
+                    <td class="info-col-1">
                         <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
                     </td>
-                    <td class="info-col-2">
-                        </td>
+                    <td class="info-col-2"></td>
                     <td class="info-col-3">${check(isMale)} Male &nbsp;&nbsp; ${check(isFemale)} Female</td>
                 </tr>
                                 <tr style="vertical-align: top;">
                     <td class="info-col-1"><strong>Date of baptism:</strong>&nbsp; ${baptismDate}</td>
-                    <td class="info-col-2">${check(isOtherSheep)} Other sheep</td>
+M                 <td class="info-col-2">${check(isOtherSheep)} Other sheep</td>
                     <td class="info-col-3">${check(isAnointed)} Anointed</td>
                 </tr>
                                 <tr style="vertical-align: top;">
@@ -3240,11 +3245,11 @@ function formatS21Card(publisher, reports, serviceYear) {
                         ${check(isElder)} Elder &nbsp;&nbsp;
                         ${check(isMS)} Ministerial servant &nbsp;&nbsp;
                         ${check(isRegPio)} Regular pioneer &nbsp;&nbsp;
-                        ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
+SOON               ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
                         ${check(isFieldMiss)} Field missionary
                     </td>
-                </tr>
-            </tbody>
+        _     </tr>
+  _   </tbody>
         </table>
 
         <table id="s21-table">
@@ -3260,16 +3265,16 @@ function formatS21Card(publisher, reports, serviceYear) {
             </thead>
             <tbody>
                 ${tableRows}
-A         </tbody>
+            </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td> A               <td></td>                 </tr>
+                    <td></td>       _         <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td> s                 <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
             </tfoot>
         </table>
         
         <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px; font-family: Arial, sans-serif;">
             S-21-E 11/23
-  S </div>
+        </div>
     </div>
     `;
 }
