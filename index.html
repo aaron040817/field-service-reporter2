@@ -105,33 +105,27 @@
 
 /* Print-specific Styles for S-21 Card */
 @media print {
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #fff;
-        margin: 0;
-        padding: 0;
-        font-size: 10pt; /* Default font size for print */
-    }
+    /* 1. Itago ang lahat ng bagay sa page */
+    body > * {
+        display: none !important;
+        visibility: hidden;
+    }
 
-    /* 1. Itago ang lahat by default */
-    body > * {
-        display: none !important;
-        visibility: hidden;
-    }
-
-    /* 2. Ipakita ang #viewRecordsPage at ang #s21-card na nasa loob nito */
-    #viewRecordsPage, 
-    #viewRecordsPage #individualRecordResult, 
-    #viewRecordsPage #s21-card {
-        display: block !important;
-        visibility: visible;
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-        padding: 0;
-        box-shadow: none;
-        border: none;
-    }
+    /* 2. Ipakita ang S-21 card at ang mga "magulang" (ancestors) nito */
+    #viewRecordsPage,
+    #viewRecordsPage > fieldset:first-of-type,
+    #viewRecordsPage #individualRecordResult,
+    #viewRecordsPage #s21-card {
+        display: block !important;
+        visibility: visible;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+        background-color: #fff; /* Siguraduhin na puti ang background */
+    }
 
     /* 3. Itago ang lahat ng HINDI kailangan sa loob ng #viewRecordsPage */
     #viewRecordsPage > h2,
@@ -143,15 +137,33 @@
     #viewRecordsPage > fieldset:first-of-type > button,
     #viewRecordsPage > fieldset:first-of-type > hr,
     #viewRecordsPage > fieldset:last-of-type, /* Itago ang buong 2nd fieldset */
-    #viewRecordsPage > button.back-btn { /* Itago ang back button */
+    #viewRecordsPage > button.back-btn, /* Itago ang back button */
+    #printS21Btn { /* Itago ang print button mismo */
         display: none !important;
         visibility: hidden;
     }
 
-    /* 4. Itago ang print button mismo */
-    #printS21Btn {
-        display: none !important;
-    }
+    /* 4. Tanggalin ang default browser headers/footers (Date, URL, Title) */
+    @page {
+        size: auto;   /* auto is the initial value */
+        margin: 0.5in;  /* Pwede mong i-adjust ito (e.g., 0.5in) */
+        padding: 0;
+        
+        /* Subukang tanggalin ang headers at footers */
+        @top-center { content: ""; }
+        @top-left { content: ""; }
+        @top-right { content: ""; }
+        @bottom-center { content: ""; }
+        @bottom-left { content: ""; }
+        @bottom-right { content: ""; }
+    }
+    
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+        margin: 0;
+        padding: 0;
+    }
 
     /* 5. I-style ang Info Table para sa print */
     #s21-info-table {
@@ -162,43 +174,43 @@
         margin-bottom: 4px;
     }
     
-    /* 6. I-style ang Main Table para sa print */
-    #s21-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10pt;
-        page-break-inside: avoid;
-    }
-    #s21-table th, #s21-table td {
-        border: 1px solid #000;
-        padding: 4px;
-        text-align: center;
-        height: 18px; /* Tamang taas para sa print */
+    /* 6. I-style ang Main Table para sa print */
+    #s21-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10pt;
+        page-break-inside: avoid;
     }
-    #s21-table th { 
-        background-color: #fff; /* Blangko ang background tulad ng sa form */
+    #s21-table th, #s21-table td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
+        height: 18px;
+    }
+    #s21-table th { 
+        background-color: #fff;
         font-weight: bold; 
         vertical-align: top; 
     }
-    #s21-table .month-col { text-align: left; width: 18%; }
-    #s21-table .check-col { width: 10%; }
-    #s21-table .bs-col { width: 10%; }
-    #s21-table .aux-col { width: 10%; }
-    #s21-table .hours-col { width: 12%; }
-    #s21-table .remarks-col { width: 40%; }
-    #s21-table .total-row td { font-weight: bold; }
+    #s21-table .month-col { text-align: left; width: 18%; }
+    #s21-table .check-col { width: 10%; }
+    #s21-table .bs-col { width: 10%; }
+    #s21-table .aux-col { width: 10%; }
+    #s21-table .hours-col { width: 12%; }
+    #s21-table .remarks-col { width: 40%; }
+    #s21-table .total-row td { font-weight: bold; }
     .check-box-display {
-        font-family: "Courier New", Courier, monospace;
-        font-weight: bold;
-        font-size: 10px;
-        line-height: 10px;
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border: 1px solid #000;
-        color: #000;
-        vertical-align: middle;
-    }
+        font-family: "Courier New", Courier, monospace;
+        font-weight: bold;
+        font-size: 10px;
+        line-height: 10px;
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #000;
+        color: #000;
+        vertical-align: middle;
+    }
     /* 7. I-style ang page footer */
     #s21-page-footer {
         font-size: 10pt; 
