@@ -3137,7 +3137,6 @@ async function generatePublisherRecordCard() {
 
 function formatS21Card(publisher, reports, serviceYear) {
     // Helper para sa checkboxes
-    // *** GUMAGAMIT NA NG UNICODE CHARACTERS (tulad ng S-21 original) ***
     const check = (val) => val ? '☑' : '☐'; 
 
     const formatHours = (val) => (val > 0 ? val : '');
@@ -3225,12 +3224,12 @@ function formatS21Card(publisher, reports, serviceYear) {
                         <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
                         <div>${check(isOtherSheep)} Other sheep</div>
                         <div>${check(isMS)} Ministerial servant</div>
+                        <div>${check(isRegPio)} Regular pioneer</div>
+                        <div>${check(isSpecPio)} Special pioneer</div>
                     </td>
-                                        <td class="info-col-3">
+                    _                 <td class="info-col-3">
                         <div>${check(isMale)} Male &nbsp;&nbsp; ${check(isFemale)} Female</div>
                         <div>${check(isAnointed)} Anointed</div>
-                        <div style="margin-top: 19px;">${check(isRegPio)} Regular pioneer</div> 
-                        <div>${check(isSpecPio)} Special pioneer</div>
                         <div>${check(isFieldMiss)} Field missionary</div>
                     </td>
                 </tr>
@@ -3243,7 +3242,7 @@ function formatS21Card(publisher, reports, serviceYear) {
                     <th class="month-col" style="font-weight:normal;">Service Year</th>
                     <th class="check-col">Shared in<br>Ministry</th>
                     <th class="bs-col">Bible<br>Studies</th>
-                    <th class="aux-col">Auxiliary<br>Pioneer</th>
+s                 <th class="aux-col">Auxiliary<br>Pioneer</th>
                     <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
                     <th class="remarks-col">Remarks</th>
                 </tr>
@@ -3252,14 +3251,14 @@ function formatS21Card(publisher, reports, serviceYear) {
                 ${tableRows}
             </tbody>
             <tfoot>
-                                <tr class="total-row">
-                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>         _           <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
+                s             <tr class="total-row">
+                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td> s                 <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
             </tfoot>
         </table>
         
         <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px; font-family: Arial, sans-serif;">
             S-21-E 11/23
-        </div>
+    A </div>
     </div>
     `;
 }
