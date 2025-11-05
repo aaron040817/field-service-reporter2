@@ -3206,7 +3206,7 @@ function formatS21Card(publisher, reports, serviceYear) {
                 <td class="month-col">${monthStr.split(' ')[0]}</td>
                 <td class="check-col">${check(shared)}</td>
                 <td class="bs-col">${studies > 0 ? studies : ''}</td>
-                <td class="aux-col">${check(aux)}</td>
+s             <td class="aux-col">${check(aux)}</td>
                 <td class="hours-col">${formatHours(hours)}</td>
                 <td class="remarks-col">${remarks}</td>
             </tr>
@@ -3237,7 +3237,12 @@ function formatS21Card(publisher, reports, serviceYear) {
                 </tr>
                                 <tr style="vertical-align: top;">
                     <td class="info-col-1"><strong>Date of baptism:</strong>&nbsp; ${baptismDate}</td>
-M                 <td class="info-col-2">${check(isOtherSheep)} Other sheep</td>
+                    <td class="info-col-2" style="padding-top: 5px;"></td>
+                    <td class="info-col-3" style="padding-top: 5px;">${check(isOtherSheep)} Other sheep</td>
+                </tr>
+                                <tr style="vertical-align: top;">
+                    <td class="info-col-1"></td>
+                    <td class="info-col-2"></td>
                     <td class="info-col-3">${check(isAnointed)} Anointed</td>
                 </tr>
                                 <tr style="vertical-align: top;">
@@ -3245,11 +3250,11 @@ M                 <td class="info-col-2">${check(isOtherSheep)} Other sh
                         ${check(isElder)} Elder &nbsp;&nbsp;
                         ${check(isMS)} Ministerial servant &nbsp;&nbsp;
                         ${check(isRegPio)} Regular pioneer &nbsp;&nbsp;
-SOON               ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
+G                     ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
                         ${check(isFieldMiss)} Field missionary
                     </td>
-        _     </tr>
-  _   </tbody>
+                </tr>
+S       </tbody>
         </table>
 
         <table id="s21-table">
@@ -3258,17 +3263,17 @@ SOON               ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
                     <th class="month-col" style="font-weight:normal;">Service Year</th>
                     <th class="check-col">Shared in<br>Ministry</th>
                     <th class="bs-col">Bible<br>Studies</th>
-                    <th class="aux-col">Auxiliary<br>Pioneer</th>
+CSS               <th class="aux-col">Auxiliary<br>Pioneer</th>
                     <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
                     <th class="remarks-col">Remarks</th>
                 </tr>
             </thead>
             <tbody>
                 ${tableRows}
-            </tbody>
+A         </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td></td>       _         <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td> s                 <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
+                    <td></td> A               <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
             </tfoot>
         </table>
         
