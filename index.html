@@ -66,9 +66,6 @@
     border: none; 
     padding: 0 2px;  /* Inalis ang top/bottom padding */
 }
-#s21-info-table div {
-    margin: 0; /* Tinitiyak na WALANG margin ang div */
-}
         
 /* Ito ang bago mong CSS */
 .info-col-1 { width: 40%; }
@@ -170,9 +167,6 @@
 #s21-info-table td {
     border: none;
     padding: 0 2px;  /* Inalis ang top/bottom padding */
-}
-#s21-info-table div {
-    margin: 0; /* Tinitiyak na WALANG margin ang div */
 }
     
     /* Ito ang bago mong CSS sa loob ng @media print */
@@ -3227,16 +3221,12 @@ function formatS21Card(publisher, reports, serviceYear) {
                 <table id="s21-info-table">
             <tbody>
                                 <tr style="vertical-align: top;">
-                    <td class="info-col-1">
-                        <div><strong>Name:</strong>&nbsp; ${name}</div>
-                    </td>
+                    <td class="info-col-1"><strong>Name:</strong>&nbsp; ${name}</td>
                     <td class="info-col-2"></td>
                     <td class="info-col-3"></td>
                 </tr>
                                 <tr style="vertical-align: top;">
-                    <td class="info-col-1">
-                        <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
-                    </td>
+                    <td class="info-col-1"><strong>Date of birth:</strong>&nbsp; ${birthdate}</td>
                     <td class="info-col-2">${check(isMale)} Male</td>
                     <td class="info-col-3">${check(isFemale)} Female</td>
                 </tr>
@@ -3251,10 +3241,10 @@ function formatS21Card(publisher, reports, serviceYear) {
                         ${check(isMS)} Ministerial servant &nbsp;&nbsp;
                         ${check(isRegPio)} Regular pioneer &nbsp;&nbsp;
                         ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
-                        ${check(isFieldMiss)} Field missionary
+          _           ${check(isFieldMiss)} Field missionary
                     </td>
                 </tr>
-section       </tbody>
+            </tbody>
         </table>
 
         <table id="s21-table">
@@ -3264,17 +3254,17 @@ section       </tbody>
                     <th class="check-col">Shared in<br>Ministry</th>
                     <th class="bs-col">Bible<br>Studies</th>
                     <th class="aux-col">Auxiliary<br>Pioneer</th>
-                s <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
+                    <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
                     <th class="remarks-col">Remarks</th>
-                </tr>
+              _ </tr>
             </thead>
             <tbody>
                 ${tableRows}
             </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td></td>                     <td></td>     D             <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
-          S </tfoot>
+                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td> A               <td></td>                 </tr>
+            </tfoot>
         </table>
         
         <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px; font-family: Arial, sans-serif;">
