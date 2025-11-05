@@ -3217,29 +3217,28 @@ function formatS21Card(publisher, reports, serviceYear) {
                                         <td class="info-col-1">
                         <div><strong>Name:</strong>&nbsp; ${name}</div>
                         <div><strong>Date of birth:</strong>&nbsp; ${birthdate}</div>
+                        <div><strong>Date of baptism:</strong>&nbsp; ${baptismDate}</div>
                         <div>${check(isElder)} Elder</div>
                     </td>
                                         <td class="info-col-2">
-                       <div><strong>Date of baptism:</strong>&nbsp; ${baptismDate}</div>
-                        <div>${check(isOtherSheep)} Other sheep</div>
-                        <div>${check(isMS)} Ministerial servant</div>
+                        <div style="padding-top: 23px;">${check(isOtherSheep)} Other sheep</div>                         <div>${check(isMS)} Ministerial servant</div>
                         <div>${check(isRegPio)} Regular pioneer</div>
                         <div>${check(isSpecPio)} Special pioneer</div>
                     </td>
                                         <td class="info-col-3">
                         <div>${check(isMale)} Male &nbsp;&nbsp; ${check(isFemale)} Female</div>
                         <div>${check(isAnointed)} Anointed</div>
-                     <div>${check(isFieldMiss)} Field missionary</div>
-                    </td>
+                        <div>${check(isFieldMiss)} Field missionary</div>
+               </td>
                 </tr>
-            </tbody>
+         </tbody>
         </table>
 
         <table id="s21-table">
             <thead>
                 <tr>
                     <th class="month-col" style="font-weight:normal;">Service Year</th>
-                    <th class="check-col">Shared in<br>Ministry</th>
+                 <th class="check-col">Shared in<br>Ministry</th>
                     <th class="bs-col">Bible<br>Studies</th>
                     <th class="aux-col">Auxiliary<br>Pioneer</th>
                     <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
@@ -3248,10 +3247,10 @@ function formatS21Card(publisher, reports, serviceYear) {
             </thead>
             <tbody>
                 ${tableRows}
-            </tbody>
+         </tbody>
             <tfoot>
-                <tr class="total-row">
-                 <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
+               <tr class="total-row">
+                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td> s                 <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
             </tfoot>
         </table>
         
