@@ -58,6 +58,7 @@
     font-size: 12px; 
     border-collapse: collapse; 
     margin-bottom: 10px;
+    border: none; /* Idagdag o siguraduhin na ito ay 'none' */
 }
 #s21-info-table div {
     margin-bottom: 4px; /* Spacing sa info block */
@@ -84,19 +85,7 @@
     font-weight: bold;
     background-color: #f9f9f9;
 }
-.check-box-display {
-    display: inline-block;
-    width: 10px; 
-    height: 10px;
-    border: 1px solid #666; /* Ang box */
-    margin-right: 5px;
-    text-align: center;
-    line-height: 10px; 
-    font-size: 10px;   
-    font-weight: bold;
-    color: #333;
-    vertical-align: middle; /* Para pumantay sa text */
-}
+
 #s21-page-footer {
     font-size: 10pt; 
     margin-top: 5px;
@@ -169,6 +158,7 @@
     #s21-info-table {
         font-size: 10pt;
         margin-bottom: 10px;
+        border: none; /* Idagdag o siguraduhin na ito ay 'none' */
     }
     #s21-info-table div {
         margin-bottom: 4px;
@@ -199,18 +189,7 @@
     #s21-table .hours-col { width: 12%; }
     #s21-table .remarks-col { width: 40%; }
     #s21-table .total-row td { font-weight: bold; }
-    .check-box-display {
-        font-family: "Courier New", Courier, monospace;
-        font-weight: bold;
-        font-size: 10px;
-        line-height: 10px;
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border: 1px solid #000;
-        color: #000;
-        vertical-align: middle;
-    }
+    
     /* 7. I-style ang page footer */
     #s21-page-footer {
         font-size: 10pt; 
@@ -3139,7 +3118,9 @@ async function generatePublisherRecordCard() {
 
 function formatS21Card(publisher, reports, serviceYear) {
     // Helper para sa checkboxes
-    const check = (val) => `<span class="check-box-display">${val ? '✓' : '&nbsp;'}</span>`;
+    // *** ITO ANG MALAKING PAGBABAGO: Gumamit ng literal Unicode characters ***
+    const check = (val) => val ? '☑' : '☐'; // '☑' (checked) o '☐' (empty)
+
     const formatHours = (val) => (val > 0 ? val : '');
 
     // Kunin ang publisher details
@@ -3192,7 +3173,7 @@ function formatS21Card(publisher, reports, serviceYear) {
             totalBibleStudies += studies;
             totalHours += hours;
             remarks = report.comments || '';
-        } else {
+       } else {
             // Walang laman ang remarks kung "No Report"
             remarks = '';
         }
@@ -3241,26 +3222,26 @@ function formatS21Card(publisher, reports, serviceYear) {
                     <td colspan="3" style="padding-top: 5px;">
                     </td>
                 </tr>
-           </tbody></table>
+            </tbody>
+        </table>
                 <table id="s21-table">
             <thead>
                 <tr>
                     <th class="month-col" style="font-weight:normal;">Service Year</th>
                     <th class="check-col">Shared in Ministry</th>
-                    <th class="bs-col">Bible Studies</th>
+                  <th class="bs-col">Bible Studies</th>
                     <th class="aux-col">Auxiliary Pioneer</th>
-                 <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field<br>missionary)</span></th>
+                    <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field<br>missionary)</span></th>
                     <th class="remarks-col">Remarks</th>
-                 </tr>
+                </tr>
             </thead>
             <tbody>
                 ${tableRows}
-         </tbody>
+            </tbody>
             <tfoot>
                                 <tr class="total-row">
-                    <td class="month-col" style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>
-                    <td></td>                     <td><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td></td>                     <td><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
-                       </tfoot>
+                    <td></td>                     <td></td>                     <td><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
+            </tfoot>
         </table>
         
                 <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px;">
