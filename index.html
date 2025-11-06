@@ -106,7 +106,10 @@
     color: #555;
     font-family: Arial, sans-serif;
 }
-
+.s21-privilege {
+    margin-right: 15px; /* Ito ang space sa pagitan ng bawat item */
+    white-space: nowrap; /* Tinitiyak na hindi mapuputol ang "Ministerial servant" */
+}
 /* Print-specific Styles for S-21 Card */
 @media print {
     @page {
@@ -214,7 +217,10 @@
         background-color: #fff;
     }
     /* Tinanggal na ang .check-box-display rule */
-    
+    .s21-privilege {
+        margin-right: 15px; /* Space para sa print */
+        white-space: nowrap;
+    }
     /* 6. I-style ang page footer */
     #s21-page-footer {
         font-size: 10pt; 
@@ -3218,7 +3224,7 @@ function formatS21Card(publisher, reports, serviceYear) {
         <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
         <h3 style="text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 14pt; font-family: Arial, sans-serif;">CONGREGATION'S PUBLISHER RECORD</h3>
 
-                <table id="s21-info-table">
+        <table id="s21-info-table">
             <tbody>
                                 <tr style="vertical-align: top;">
                     <td class="info-col-1"><strong>Name:</strong>&nbsp; ${name}</td>
@@ -3236,12 +3242,12 @@ function formatS21Card(publisher, reports, serviceYear) {
                     <td class="info-col-3">${check(isAnointed)} Anointed</td>
                 </tr>
                                 <tr style="vertical-align: top;">
-                    <td colspan="3" style="padding-top: 5px;">
-                        ${check(isElder)} Elder &nbsp;&nbsp;
-                        ${check(isMS)} Ministerial servant &nbsp;&nbsp;
-                        ${check(isRegPio)} Regular pioneer &nbsp;&nbsp;
-                        ${check(isSpecPio)} Special pioneer &nbsp;&nbsp;
-          _           ${check(isFieldMiss)} Field missionary
+                    <td colspan="3" style="padding-top: 5px;" class="privilege-row">
+                        <span class="s21-privilege">${check(isElder)} Elder</span>
+                        <span class="s21-privilege">${check(isMS)} Ministerial servant</span>
+                        <span class="s21-privilege">${check(isRegPio)} Regular pioneer</span>
+                        <span class="s21-privilege">${check(isSpecPio)} Special pioneer</span>
+                        <span class="s21-privilege">${check(isFieldMiss)} Field missionary</span>
                     </td>
                 </tr>
             </tbody>
@@ -3256,14 +3262,14 @@ function formatS21Card(publisher, reports, serviceYear) {
                     <th class="aux-col">Auxiliary<br>Pioneer</th>
                     <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
                     <th class="remarks-col">Remarks</th>
-              _ </tr>
+                </tr>
             </thead>
             <tbody>
                 ${tableRows}
             </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td> A               <td></td>                 </tr>
+                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
             </tfoot>
         </table>
         
