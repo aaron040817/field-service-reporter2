@@ -181,53 +181,130 @@
     #s21-table {
         width: 100%;
         border-collapse: collapse;
-        font-family: Arial, sans-serif;
-        font-size: 10pt;
-        page-break-inside: avoid;
-    }
-    #s21-table th, #s21-table td {
-        border: 1px solid #000;
-        padding: 4px;
-        text-align: center;
-        height: 18px;
+        font-family: Arial, sans-serif;/* --- S-21 Styles (Shared for Screen & Print) --- */
+#s21-card {
+    padding: 20px;
+    background-color: #fff;
+    font-family: Arial, sans-serif;
+    color: #000;
+}
+.s21-title {
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 14pt;
+    text-transform: uppercase;
+}
+
+/* Info Header Layout (Flexbox) */
+.s21-header-info {
+    margin-bottom: 15px;
+    font-size: 11pt;
+}
+.form-row {
+    display: flex;
+    align-items: flex-end; /* Pantayin ang text sa ibaba ng linya */
+    margin-bottom: 8px;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+.label {
+    font-weight: bold;
+    margin-right: 5px;
+    white-space: nowrap;
+}
+/* Ito ang gumagawa ng "underline" effect kung nasaan ang data */
+.data-line {
+    display: inline-block;
+    padding-left: 10px;
+    min-height: 1em;
+    /* background-color: #eef; */ /* Tanggalin ang comment kung gusto mo makita ang highlight sa screen */
+}
+.checkbox-group {
+    display: flex;
+    gap: 20px; /* Space sa pagitan ng checkbox items */
+}
+.right-align {
+    margin-left: auto; /* Itulak sa pinaka-kanan */
+}
+.cb-item {
+    white-space: nowrap;
+}
+/* Row para sa Elder, MS, etc. - Space between para kumalat sila */
+.privileges-row {
+    justify-content: space-between; 
+    margin-top: 15px;
+}
+
+/* Table Styles */
+#s21-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    margin-top: 5px;
+    border: 2px solid #000; /* Makapal na outer border */
+}
+#s21-table th, #s21-table td {
+    border: 1px solid #000;
+    padding: 4px;
+    text-align: center;
+    height: 20px;
+    vertical-align: middle;
+}
+#s21-table th {
+    background-color: #fff;
+    font-weight: bold;
+}
+#s21-table .month-col { text-align: left; padding-left: 5px; width: 15%; }
+#s21-table .check-col { width: 10%; }
+#s21-table .bs-col { width: 10%; }
+#s21-table .aux-col { width: 10%; }
+#s21-table .hours-col { width: 12%; }
+#s21-table .remarks-col { width: 43%; }
+
+/* Footer */
+#s21-page-footer {
+    font-size: 9pt;
+    margin-top: 10px;
+}
+
+/* --- PRINT SPECIFIC OVERRIDES --- */
+@media print {
+    @page {
+        size: auto;
+        margin: 0.5in;
+        /* Hide browser headers */
+        @top-center { content: ""; } @bottom-center { content: ""; }
+        @top-left { content: ""; } @bottom-left { content: ""; }
+        @top-right { content: ""; } @bottom-right { content: ""; }
     }
-    #s21-table th { 
-        background-color: #fff; 
-        font-weight: bold; 
-        vertical-align: middle; 
-        font-size: 9pt;
-        line-height: 1.3;
-        color: #000;
+    
+    /* Itago ang lahat */
+    body * { visibility: hidden; } 
+    
+    /* Ipakita lang ang card */
+    #s21-card, #s21-card * {
+        visibility: visible !important; 
     }
-    #s21-table td {
-        color: #000;
+    
+    #s21-card {
+        position: absolute;
+        top: 0; left: 0; width: 100%;
+        margin: 0; padding: 0;
+        border: none;
     }
-    #s21-table .month-col { 
-        text-align: left; 
-        width: 18%; 
-        padding-left: 10px;
+    
+    #printS21Btn { display: none !important; }
+    
+    /* Remove colored background for data lines in print */
+    .data-line { background-color: transparent !important; }
+    
+    /* Ensure table borders print */
+    #s21-table, #s21-table th, #s21-table td {
+        border: 1px solid #000 !important;
     }
-    #s21-table .check-col { width: 10%; }
-    #s21-table .bs-col { width: 10%; }
-    #s21-table .aux-col { width: 10%; }
-    #s21-table .hours-col { width: 12%; }
-    #s21-table .remarks-col { width: 40%; }
-    #s21-table .total-row td { 
-        font-weight: bold; 
-        background-color: #fff;
-    }
-    /* Tinanggal na ang .check-box-display rule */
-    .s21-privilege {
-        margin-right: 15px; /* Space para sa print */
-        white-space: nowrap;
-    }
-    /* 6. I-style ang page footer */
-    #s21-page-footer {
-        font-size: 10pt; 
-        margin-top: 5px;
-        color: #000;
-        font-family: Arial, sans-serif;
-    }
+    /* Thick outer border for table */
+    #s21-table { border: 2px solid #000 !important; }
 }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -3148,136 +3225,146 @@ async function generatePublisherRecordCard() {
     }
 }
 function formatS21Card(publisher, reports, serviceYear) {
-    // Helper para sa checkboxes
-    const check = (val) => val ? '☑' : '☐'; 
+    // Helper para sa checkboxes (Unicode characters)
+    const check = (val) => val ? '☑' : '☐'; 
+    const formatHours = (val) => (val > 0 ? val : '');
 
-    const formatHours = (val) => (val > 0 ? val : '');
+    // Kunin ang publisher details
+    const name = publisher.fullName || '';
+    const birthdate = publisher.birthdate || '';
+    const isMale = publisher.gender === 'Male';
+    const isFemale = publisher.gender === 'Female';
+    const baptismDate = publisher.baptismDate || '';
+    const isOtherSheep = publisher.hope === 'Other Sheep';
+    const isAnointed = publisher.hope === 'Anointed';
+    const isElder = publisher.privilege === 'Elder';
+    const isMS = publisher.privilege === 'Ministerial Servant';
+    const isRegPio = publisher.privilege2 === 'Regular Pioneer';
+    const isSpecPio = publisher.privilege2 === 'Special Pioneer';
+    const isFieldMiss = publisher.privilege2 === 'Field Missionary';
 
-    // Kunin ang publisher details
-    const name = publisher.fullName || '';
-    const birthdate = publisher.birthdate || '';
-    const isMale = publisher.gender === 'Male';
-    const isFemale = publisher.gender === 'Female';
-    const baptismDate = publisher.baptismDate || '';
-    const isOtherSheep = publisher.hope === 'Other Sheep';
-    const isAnointed = publisher.hope === 'Anointed';
-    const isElder = publisher.privilege === 'Elder';
-    const isMS = publisher.privilege === 'Ministerial Servant';
-    const isRegPio = publisher.privilege2 === 'Regular Pioneer';
-    const isSpecPio = publisher.privilege2 === 'Special Pioneer';
-    const isFieldMiss = publisher.privilege2 === 'Field Missionary';
+    // Buuin ang 12 months
+    const months = [];
+    let currentMonth = new Date(parseInt(serviceYear) - 1, 8); // Start from September
+    for (let i = 0; i < 12; i++) {
+        const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
+        const year = currentMonth.getFullYear();
+        months.push(`${monthName} ${year}`);
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+    
+    let totalBibleStudies = 0;
+    let totalHours = 0;
 
-    // Buuin ang 12 months ng service year
-    const months = [];
-    let currentMonth = new Date(parseInt(serviceYear) - 1, 8); // Start from September
-    for (let i = 0; i < 12; i++) {
-        const monthName = currentMonth.toLocaleString('en-US', { month: 'long' });
-        const year = currentMonth.getFullYear();
-        months.push(`${monthName} ${year}`);
-        currentMonth.setMonth(currentMonth.getMonth() + 1);
-    }
-    
-    let totalBibleStudies = 0;
-    let totalHours = 0;
+    // Buuin ang table rows
+    const tableRows = months.map(monthStr => {
+        const report = reports.find(r => r.month === monthStr);
+        let shared = false;
+        let studies = 0;
+        let aux = false;
+        let hours = 0;
+        let remarks = ''; 
 
-    // Buuin ang table rows
-    const tableRows = months.map(monthStr => {
-        const report = reports.find(r => r.month === monthStr);
-        
-        let shared = false;
-        let studies = 0;
-        let aux = false;
-        let hours = 0;
-        let remarks = ''; // Default ay blangko
+        if (report) {
+            shared = report.sharedInMinistry;
+            studies = report.bibleStudies || 0;
+            aux = report.wasAuxiliaryPioneer;
+            
+            if (isRegPio || isSpecPio || isFieldMiss || aux) {
+                 hours = report.hours || 0;
+            }
+            
+            totalBibleStudies += studies;
+            totalHours += hours;
+            remarks = report.comments || '';
+        }
 
-        if (report) {
-            shared = report.sharedInMinistry;
-            studies = report.bibleStudies || 0;
-            aux = report.wasAuxiliaryPioneer;
-            
-            if (isRegPio || isSpecPio || isFieldMiss || aux) {
-                 hours = report.hours || 0;
-            }
-            
-            totalBibleStudies += studies;
-            totalHours += hours;
-            remarks = report.comments || '';
-        } else {
-            remarks = '';
-        }
+        return `
+            <tr>
+                <td class="month-col">${monthStr.split(' ')[0]}</td>
+                <td class="check-col">${check(shared)}</td>
+                <td class="bs-col">${studies > 0 ? studies : ''}</td>
+                <td class="aux-col">${check(aux)}</td>
+                <td class="hours-col">${formatHours(hours)}</td>
+                <td class="remarks-col">${remarks}</td>
+            </tr>
+        `;
+    }).join('');
 
-        return `
-            <tr>
-                <td class="month-col">${monthStr.split(' ')[0]}</td>
-                <td class="check-col">${check(shared)}</td>
-                <td class="bs-col">${studies > 0 ? studies : ''}</td>
-                <td class="aux-col">${check(aux)}</td>
-                <td class="hours-col">${formatHours(hours)}</td>
-                <td class="remarks-col">${remarks}</td>
-            </tr>
-        `;
-    }).join('');
+    return `
+    <div id="s21-card">
+        <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
+        
+        <h3 class="s21-title">CONGREGATION'S PUBLISHER RECORD</h3>
 
-    // Ang HTML para sa buong S-21 card
-    return `
-    <div id="s21-card">
-        <button id="printS21Btn" class="approve-btn" style="float: right;">Print</button>
-        <h3 style="text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 14pt; font-family: Arial, sans-serif;">CONGREGATION'S PUBLISHER RECORD</h3>
+        <div class="s21-header-info">
+            
+            <div class="form-row">
+                <span class="label">Name:</span>
+                <span class="data-line" style="flex-grow: 1;">${name}</span>
+            </div>
 
-        <table id="s21-info-table">
-            <tbody>
-                                <tr style="vertical-align: top;">
-                    <td class="info-col-1"><strong>Name:</strong>&nbsp; ${name}</td>
-                    <td class="info-col-2"></td>
-                    <td class="info-col-3"></td>
-                </tr>
-                                <tr style="vertical-align: top;">
-                    <td class="info-col-1"><strong>Date of birth:</strong>&nbsp; ${birthdate}</td>
-                    <td class="info-col-2">${check(isMale)} Male</td>
-                    <td class="info-col-3">${check(isFemale)} Female</td>
-                </tr>
-                                <tr style="vertical-align: top;">
-                    <td class="info-col-1"><strong>Date of baptism:</strong>&nbsp; ${baptismDate}</td>
-                    <td class="info-col-2">${check(isOtherSheep)} Other sheep</td>
-                    <td class="info-col-3">${check(isAnointed)} Anointed</td>
-                </tr>
-                                <tr style="vertical-align: top;">
-                    <td colspan="3" style="padding-top: 5px;" class="privilege-row">
-                        <span class="s21-privilege">${check(isElder)} Elder</span>
-                        <span class="s21-privilege">${check(isMS)} Ministerial servant</span>
-                        <span class="s21-privilege">${check(isRegPio)} Regular pioneer</span>
-                        <span class="s21-privilege">${check(isSpecPio)} Special pioneer</span>
-                        <span class="s21-privilege">${check(isFieldMiss)} Field missionary</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+            <div class="form-row">
+                <span class="label">Date of birth:</span>
+                <span class="data-line" style="width: 200px;">${birthdate}</span>
+                
+                <div class="checkbox-group right-align">
+                    <span class="cb-item">${check(isMale)} Male</span>
+                    <span class="cb-item">${check(isFemale)} Female</span>
+                </div>
+            </div>
 
-        <table id="s21-table">
-            <thead>
-                <tr>
-                    <th class="month-col" style="font-weight:normal;">Service Year</th>
-                    <th class="check-col">Shared in<br>Ministry</th>
-                    <th class="bs-col">Bible<br>Studies</th>
-                    <th class="aux-col">Auxiliary<br>Pioneer</th>
-                    <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
-                    <th class="remarks-col">Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${tableRows}
-            </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td></td>                     <td></td>                     <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>                     <td style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>                     <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>                     <td></td>                 </tr>
-            </tfoot>
-        </table>
-        
-        <div id="s21-page-footer" style="font-size: 10pt; margin-top: 5px; font-family: Arial, sans-serif;">
-            S-21-E 11/23
-        </div>
-    </div>
-    `;
+            <div class="form-row">
+                <span class="label">Date of baptism:</span>
+                <span class="data-line" style="width: 200px;">${baptismDate}</span>
+
+                <div class="checkbox-group right-align">
+                    <span class="cb-item">${check(isOtherSheep)} Other sheep</span>
+                    <span class="cb-item">${check(isAnointed)} Anointed</span>
+                </div>
+            </div>
+
+            <div class="form-row privileges-row">
+                <span class="cb-item">${check(isElder)} Elder</span>
+                <span class="cb-item">${check(isMS)} Ministerial servant</span>
+                <span class="cb-item">${check(isRegPio)} Regular pioneer</span>
+                <span class="cb-item">${check(isSpecPio)} Special pioneer</span>
+                <span class="cb-item">${check(isFieldMiss)} Field missionary</span>
+            </div>
+
+        </div>
+
+        <table id="s21-table">
+            <thead>
+                <tr>
+                    <th class="month-col" style="font-weight:normal;">Service Year</th>
+                    <th class="check-col">Shared in<br>Ministry</th>
+                    <th class="bs-col">Bible<br>Studies</th>
+                    <th class="aux-col">Auxiliary<br>Pioneer</th>
+                    <th class="hours-col">Hours<br><span style="font-weight:normal; font-size: 8pt;">(If pioneer<br>or field missionary)</span></th>
+                    <th class="remarks-col">Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td style="border:none;"></td>
+                    <td style="border:none;"></td>
+                    <td style="text-align:center;"><strong>${totalBibleStudies > 0 ? totalBibleStudies : ''}</strong></td>
+                    <td style="text-align: right; padding-right: 10px; border:none;"><strong>Total</strong></td>
+                    <td style="text-align:center;"><strong>${totalHours > 0 ? totalHours : ''}</strong></td>
+                    <td style="border:none;"></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div id="s21-page-footer">
+            S-21-E 11/23
+        </div>
+    </div>
+    `;
 }
 async function generateSummaryTotalsCard() {
     const serviceYear = serviceYearSummaryCat.value;
