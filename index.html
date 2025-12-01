@@ -331,6 +331,7 @@
     <button id="exportExcelBtn">Export to Excel</button>
     <button id="uploadReportsBtn">Upload Reports</button>
     <button id="uploadPublishersBtn">Upload Publishers</button>
+    <button id="exportPublishersBtn">Export Publisher Records</button>
     <button id="viewRecordsBtn">View/Print S-21 Records</button>
 </div>
         <div id="userButtons">
@@ -746,6 +747,7 @@
     let pendingRequestsList, noPendingRequestsLabel;
     let selectFileBtn, excelFileInput, uploadStatus, processUploadBtn, backHomeFromUploadBtn, logoutBtnFromUpload;
     let selectFileBtnPublishers, excelFileInputPublishers, uploadStatusPublishers, processUploadBtnPublishers, backHomeFromUploadPublishersBtn, logoutBtnFromUploadPublishers;
+    let exportPublishersBtn;
     let searchPublisherAux, suggestionBoxAux, publisherNameDropdownAux, fieldGroupAux, privilege2Aux, serviceYearDropdownAux, monthYearDropdownAux, isAuxiliaryPioneerThisMonthAux, addAuxStatusBtn, updateAuxStatusBtn, previousAuxStatusBtn, nextAuxStatusBtn, clearAuxFormBtn, backHomeFromAuxBtn, lastModifiedByAux;
     let summaryReportPage;
     let serviceYearSummary, monthSummary, generateSummaryBtn, summaryResults, backHomeFromSummaryBtn;
@@ -892,6 +894,7 @@
     processUploadBtnPublishers = document.getElementById('processUploadBtnPublishers');
     backHomeFromUploadPublishersBtn = document.getElementById('backHomeFromUploadPublishersBtn');
     logoutBtnFromUploadPublishers = document.getElementById('logoutBtnFromUploadPublishers');
+    exportPublishersBtn = document.getElementById('exportPublishersBtn');
     searchPublisherAux = document.getElementById('searchPublisherAux');
     suggestionBoxAux = document.getElementById('suggestionBoxAux');
     publisherNameDropdownAux = document.getElementById('publisherNameDropdownAux');
@@ -1020,6 +1023,7 @@ backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSu
     excelFileInputPublishers?.addEventListener('change', handlePublisherFileSelect);
     processUploadBtnPublishers?.addEventListener('click', processAndUploadPublishers);
     logoutBtnFromUploadPublishers?.addEventListener('click', logout);
+    exportPublishersBtn?.addEventListener('click', exportPublishersToExcel);
     addAuxStatusBtn?.addEventListener("click", addAuxiliaryStatus);
     updateAuxStatusBtn?.addEventListener("click", updateAuxiliaryStatus);
     previousAuxStatusBtn?.addEventListener("click", previousAuxStatus);
@@ -3583,6 +3587,69 @@ nbsp;           </tr>
         summaryTotalsResult.innerHTML = `<p style='color:red;'>An error occurred: ${error.message}</p>`;
     }
 }  
-    </script>
+async function exportPublishersToExcel() {
+    // Check kung may laman ang listahan
+    if (!publisherList || publisherList.length === 0) {
+        alert("No publisher records found to export.");
+        return;
+    }
+
+    try {
+        // 1. I-map ang data para maging malinis ang Headers sa Excel
+        // Pwede mong ayusin ang pagkakasunod-sunod dito
+        const dataToExport = publisherList.map(pub => ({
+            "Last Name": pub.lastName,
+            "First Name": pub.firstName,
+            "Full Name": pub.fullName,
+            "Status": pub.publisherStatus,
+            "Birthdate": pub.birthdate,
+            "Gender": pub.gender,
+            "Baptism Status": pub.baptismStatus,
+            "Baptism Date": pub.baptismDate || "",
+            "Hope": pub.hope,
+            "Privilege": pub.privilege,
+            "Privilege 2 (Pioneer Status)": pub.privilege2,
+            "Field Service Group": pub.fieldServiceGroup,
+            "Month of Transfer": pub.monthOfTransfer || "",
+            "Month of Death": pub.monthOfDeath || ""
+        }));
+
+        // 2. Gumawa ng Worksheet
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+
+        // (Optional) I-adjust ang lapad ng columns para maganda tingnan
+        const wscols = [
+            {wch: 15}, // Last Name
+            {wch: 15}, // First Name
+            {wch: 25}, // Full Name
+            {wch: 20}, // Status
+            {wch: 12}, // Birthdate
+            {wch: 10}, // Gender
+            {wch: 15}, // Baptism Status
+            {wch: 12}, // Baptism Date
+            {wch: 15}, // Hope
+            {wch: 20}, // Privilege
+            {wch: 25}, // Privilege 2
+            {wch: 20}, // Group
+            {wch: 15}, // Transfer
+            {wch: 15}  // Death
+        ];
+        worksheet['!cols'] = wscols;
+
+        // 3. Gumawa ng Workbook at i-append ang worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Publishers");
+
+        // 4. I-download ang file
+        // Gumawa ng filename na may date ngayon
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(workbook, `Congregation_Publishers_${dateStr}.xlsx`);
+
+    } catch (error) {
+        console.error("Error exporting publishers:", error);
+        alert("An error occurred while exporting. Please check the console.");
+    }
+}
+</script>
 </body>
 </html>
