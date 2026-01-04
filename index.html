@@ -3226,7 +3226,7 @@ async function generatePublisherRecordCard() {
         const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
         const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
         const fontSize = 10;
-        const checkMark = "✓"; // Gamitin ang '✓' o '/' pang-check
+        const checkMark = "/"; // Gamitin ang 'x' o '/' pang-check
 
         // Helper function para mag-drawing ng text
         const drawText = (text, x, y, isBold = false) => {
