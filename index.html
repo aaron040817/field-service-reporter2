@@ -2076,7 +2076,7 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
                 <label for="auxiliaryPioneerRequest">Auxiliary Pioneer</label>
             </div>
             <label for="commentsRequest">Comments/Reason for Update (Optional):</label>
-            <textarea id="commentsRequest"></textarea>
+            <textarea id="commentsRequest" maxlength="30" placeholder="Max 30 characters only"></textarea>
             <div id="lastModifiedByRequest" class="last-modified"></div>
         `;
         requestFields.innerHTML = fieldsHTML;
