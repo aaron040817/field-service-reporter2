@@ -3327,7 +3327,6 @@ async function generatePublisherRecordCard() {
 
         // Totals Row
         const totalY = startY - (12 * rowHeight); // Pang-13 na row
-        drawText(String(totalStudies), colX.studies, totalY, true);
         if (totalHours > 0) drawText(String(totalHours), colX.hours, totalY, true);
 
         // 4. Finalize PDF
