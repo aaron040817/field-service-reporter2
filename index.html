@@ -1466,90 +1466,143 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
         }
     }
         async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
-    elements.fieldHoursContainer.classList.add("hidden");
-    elements.bibleStudiesContainer.classList.add("hidden");
-    elements.sharedMinistryContainer.classList.add("hidden");
-    elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-    elements.fieldHoursInput.value = "";
-    elements.bibleStudiesInput.value = "";
-    elements.sharedMinistryCheckbox.checked = false;
-    elements.auxiliaryPioneerCheckbox.checked = false;
-    elements.sharedMinistryCheckbox.disabled = false;
-    elements.auxiliaryPioneerCheckbox.disabled = false;
+        // 1. Reset muna ang lahat ng fields (Hide at Clear)
+        elements.fieldHoursContainer.classList.add("hidden");
+        elements.bibleStudiesContainer.classList.add("hidden");
+        elements.sharedMinistryContainer.classList.add("hidden");
+        elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+        
+        elements.fieldHoursInput.value = "";
+        elements.bibleStudiesInput.value = "";
+        elements.sharedMinistryCheckbox.checked = false;
+        elements.auxiliaryPioneerCheckbox.checked = false;
+        
+        elements.sharedMinistryCheckbox.disabled = false;
+        elements.auxiliaryPioneerCheckbox.disabled = false;
 
-    const handleHoursInput_Standard = () => {
-        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-        if (value && parseInt(value, 10) === 0) { value = ''; }
-        elements.fieldHoursInput.value = value;
-        elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
-    };
+        // 2. Logic kapag nag-type ng Oras (Standard Publishers)
+        const handleHoursInput_Standard = () => {
+            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+            if (value && parseInt(value, 10) === 0) { value = ''; }
+            elements.fieldHoursInput.value = value;
+            // Auto-check Shared in Ministry lang
+            elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
+        };
 
-    const handleHoursInput_WithAux = () => {
-        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-        if (value && parseInt(value, 10) === 0) { value = ''; }
-        elements.fieldHoursInput.value = value;
-        const hasHours = parseInt(value, 10) > 0;
-        elements.sharedMinistryCheckbox.checked = hasHours;
-        elements.auxiliaryPioneerCheckbox.checked = hasHours;
-    };
-
-    const handleStudiesInput = () => { elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); };
-    
-    elements.fieldHoursInput.oninput = null;
-    elements.bibleStudiesInput.oninput = null;
-
-    const privilege2 = elements.privilegeInput.value;
-    switch (privilege2) {
-        case "Regular Pioneer":
-        case "Special Pioneer":
-        case "Field Missionary":
-            elements.fieldHoursContainer.classList.remove("hidden");
-            elements.bibleStudiesContainer.classList.remove("hidden");
-            elements.sharedMinistryContainer.classList.remove("hidden");
-            elements.sharedMinistryCheckbox.disabled = true;
-            elements.fieldHoursInput.oninput = handleHoursInput_Standard; 
-            elements.bibleStudiesInput.oninput = handleStudiesInput;
-            break;
-        case "Continuous Auxiliary Pioneer":
-            elements.fieldHoursContainer.classList.remove("hidden");
-            elements.bibleStudiesContainer.classList.remove("hidden");
-            elements.sharedMinistryContainer.classList.remove("hidden");
-            elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-            elements.sharedMinistryCheckbox.disabled = true;
-            elements.auxiliaryPioneerCheckbox.disabled = true;
-            elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
-            elements.bibleStudiesInput.oninput = handleStudiesInput;
-            break;
-        case "Publisher/Auxi":
-            let isAux = false;
-            if (publisherId && serviceYear && month) {
-                const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-                const auxStatusRef = db.collection("auxiliary_status").doc(docId);
-                try {
-                    const docSnap = await auxStatusRef.get();
-                    if (docSnap.exists && docSnap.data().isAuxiliary) {
-                        isAux = true;
-                    }
-                } catch (e) { console.error("Error fetching aux status", e); }
+        // 3. Logic kapag nag-type ng Oras (FULL TIME SERVANTS: RP, SP, FM)
+        // Ito ang solusyon sa issue mo sa August 2025
+        const handleHoursInput_FullTime = () => {
+            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+            if (value && parseInt(value, 10) === 0) { value = ''; }
+            elements.fieldHoursInput.value = value;
+            
+            // Auto-check Shared in Ministry
+            elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
+            
+            // FORCE UNCHECK AUXILIARY PIONEER (Siguradong walang check kahit anong month)
+            if(elements.auxiliaryPioneerCheckbox) {
+                elements.auxiliaryPioneerCheckbox.checked = false; 
             }
-            if (isAux) {
+        };
+
+        // 4. Logic kapag nag-type ng Oras (Auxiliary Pioneers)
+        const handleHoursInput_WithAux = () => {
+            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+            if (value && parseInt(value, 10) === 0) { value = ''; }
+            elements.fieldHoursInput.value = value;
+            
+            const hasHours = parseInt(value, 10) > 0;
+            elements.sharedMinistryCheckbox.checked = hasHours;
+            // Dito lang dapat nag-o-autocheck ang Aux Pioneer
+            elements.auxiliaryPioneerCheckbox.checked = hasHours;
+        };
+
+        const handleStudiesInput = () => { 
+            elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); 
+        };
+        
+        // Reset listeners
+        elements.fieldHoursInput.oninput = null;
+        elements.bibleStudiesInput.oninput = null;
+
+        // 5. I-apply ang logic base sa Privilege
+        const privilege2 = elements.privilegeInput.value;
+        
+        switch (privilege2) {
+            case "Regular Pioneer":
+            case "Special Pioneer":
+            case "Field Missionary":
+                // Ipakita ang hours, studies, shared
+                elements.fieldHoursContainer.classList.remove("hidden");
+                elements.bibleStudiesContainer.classList.remove("hidden");
+                elements.sharedMinistryContainer.classList.remove("hidden");
+                
+                // Disable Shared checkbox (kasi automatic na dapat checked pag may hours)
+                elements.sharedMinistryCheckbox.disabled = true;
+                
+                // *** GAMITIN ANG BAGONG HANDLER PARA SA FULL TIME ***
+                elements.fieldHoursInput.oninput = handleHoursInput_FullTime; 
+                elements.bibleStudiesInput.oninput = handleStudiesInput;
+                break;
+
+            case "Continuous Auxiliary Pioneer":
                 elements.fieldHoursContainer.classList.remove("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
                 elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                
                 elements.sharedMinistryCheckbox.disabled = true;
-                elements.auxiliaryPioneerCheckbox.disabled = true;
+                elements.auxiliaryPioneerCheckbox.disabled = true; // Auto-check kaya disabled
+                
                 elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
-            } else {
-                elements.bibleStudiesContainer.classList.remove("hidden");
-                elements.sharedMinistryContainer.classList.remove("hidden");
-                elements.sharedMinistryCheckbox.disabled = false;
-                elements.bibleStudiesInput.oninput = handleStudiesInput;
-            }
-            break;
+                break;
+
+            case "Publisher/Auxi":
+                let isAux = false;
+                // Check kung naka-set na Aux siya sa database para sa month na ito
+                if (publisherId && serviceYear && month) {
+                    const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+                    // Tandaan: Async ito pero hindi natin mahihintay sa UI render agad minsan, 
+                    // pero dahil reactive ang buttons, okay lang.
+                    try {
+                        const docSnap = await db.collection("auxiliary_status").doc(docId).get();
+                        if (docSnap.exists && docSnap.data().isAuxiliary) {
+                            isAux = true;
+                        }
+                    } catch (e) { console.error("Error fetching aux status", e); }
+                }
+
+                if (isAux) {
+                    // Kung Aux siya ngayong buwan
+                    elements.fieldHoursContainer.classList.remove("hidden");
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+                    
+                    elements.sharedMinistryCheckbox.disabled = true;
+                    elements.auxiliaryPioneerCheckbox.disabled = true;
+                    
+                    elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
+                } else {
+                    // Kung Regular Publisher lang
+                    elements.bibleStudiesContainer.classList.remove("hidden");
+                    elements.sharedMinistryContainer.classList.remove("hidden");
+                    // Kung may hours (e.g. August Campaign), ipakita ang field hours input
+                    // Pero sa default, baka studies lang. Depende sa requirement niyo.
+                    // Assuming papayagan mag-input ng hours ang publisher kahit hindi aux:
+                    elements.fieldHoursContainer.classList.remove("hidden"); 
+                    
+                    elements.sharedMinistryCheckbox.disabled = false;
+                    
+                    // Gamitin ang Standard Handler (HINDI mag-o-autocheck ng Aux)
+                    elements.fieldHoursInput.oninput = handleHoursInput_Standard; 
+                    elements.bibleStudiesInput.oninput = handleStudiesInput;
+                }
+                break;
+        }
     }
-}
     function setupManagePublisherPage() {
         clearPublisherForm();
         searchInputManage.addEventListener("input", function () {
