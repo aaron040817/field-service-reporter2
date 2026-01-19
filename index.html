@@ -333,6 +333,7 @@
     <button id="uploadPublishersBtn">Upload Publishers</button>
     <button id="exportPublishersBtn">Export Publisher Records</button>
     <button id="viewRecordsBtn">View/Print S-21 Records</button>
+    <button id="missingReportsBtn">Monitoring of No Report</button>
 </div>
         <div id="userButtons">
             <button id="addReportBtnUser">Add Report</button>
@@ -698,6 +699,27 @@
 
     <button id="backHomeFromViewRecordsBtn" class="back-btn" style="margin-top: 20px;">Back to Home</button>
 </div>
+<div id="missingReportsPage" class="page-container hidden">
+    <h2>Monitoring of No Report</h2>
+    <p>Select a period to see who has NOT submitted a report yet.</p>
+    
+    <label for="serviceYearMissing">Service Year:</label>
+    <select id="serviceYearMissing"></select>
+    
+    <label for="monthMissing">Month:</label>
+    <select id="monthMissing"></select>
+    
+    <button id="generateMissingBtn">Generate List</button>
+    
+    <hr style="margin: 20px 0;">
+    
+    <div id="missingReportsResults">
+        <p>Please select a date and click Generate.</p>
+    </div>
+    
+    <button id="backHomeFromMissingBtn" class="back-btn" style="margin-top: 20px;">Back to Home</button>
+</div>
+    
    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -759,7 +781,8 @@
 // 👇 IDAGDAG ANG MGA BAGONG VARIABLES NA ITO 👇
     let viewRecordsPage, searchPublisherS21, suggestionBoxS21, publisherNameDropdownS21, serviceYearS21, generateS21Btn, individualRecordResult;
     let serviceYearSummaryCat, monthSummaryCat, generateSummaryCatBtn, summaryTotalsResult, backHomeFromViewRecordsBtn;
-    
+    let missingReportsPage, serviceYearMissing, monthMissing, generateMissingBtn, missingReportsResults, backHomeFromMissingBtn, missingReportsBtn;
+        
     document.addEventListener("DOMContentLoaded", initializeApp);
     async function initializeApp() {
         getAllElements();
@@ -952,6 +975,18 @@ backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSu
     generateSummaryCatBtn = document.getElementById('generateSummaryCatBtn');
     summaryTotalsResult = document.getElementById('summaryTotalsResult');
     backHomeFromViewRecordsBtn = document.getElementById('backHomeFromViewRecordsBtn');
+        // Sa loob ng getAllElements function:
+
+// ... ibang buttons ...
+missingReportsBtn = document.getElementById('missingReportsBtn');
+
+// ... ibang pages ...
+missingReportsPage = document.getElementById('missingReportsPage');
+serviceYearMissing = document.getElementById('serviceYearMissing');
+monthMissing = document.getElementById('monthMissing');
+generateMissingBtn = document.getElementById('generateMissingBtn');
+missingReportsResults = document.getElementById('missingReportsResults');
+backHomeFromMissingBtn = document.getElementById('backHomeFromMissingBtn');
         }
     function toggleStatusDateFields() {
     const status = publisherStatus.value;
@@ -1044,6 +1079,19 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
     generateS21Btn?.addEventListener("click", generatePublisherRecordCard);
     generateSummaryCatBtn?.addEventListener("click", generateSummaryTotalsCard);
     backHomeFromViewRecordsBtn?.addEventListener("click", () => showPage('homePage'));
+    // Sa loob ng attachAllListeners function:
+
+// 1. Button sa Home Page
+missingReportsBtn?.addEventListener('click', () => showPage('missingReportsPage'));
+
+// 2. Button sa loob ng Missing Reports Page
+generateMissingBtn?.addEventListener('click', generateMissingReports);
+backHomeFromMissingBtn?.addEventListener('click', () => showPage('homePage'));
+
+// 3. Dropdown Logic (Para mag-update ang months pag nagbago ang year)
+serviceYearMissing?.addEventListener('change', () => {
+    populateMonths(monthMissing, serviceYearMissing.value);
+});
     }
         function showPage(pageId) {
     document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
@@ -1062,7 +1110,13 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
     else if (pageId === 'manageAuxiliaryPage') { setupManageAuxiliaryPage(); }
     else if (pageId === 'summaryReportPage') { setupSummaryReportPage(); }
     else if (pageId === 'advancedSummaryPage') { setupAdvancedSummaryPage(); }
+    // Sa loob ng showPage(pageId) function, idagdag ito sa dulo ng if-else block:
 
+else if (pageId === 'missingReportsPage') {
+    populateServiceYears(serviceYearMissing);
+    populateMonths(monthMissing, serviceYearMissing.value);
+    missingReportsResults.innerHTML = "<p>Please select a date and click Generate.</p>";
+}
 // 👇 IDAGDAG ANG BAGONG "ELSE IF" NA ITO 👇
     else if (pageId === 'viewRecordsPage') { setupViewRecordsPage(); }
         }
@@ -3691,6 +3745,103 @@ async function exportPublishersToExcel() {
         console.error("Error exporting publishers:", error);
         alert("An error occurred while exporting. Please check the console.");
     }
+}
+async function generateMissingReports() {
+    const selectedYear = serviceYearMissing.value;
+    const selectedMonth = monthMissing.value;
+
+    if (!selectedYear || !selectedMonth) {
+        alert("Please select both Service Year and Month.");
+        return;
+    }
+
+    missingReportsResults.innerHTML = "<p>Scanning records... Please wait.</p>";
+
+    try {
+        // 1. Kunin lahat ng REPORTS para sa selected Month/Year
+        const reportsSnap = await db.collection('reports')
+            .where('serviceYear', '==', selectedYear)
+            .where('month', '==', selectedMonth)
+            .get();
+
+        // Ilista ang mga IDs ng mga nakapag-report na
+        const reportedPublisherIds = reportsSnap.docs.map(doc => doc.data().publisherId);
+
+        // 2. I-filter ang Active Publishers na WALA sa listahan ng nag-report
+        const missingPublishers = publisherList.filter(pub => {
+            // Filter: Active lang (In the Congregation)
+            const isActive = pub.publisherStatus === 'In the Congregation';
+            
+            // Check kung nakapag-report na
+            const hasReported = reportedPublisherIds.includes(pub.id);
+
+            return isActive && !hasReported;
+        });
+
+        // 3. I-sort alphabetical by Name
+        missingPublishers.sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+        // 4. I-display ang Resulta
+        if (missingPublishers.length === 0) {
+            missingReportsResults.innerHTML = `
+                <div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">
+                    <strong>Great job!</strong> All active publishers have submitted a report for ${selectedMonth}.
+                </div>`;
+        } else {
+            let html = `
+                <h3>List of Publishers with No Report (${selectedMonth})</h3>
+                <p>Total Count: <strong>${missingPublishers.length}</strong></p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Publisher Name</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Group</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Privilege</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            missingPublishers.forEach(pub => {
+                html += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${pub.fullName}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${pub.fieldServiceGroup || '-'}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${pub.privilege2 || 'Publisher'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            
+            // Add Copy Button
+            html += `
+                <br>
+                <button onclick="copyMissingToClipboard()" class="approve-btn">Copy List to Clipboard</button>
+            `;
+            
+            missingReportsResults.innerHTML = html;
+        }
+
+    } catch (error) {
+        console.error("Error generating missing reports:", error);
+        missingReportsResults.innerHTML = "<p style='color:red'>An error occurred. Please try again.</p>";
+    }
+}
+
+// Optional Helper: Para madaling i-copy paste sa chat
+function copyMissingToClipboard() {
+    const rows = document.querySelectorAll('#missingReportsResults table tbody tr');
+    let text = "Monitoring of No Report:\n\n";
+    rows.forEach(row => {
+        const name = row.cells[0].innerText;
+        const group = row.cells[1].innerText;
+        text += `- ${name} (${group})\n`;
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+        alert("List copied to clipboard!");
+    });
 }
 </script>
 </body>
