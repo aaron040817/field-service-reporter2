@@ -3755,10 +3755,13 @@ async function generateMissingReports() {
         return;
     }
 
-    missingReportsResults.innerHTML = "<p>Scanning records... Please wait.</p>";
+    missingReportsResults.innerHTML = "<p>Refreshing data and scanning records... Please wait.</p>";
 
     try {
-        // 1. Kunin lahat ng REPORTS para sa selected Month/Year
+        // 1. I-refresh muna ang listahan ng Publishers para sigurado (IMPORTANT FIX)
+        await loadPublishers(); 
+
+        // 2. Kunin lahat ng REPORTS para sa selected Month/Year
         const reportsSnap = await db.collection('reports')
             .where('serviceYear', '==', selectedYear)
             .where('month', '==', selectedMonth)
@@ -3767,21 +3770,32 @@ async function generateMissingReports() {
         // Ilista ang mga IDs ng mga nakapag-report na
         const reportedPublisherIds = reportsSnap.docs.map(doc => doc.data().publisherId);
 
-        // 2. I-filter ang Active Publishers na WALA sa listahan ng nag-report
+        console.log("Total Reports Found:", reportedPublisherIds.length); // Debugging
+
+        // 3. I-filter ang Active Publishers na WALA sa listahan ng nag-report
         const missingPublishers = publisherList.filter(pub => {
-            // Filter: Active lang (In the Congregation)
-            const isActive = pub.publisherStatus === 'In the Congregation';
+            // Kunin ang status at linisin (remove spaces)
+            const status = (pub.publisherStatus || "").trim();
+            
+            // Tanggapin ang "In the Congregation" (Case insensitive check para sure)
+            const isActive = status.toLowerCase() === 'in the congregation';
             
             // Check kung nakapag-report na
             const hasReported = reportedPublisherIds.includes(pub.id);
 
+            // Debugging: Kung active pero di lumalabas, makikita mo dito
+            // if (isActive && hasReported) console.log("Reported:", pub.fullName);
+            // if (!isActive) console.log("Not Active:", pub.fullName, status);
+
             return isActive && !hasReported;
         });
 
-        // 3. I-sort alphabetical by Name
+        // 4. I-sort alphabetical by Name
         missingPublishers.sort((a, b) => a.fullName.localeCompare(b.fullName));
 
-        // 4. I-display ang Resulta
+        console.log("Total Missing Reports:", missingPublishers.length); // Debugging
+
+        // 5. I-display ang Resulta
         if (missingPublishers.length === 0) {
             missingReportsResults.innerHTML = `
                 <div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">
@@ -3790,7 +3804,8 @@ async function generateMissingReports() {
         } else {
             let html = `
                 <h3>List of Publishers with No Report (${selectedMonth})</h3>
-                <p>Total Count: <strong>${missingPublishers.length}</strong></p>
+                <p>Total Count: <strong>${missingPublishers.length}</strong> / Active Publishers: <strong>${publisherList.filter(p => (p.publisherStatus || "").trim() === 'In the Congregation').length}</strong></p>
+                <button onclick="copyMissingToClipboard()" class="approve-btn" style="margin-bottom: 10px;">Copy List to Clipboard</button>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <thead>
                         <tr style="background-color: #f2f2f2;">
@@ -3814,34 +3829,13 @@ async function generateMissingReports() {
 
             html += `</tbody></table>`;
             
-            // Add Copy Button
-            html += `
-                <br>
-                <button onclick="copyMissingToClipboard()" class="approve-btn">Copy List to Clipboard</button>
-            `;
-            
             missingReportsResults.innerHTML = html;
         }
 
     } catch (error) {
         console.error("Error generating missing reports:", error);
-        missingReportsResults.innerHTML = "<p style='color:red'>An error occurred. Please try again.</p>";
+        missingReportsResults.innerHTML = "<p style='color:red'>An error occurred. Please check console.</p>";
     }
-}
-
-// Optional Helper: Para madaling i-copy paste sa chat
-function copyMissingToClipboard() {
-    const rows = document.querySelectorAll('#missingReportsResults table tbody tr');
-    let text = "Monitoring of No Report:\n\n";
-    rows.forEach(row => {
-        const name = row.cells[0].innerText;
-        const group = row.cells[1].innerText;
-        text += `- ${name} (${group})\n`;
-    });
-    
-    navigator.clipboard.writeText(text).then(() => {
-        alert("List copied to clipboard!");
-    });
 }
 </script>
 </body>
