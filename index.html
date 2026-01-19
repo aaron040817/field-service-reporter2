@@ -1466,7 +1466,7 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
         }
     }
         async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
-        // 1. Reset muna ang lahat ng fields (Hide at Clear)
+        // 1. I-RESET: Itago muna ang LAHAT at i-clear ang values
         elements.fieldHoursContainer.classList.add("hidden");
         elements.bibleStudiesContainer.classList.add("hidden");
         elements.sharedMinistryContainer.classList.add("hidden");
@@ -1480,91 +1480,75 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
         elements.sharedMinistryCheckbox.disabled = false;
         elements.auxiliaryPioneerCheckbox.disabled = false;
 
-        // 2. Logic kapag nag-type ng Oras (Standard Publishers)
-        const handleHoursInput_Standard = () => {
-            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-            if (value && parseInt(value, 10) === 0) { value = ''; }
-            elements.fieldHoursInput.value = value;
-            // Auto-check Shared in Ministry lang
-            elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
+        // Reset listeners para hindi magpatong-patong
+        elements.fieldHoursInput.oninput = null;
+        elements.bibleStudiesInput.oninput = null;
+
+        // --- HELPER FUNCTIONS ---
+        
+        const handleStudiesInput = () => { 
+            elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); 
         };
 
-        // 3. Logic kapag nag-type ng Oras (FULL TIME SERVANTS: RP, SP, FM)
-        // Ito ang solusyon sa issue mo sa August 2025
+        // Logic para sa Full Time (RP/SP/FM)
         const handleHoursInput_FullTime = () => {
             let value = elements.fieldHoursInput.value.replace(/\D/g, '');
             if (value && parseInt(value, 10) === 0) { value = ''; }
             elements.fieldHoursInput.value = value;
-            
-            // Auto-check Shared in Ministry
+            // Auto-check Shared
             elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
-            
-            // FORCE UNCHECK AUXILIARY PIONEER (Siguradong walang check kahit anong month)
-            if(elements.auxiliaryPioneerCheckbox) {
-                elements.auxiliaryPioneerCheckbox.checked = false; 
-            }
+            // Force Uncheck Aux
+            if(elements.auxiliaryPioneerCheckbox) elements.auxiliaryPioneerCheckbox.checked = false; 
         };
 
-        // 4. Logic kapag nag-type ng Oras (Auxiliary Pioneers)
-        const handleHoursInput_WithAux = () => {
+        // Logic para sa Aux Pioneers
+        const handleHoursInput_Aux = () => {
             let value = elements.fieldHoursInput.value.replace(/\D/g, '');
             if (value && parseInt(value, 10) === 0) { value = ''; }
             elements.fieldHoursInput.value = value;
-            
             const hasHours = parseInt(value, 10) > 0;
             elements.sharedMinistryCheckbox.checked = hasHours;
-            // Dito lang dapat nag-o-autocheck ang Aux Pioneer
             elements.auxiliaryPioneerCheckbox.checked = hasHours;
         };
 
-        const handleStudiesInput = () => { 
-            elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); 
-        };
-        
-        // Reset listeners
-        elements.fieldHoursInput.oninput = null;
-        elements.bibleStudiesInput.oninput = null;
+        // --- MAIN LOGIC BASE SA PRIVILEGE ---
 
-        // 5. I-apply ang logic base sa Privilege
         const privilege2 = elements.privilegeInput.value;
         
         switch (privilege2) {
             case "Regular Pioneer":
             case "Special Pioneer":
             case "Field Missionary":
-                // Ipakita ang hours, studies, shared
+                // SHOW: Hours, Studies, Shared
                 elements.fieldHoursContainer.classList.remove("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
                 
-                // Disable Shared checkbox (kasi automatic na dapat checked pag may hours)
-                elements.sharedMinistryCheckbox.disabled = true;
+                elements.sharedMinistryCheckbox.disabled = true; // Auto-check kaya disabled
                 
-                // *** GAMITIN ANG BAGONG HANDLER PARA SA FULL TIME ***
                 elements.fieldHoursInput.oninput = handleHoursInput_FullTime; 
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
                 break;
 
             case "Continuous Auxiliary Pioneer":
+                // SHOW: Hours, Studies, Shared, Aux Checkbox
                 elements.fieldHoursContainer.classList.remove("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
                 elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
                 
                 elements.sharedMinistryCheckbox.disabled = true;
-                elements.auxiliaryPioneerCheckbox.disabled = true; // Auto-check kaya disabled
+                elements.auxiliaryPioneerCheckbox.disabled = true; 
                 
-                elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
+                elements.fieldHoursInput.oninput = handleHoursInput_Aux;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
                 break;
 
             case "Publisher/Auxi":
                 let isAux = false;
-                // Check kung naka-set na Aux siya sa database para sa month na ito
+                // Check sa database kung nag-Auxiliary siya sa buwan na ito
                 if (publisherId && serviceYear && month) {
                     const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-                    // Tandaan: Async ito pero hindi natin mahihintay sa UI render agad minsan, 
-                    // pero dahil reactive ang buttons, okay lang.
                     try {
                         const docSnap = await db.collection("auxiliary_status").doc(docId).get();
                         if (docSnap.exists && docSnap.data().isAuxiliary) {
@@ -1574,8 +1558,9 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
                 }
 
                 if (isAux) {
-                    // Kung Aux siya ngayong buwan
-                    elements.fieldHoursContainer.classList.remove("hidden");
+                    // --- KUNG AUXILIARY SYA NGAYONG BUWAN ---
+                    // SHOW: Hours, Studies, Shared, Aux Checkbox
+                    elements.fieldHoursContainer.classList.remove("hidden"); // <--- SHOW HOURS
                     elements.bibleStudiesContainer.classList.remove("hidden");
                     elements.sharedMinistryContainer.classList.remove("hidden");
                     elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
@@ -1583,23 +1568,28 @@ backHomeFromAdvancedSummaryBtn?.addEventListener("click", () => showPage('homePa
                     elements.sharedMinistryCheckbox.disabled = true;
                     elements.auxiliaryPioneerCheckbox.disabled = true;
                     
-                    elements.fieldHoursInput.oninput = handleHoursInput_WithAux;
+                    elements.fieldHoursInput.oninput = handleHoursInput_Aux;
                     elements.bibleStudiesInput.oninput = handleStudiesInput;
                 } else {
-                    // Kung Regular Publisher lang
+                    // --- KUNG REGULAR PUBLISHER LANG SYA ---
+                    // HIDE: Hours (Ito ang hinahanap mong restriction)
+                    elements.fieldHoursContainer.classList.add("hidden"); // <--- HIDE HOURS
+                    
+                    // SHOW: Studies, Shared Checkbox ONLY
                     elements.bibleStudiesContainer.classList.remove("hidden");
                     elements.sharedMinistryContainer.classList.remove("hidden");
-                    // Kung may hours (e.g. August Campaign), ipakita ang field hours input
-                    // Pero sa default, baka studies lang. Depende sa requirement niyo.
-                    // Assuming papayagan mag-input ng hours ang publisher kahit hindi aux:
-                    elements.fieldHoursContainer.classList.remove("hidden"); 
                     
-                    elements.sharedMinistryCheckbox.disabled = false;
-                    
-                    // Gamitin ang Standard Handler (HINDI mag-o-autocheck ng Aux)
-                    elements.fieldHoursInput.oninput = handleHoursInput_Standard; 
+                    elements.sharedMinistryCheckbox.disabled = false; // Manual check ng user
                     elements.bibleStudiesInput.oninput = handleStudiesInput;
                 }
+                break;
+                
+            default:
+                // Default fallback (Publisher lang) -> Hide Hours
+                elements.fieldHoursContainer.classList.add("hidden");
+                elements.bibleStudiesContainer.classList.remove("hidden");
+                elements.sharedMinistryContainer.classList.remove("hidden");
+                elements.bibleStudiesInput.oninput = handleStudiesInput;
                 break;
         }
     }
