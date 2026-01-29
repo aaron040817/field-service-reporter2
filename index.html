@@ -2753,6 +2753,7 @@ else if (pageId === 'missingReportsPage') {
         }
         return null;
     }
+
 async function generateSummaryReport() {
     const selectedYear = serviceYearSummary.value;
     const selectedMonthStr = monthSummary.value;
@@ -2838,6 +2839,7 @@ async function generateSummaryReport() {
         windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
         windowEnd.setHours(23,59,59,999);
 
+        // --- BINAGO DITO: Tanggalin ang status check ---
         const activePublishersIds = new Set();
         allReports.forEach(report => {
             if (!report.month || !report.publisherId) return;
@@ -2845,9 +2847,9 @@ async function generateSummaryReport() {
             
             if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
                 if (report.sharedInMinistry === true) {
-                    // LOGIC CHANGE: Basta may report siya sa period na ito, counted siya as Active.
-                    // Hindi na natin iche-check kung Transferred o Dead na siya ngayon.
-                    // Ito ay para manatiling accurate ang historical data.
+                    // DITO TAYO NAGBAGO:
+                    // Tinanggal na ang check kung "In the Congregation".
+                    // Basta may report sa loob ng 6 months, counted as active.
                     activePublishersIds.add(report.publisherId);
                 }
             }
@@ -2855,12 +2857,12 @@ async function generateSummaryReport() {
         
         summary.activeInLast6Months = activePublishersIds.size;
         
+        // --- BINAGO DITO: Fallback name retrieval ---
         const activePublishersNames = Array.from(activePublishersIds).map(id => {
             const pub = publisherList.find(p => p.id === id);
-            // Kung wala sa current list, subukang hanapin sa reports data kung meron
+            // Kung wala sa current list (e.g. deleted), kunin sa reports
             if (pub) return pub.fullName;
             
-            // Fallback: Hanapin ang pangalan sa isa sa mga report niya
             const reportRef = allReports.find(r => r.publisherId === id);
             return reportRef ? reportRef.publisherFullName : 'Unknown/Deleted Publisher';
         }).sort();
@@ -2901,7 +2903,8 @@ async function generateSummaryReport() {
         console.error("Error generating summary:", error);
         summaryResults.innerHTML = `<p style="color:red;">An error occurred while generating the summary. Please check the console.</p>`;
     }
-}   
+}
+        
 function clearSummaryPage() {
     serviceYearSummary.value = "";
     monthSummary.innerHTML = '<option value="">-- Select Month --</option>';
@@ -3034,141 +3037,121 @@ function setupAdvancedSummaryPage() {
             alert("An error occurred while saving. Please check the console.");
         }
     }
+
 async function generateAdvancedSummary() {
-    const selectedMonthStr = monthAdvancedSummary.value;
-    if (!selectedMonthStr) {
-        alert("Please select a month.");
-        return;
-    }
-    advancedSummaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
+    const selectedMonthStr = monthAdvancedSummary.value;
+    if (!selectedMonthStr) {
+        alert("Please select a month.");
+        return;
+    }
+    advancedSummaryResults.innerHTML = "<p>Generating summary... Please wait.</p>";
 
-    // --- START NG DEBUG LISTS ---
-    // Dito natin iipunin ang mga pangalan
-    let publisherNames = {
-        publishers: [],
-        auxi: [],
-        rp: []
-    };
-    // --- END NG DEBUG LISTS ---
+    let publisherNames = {
+        publishers: [],
+        auxi: [],
+        rp: []
+    };
 
-    try {
-        const allReportsSnap = await db.collection("reports").get();
-        const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
-        
-        const allReports = allReportsSnap.docs.map(doc => doc.data());
-        const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
+    try {
+        const allReportsSnap = await db.collection("reports").get();
+        const allAuxStatusesSnap = await db.collection("auxiliary_status").get();
+        
+        const allReports = allReportsSnap.docs.map(doc => doc.data());
+        const allAuxStatuses = allAuxStatusesSnap.docs.map(doc => ({id: `${doc.data().publisherId}_${doc.data().serviceYear}_${doc.data().month.replace(/\s+/g, '-')}`, ...doc.data()}));
 
-        const manualDataSnap = await db.collection("manual_summaries").doc(selectedMonthStr.replace(/\s+/g, '_')).get();
-        const manualData = manualDataSnap.exists ? manualDataSnap.data() : {};
-        
-        let summaryData = {
-            publishers: { actual: {count: 0, bs: 0}, lateIn: {count: 0, bs: 0}, lateOut: {count: 0, bs: 0} },
-            auxi: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
-            rp: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
-        };
-        
-        const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
+        const manualDataSnap = await db.collection("manual_summaries").doc(selectedMonthStr.replace(/\s+/g, '_')).get();
+        const manualData = manualDataSnap.exists ? manualDataSnap.data() : {};
+        
+        let summaryData = {
+            publishers: { actual: {count: 0, bs: 0}, lateIn: {count: 0, bs: 0}, lateOut: {count: 0, bs: 0} },
+            auxi: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
+            rp: { actual: {count: 0, hours: 0, bs: 0}, lateIn: {count: 0, hours: 0, bs: 0}, lateOut: {count: 0, hours: 0, bs: 0} },
+        };
+        
+        const fullTimePrivileges = ["Regular Pioneer", "Special Pioneer", "Field Missionary"];
 
-        for (const report of allReports) {
-            const reportMonth = report.month;
-            const consolidateMonth = report.consolidateToMonth || report.month;
-            
-            const processReport = (category) => {
-                const privilege = report.privilege2AtTimeOfReport;
-                const publisherName = report.publisherFullName; // Kunin ang pangalan
+        for (const report of allReports) {
+            const reportMonth = report.month;
+            const consolidateMonth = report.consolidateToMonth || report.month;
+            
+            const processReport = (category) => {
+                const privilege = report.privilege2AtTimeOfReport;
+                const publisherName = report.publisherFullName;
 
-                if (fullTimePrivileges.includes(privilege)) {
-                    if (report.hours > 0) {
-                        summaryData.rp[category].count++;
-                        summaryData.rp[category].hours += report.hours;
-                        summaryData.rp[category].bs += report.bibleStudies;
-                       // --- START UPDATE ---
-                        // Idagdag lang sa listahan kung para sa "Actual" month
-                        if (category === 'actual') {
-                            publisherNames.rp.push(publisherName);
-                        }
-                        // --- END UPDATE ---
-                    }
-                } else if (privilege === "Continuous Auxiliary Pioneer") {
-                     if (report.hours > 0) {
-                        summaryData.auxi[category].count++;
-                        summaryData.auxi[category].hours += report.hours;
-                        summaryData.auxi[category].bs += report.bibleStudies;
-                        // --- START UPDATE ---
-                        if (category === 'actual') {
-                           publisherNames.auxi.push(publisherName);
-                        }
-                        // --- END UPDATE ---
-                    }
-                } else if (privilege === "Publisher/Auxi") {
-                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
-                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
-                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
-                    if (isAux) {
-                        if (report.hours > 0) {
-                            summaryData.auxi[category].count++;
-                            summaryData.auxi[category].hours += report.hours;
-                            summaryData.auxi[category].bs += report.bibleStudies;
-                            // --- START UPDATE ---
-                            if (category === 'actual') {
-                                publisherNames.auxi.push(publisherName);
-                            }
-                            // --- END UPDATE ---
-                        }
-                    } else {
-                        if (report.sharedInMinistry) {
-                            summaryData.publishers[category].count++;
-                            summaryData.publishers[category].bs += report.bibleStudies;
-                            // --- START UPDATE ---
-                            if (category === 'actual') {
-                                publisherNames.publishers.push(publisherName);
-                            }
-                           // --- END UPDATE ---
-                        }
-                    }
-                }
-            };
+                if (fullTimePrivileges.includes(privilege)) {
+                    if (report.hours > 0) {
+                        summaryData.rp[category].count++;
+                        summaryData.rp[category].hours += report.hours;
+                        summaryData.rp[category].bs += report.bibleStudies;
+                        if (category === 'actual') publisherNames.rp.push(publisherName);
+                    }
+                } else if (privilege === "Continuous Auxiliary Pioneer") {
+                     if (report.hours > 0) {
+                        summaryData.auxi[category].count++;
+                        summaryData.auxi[category].hours += report.hours;
+                        summaryData.auxi[category].bs += report.bibleStudies;
+                        if (category === 'actual') publisherNames.auxi.push(publisherName);
+                    }
+                } else if (privilege === "Publisher/Auxi") {
+                    const auxStatusDocId = `${report.publisherId}_${report.serviceYear}_${report.month.replace(/\s+/g, '-')}`;
+                    const auxStatus = allAuxStatuses.find(s => s.id === auxStatusDocId);
+                    const isAux = auxStatus ? auxStatus.isAuxiliary : false;
+                    if (isAux) {
+                        if (report.hours > 0) {
+                            summaryData.auxi[category].count++;
+                            summaryData.auxi[category].hours += report.hours;
+                            summaryData.auxi[category].bs += report.bibleStudies;
+                            if (category === 'actual') publisherNames.auxi.push(publisherName);
+                        }
+                    } else {
+                        if (report.sharedInMinistry) {
+                            summaryData.publishers[category].count++;
+                            summaryData.publishers[category].bs += report.bibleStudies;
+                            if (category === 'actual') publisherNames.publishers.push(publisherName);
+                        }
+                    }
+                }
+            };
 
-            if (reportMonth === selectedMonthStr) {
-                processReport('actual'); // <-- DITO MAPUPUNO YUNG MGA LISTAHAN
-                if (consolidateMonth !== selectedMonthStr) {
-                    processReport('lateOut');
-                }
-            } else if (consolidateMonth === selectedMonthStr) {
-                 processReport('lateIn');
-            }
-        }
+            if (reportMonth === selectedMonthStr) {
+                processReport('actual');
+                if (consolidateMonth !== selectedMonthStr) {
+                    processReport('lateOut');
+                }
+            } else if (consolidateMonth === selectedMonthStr) {
+                 processReport('lateIn');
+            }
+        }
 
-        const targetMonthDate = parseMonthString(selectedMonthStr);
-        const sixMonthsAgo = new Date(targetMonthDate);
-        sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5, 1);
-        sixMonthsAgo.setHours(0,0,0,0);
-        const windowEnd = new Date(targetMonthDate);
-        windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
-        windowEnd.setHours(23,59,59,999);
-
+        const targetMonthDate = parseMonthString(selectedMonthStr);
+        const sixMonthsAgo = new Date(targetMonthDate);
+        sixMonthsAgo.setMonth(targetMonthDate.getMonth() - 5, 1);
+        sixMonthsAgo.setHours(0,0,0,0);
+        const windowEnd = new Date(targetMonthDate);
+        windowEnd.setMonth(targetMonthDate.getMonth() + 1, 0);
+        windowEnd.setHours(23,59,59,999);
+        
+        // --- BINAGO DITO: Tanggalin ang status check ---
         const activePublishersIds = new Set();
         allReports.forEach(report => {
             if (!report.month || !report.publisherId) return;
             const reportDate = parseMonthString(report.month);
-            
             if (reportDate && reportDate >= sixMonthsAgo && reportDate <= windowEnd) {
                 if (report.sharedInMinistry === true) {
-                    // LOGIC CHANGE: Basta may report siya sa period na ito, counted siya as Active.
-                    // Hindi na natin iche-check kung Transferred o Dead na siya ngayon.
-                    // Ito ay para manatiling accurate ang historical data.
+                    // DITO TAYO NAGBAGO:
+                    // Tinanggal na ang check kung "In the Congregation".
+                    // Basta may report, counted as Active.
                     activePublishersIds.add(report.publisherId);
                 }
             }
         });
         
-        const activePublishersCount = activePublishersIds.size;
-        
-        // --- START UPDATE ---
-        // Kunin ang mga pangalan para sa Active Publishers list
-        const activePublishersNames = Array.from(activePublishersIds).map(id => {
+        const activePublishersCount = activePublishersIds.size;
+        
+        // --- BINAGO DITO: Fallback name retrieval ---
+        const activePublishersNames = Array.from(activePublishersIds).map(id => {
             const pub = publisherList.find(p => p.id === id);
-            // Kung wala sa current list, subukang hanapin sa reports data kung meron
+            // Kung wala sa current list, subukang hanapin sa reports data
             if (pub) return pub.fullName;
             
             // Fallback: Hanapin ang pangalan sa isa sa mga report niya
@@ -3176,80 +3159,79 @@ async function generateAdvancedSummary() {
             return reportRef ? reportRef.publisherFullName : 'Unknown/Deleted Publisher';
         }).sort();
 
-        // I-sort alphabetically ang mga listahan
-        publisherNames.publishers.sort();
-        publisherNames.auxi.sort();
-        publisherNames.rp.sort();
-        // --- END UPDATE ---
+        publisherNames.publishers.sort();
+        publisherNames.auxi.sort();
+        publisherNames.rp.sort();
 
-        const resultsHTML = `
-        <table id="summaryTable" border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse; font-size: 12px;">
-            <thead>
-                <tr>
-                    <th>Particulars</th>
-                    <th>Actual Total Report for This Month</th>
-                    <th>ADDITIONAL LATE from Previous Months</th>
-                    <th>Late Report Added to Next Months</th>
-                    <th>Manual Encoding</th>
-                    <th>Total Adjusted Report</th>
-                    <th>Total Reports Encoded in JW Hub</th>
-                    <th>Is Equal</th>
-                </tr>
-           </thead>
-            <tbody>
-                <tr><td>Active Publishers</td><td id="actual_active_publishers">${activePublishersCount}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
-                <tr><td>Publishers Count:</td><td id="actual_publishers_count">${summaryData.publishers.actual.count}</td><td id="late_in_publishers_count">${summaryData.publishers.lateIn.count}</td><td id="late_out_publishers_count">${summaryData.publishers.lateOut.count}</td><td><input type="number" id="manual_publishers_count" value="${manualData.manual_publishers_count || 0}"></td><td id="adjusted_publishers_count"></td><td><input type="number" id="jwhub_publishers_count" value="${manualData.jwhub_publishers_count || 0}"></td><td id="isequal_publishers_count"></td></tr>
-                <tr><td>BS:</td><td id="actual_publishers_bs">${summaryData.publishers.actual.bs}</td><td id="late_in_publishers_bs">${summaryData.publishers.lateIn.bs}</td><td id="late_out_publishers_bs">${summaryData.publishers.lateOut.bs}</td><td><input type="number" id="manual_publishers_bs" value="${manualData.manual_publishers_bs || 0}"></td><td id="adjusted_publishers_bs"></td><td><input type="number" id="jwhub_publishers_bs" value="${manualData.jwhub_publishers_bs || 0}"></td><td id="isequal_publishers_bs"></td></tr>
-                <tr><td>Auxi Count:</td><td id="actual_auxi_count">${summaryData.auxi.actual.count}</td><td id="late_in_auxi_count">${summaryData.auxi.lateIn.count}</td><td id="late_out_auxi_count">${summaryData.auxi.lateOut.count}</td><td><input type="number" id="manual_auxi_count" value="${manualData.manual_auxi_count || 0}"></td><td id="adjusted_auxi_count"></td><td><input type="number" id="jwhub_auxi_count" value="${manualData.jwhub_auxi_count || 0}"></td><td id="isequal_auxi_count"></td></tr>
-                <tr><td>FieldHours:</td><td id="actual_auxi_hours">${summaryData.auxi.actual.hours}</td><td id="late_in_auxi_hours">${summaryData.auxi.lateIn.hours}</td><td id="late_out_auxi_hours">${summaryData.auxi.lateOut.hours}</td><td><input type="number" id="manual_auxi_hours" value="${manualData.manual_auxi_hours || 0}"></td><td id="adjusted_auxi_hours"></td><td><input type="number" id="jwhub_auxi_hours" value="${manualData.jwhub_auxi_hours || 0}"></td><td id="isequal_auxi_hours"></td></tr>
-                <tr><td>BS:</td><td id="actual_auxi_bs">${summaryData.auxi.actual.bs}</td><td id="late_in_auxi_bs">${summaryData.auxi.lateIn.bs}</td><td id="late_out_auxi_bs">${summaryData.auxi.lateOut.bs}</td><td><input type="number" id="manual_auxi_bs" value="${manualData.manual_auxi_bs || 0}"></td><td id="adjusted_auxi_bs"></td><td><input type="number" id="jwhub_auxi_bs" value="${manualData.jwhub_auxi_bs || 0}"></td><td id="isequal_auxi_bs"></td></tr>
-                <tr><td>RP Count:</td><td id="actual_rp_count">${summaryData.rp.actual.count}</td><td id="late_in_rp_count">${summaryData.rp.lateIn.count}</td><td id="late_out_rp_count">${summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_rp_count" value="${manualData.manual_rp_count || 0}"></td><td id="adjusted_rp_count"></td><td><input type="number" id="jwhub_rp_count" value="${manualData.jwhub_rp_count || 0}"></td><td id="isequal_rp_count"></td></tr>
-                <tr><td>FieldHours:</td><td id="actual_rp_hours">${summaryData.rp.actual.hours}</td><td id="late_in_rp_hours">${summaryData.rp.lateIn.hours}</td><td id="late_out_rp_hours">${summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_rp_hours" value="${manualData.manual_rp_hours || 0}"></td><td id="adjusted_rp_hours"></td><td><input type="number" id="jwhub_rp_hours" value="${manualData.jwhub_rp_hours || 0}"></td><td id="isequal_rp_hours"></td></tr>
-                <tr><td>BS:</td><td id="actual_rp_bs">${summaryData.rp.actual.bs}</td><td id="late_in_rp_bs">${summaryData.rp.lateIn.bs}</td><td id="late_out_rp_bs">${summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_rp_bs" value="${manualData.manual_rp_bs || 0}"></td><td id="adjusted_rp_bs"></td><td><input type="number" id="jwhub_rp_bs" value="${manualData.jwhub_rp_bs || 0}"></td><td id="isequal_rp_bs"></td></tr>
-                <tr><td>Total Count</td><td id="actual_total_count"></td><td id="late_in_total_count"></td><td id="late_out_total_count"></td><td><input type="number" id="manual_total_count" disabled></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" disabled></td><td id="isequal_total_count"></td></tr>
-               <tr><td>Total Field Hours</td><td id="actual_total_hours"></td><td id="late_in_total_hours"></td><td id="late_out_total_hours"></td><td><input type="number" id="manual_total_hours" disabled></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" disabled></td><td id="isequal_total_hours"></td></tr>
-                <tr><td>Total BS</td><td id="actual_total_bs"></td><td id="late_in_total_bs"></td><td id="late_out_total_bs"></td><td><input type="number" id="manual_total_bs" disabled></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" disabled></td><td id="isequal_total_bs"></td></tr>
-            </tbody>
-        </table>
+        const resultsHTML = `
+        <table id="summaryTable" border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Particulars</th>
+                    <th>Actual Total Report for This Month</th>
+                    <th>ADDITIONAL LATE from Previous Months</th>
+                    <th>Late Report Added to Next Months</th>
+                    <th>Manual Encoding</th>
+                    <th>Total Adjusted Report</th>
+                    <th>Total Reports Encoded in JW Hub</th>
+                    <th>Is Equal</th>
+                </tr>
+           </thead>
+            <tbody>
+                <tr><td>Active Publishers</td><td id="actual_active_publishers">${activePublishersCount}</td><td id="late_in_active_publishers">0</td><td id="late_out_active_publishers">0</td><td><input type="number" id="manual_active_publishers" value="${manualData.manual_active_publishers || 0}"></td><td id="adjusted_active_publishers"></td><td><input type="number" id="jwhub_active_publishers" value="${manualData.jwhub_active_publishers || 0}"></td><td id="isequal_active_publishers"></td></tr>
+                <tr><td>Publishers Count:</td><td id="actual_publishers_count">${summaryData.publishers.actual.count}</td><td id="late_in_publishers_count">${summaryData.publishers.lateIn.count}</td><td id="late_out_publishers_count">${summaryData.publishers.lateOut.count}</td><td><input type="number" id="manual_publishers_count" value="${manualData.manual_publishers_count || 0}"></td><td id="adjusted_publishers_count"></td><td><input type="number" id="jwhub_publishers_count" value="${manualData.jwhub_publishers_count || 0}"></td><td id="isequal_publishers_count"></td></tr>
+                <tr><td>BS:</td><td id="actual_publishers_bs">${summaryData.publishers.actual.bs}</td><td id="late_in_publishers_bs">${summaryData.publishers.lateIn.bs}</td><td id="late_out_publishers_bs">${summaryData.publishers.lateOut.bs}</td><td><input type="number" id="manual_publishers_bs" value="${manualData.manual_publishers_bs || 0}"></td><td id="adjusted_publishers_bs"></td><td><input type="number" id="jwhub_publishers_bs" value="${manualData.jwhub_publishers_bs || 0}"></td><td id="isequal_publishers_bs"></td></tr>
+                <tr><td>Auxi Count:</td><td id="actual_auxi_count">${summaryData.auxi.actual.count}</td><td id="late_in_auxi_count">${summaryData.auxi.lateIn.count}</td><td id="late_out_auxi_count">${summaryData.auxi.lateOut.count}</td><td><input type="number" id="manual_auxi_count" value="${manualData.manual_auxi_count || 0}"></td><td id="adjusted_auxi_count"></td><td><input type="number" id="jwhub_auxi_count" value="${manualData.jwhub_auxi_count || 0}"></td><td id="isequal_auxi_count"></td></tr>
+                <tr><td>FieldHours:</td><td id="actual_auxi_hours">${summaryData.auxi.actual.hours}</td><td id="late_in_auxi_hours">${summaryData.auxi.lateIn.hours}</td><td id="late_out_auxi_hours">${summaryData.auxi.lateOut.hours}</td><td><input type="number" id="manual_auxi_hours" value="${manualData.manual_auxi_hours || 0}"></td><td id="adjusted_auxi_hours"></td><td><input type="number" id="jwhub_auxi_hours" value="${manualData.jwhub_auxi_hours || 0}"></td><td id="isequal_auxi_hours"></td></tr>
+                <tr><td>BS:</td><td id="actual_auxi_bs">${summaryData.auxi.actual.bs}</td><td id="late_in_auxi_bs">${summaryData.auxi.lateIn.bs}</td><td id="late_out_auxi_bs">${summaryData.auxi.lateOut.bs}</td><td><input type="number" id="manual_auxi_bs" value="${manualData.manual_auxi_bs || 0}"></td><td id="adjusted_auxi_bs"></td><td><input type="number" id="jwhub_auxi_bs" value="${manualData.jwhub_auxi_bs || 0}"></td><td id="isequal_auxi_bs"></td></tr>
+                <tr><td>RP Count:</td><td id="actual_rp_count">${summaryData.rp.actual.count}</td><td id="late_in_rp_count">${summaryData.rp.lateIn.count}</td><td id="late_out_rp_count">${summaryData.rp.lateOut.count}</td><td><input type="number" id="manual_rp_count" value="${manualData.manual_rp_count || 0}"></td><td id="adjusted_rp_count"></td><td><input type="number" id="jwhub_rp_count" value="${manualData.jwhub_rp_count || 0}"></td><td id="isequal_rp_count"></td></tr>
+                <tr><td>FieldHours:</td><td id="actual_rp_hours">${summaryData.rp.actual.hours}</td><td id="late_in_rp_hours">${summaryData.rp.lateIn.hours}</td><td id="late_out_rp_hours">${summaryData.rp.lateOut.hours}</td><td><input type="number" id="manual_rp_hours" value="${manualData.manual_rp_hours || 0}"></td><td id="adjusted_rp_hours"></td><td><input type="number" id="jwhub_rp_hours" value="${manualData.jwhub_rp_hours || 0}"></td><td id="isequal_rp_hours"></td></tr>
+                <tr><td>BS:</td><td id="actual_rp_bs">${summaryData.rp.actual.bs}</td><td id="late_in_rp_bs">${summaryData.rp.lateIn.bs}</td><td id="late_out_rp_bs">${summaryData.rp.lateOut.bs}</td><td><input type="number" id="manual_rp_bs" value="${manualData.manual_rp_bs || 0}"></td><td id="adjusted_rp_bs"></td><td><input type="number" id="jwhub_rp_bs" value="${manualData.jwhub_rp_bs || 0}"></td><td id="isequal_rp_bs"></td></tr>
+                <tr><td>Total Count</td><td id="actual_total_count"></td><td id="late_in_total_count"></td><td id="late_out_total_count"></td><td><input type="number" id="manual_total_count" disabled></td><td id="adjusted_total_count"></td><td><input type="number" id="jwhub_total_count" disabled></td><td id="isequal_total_count"></td></tr>
+               <tr><td>Total Field Hours</td><td id="actual_total_hours"></td><td id="late_in_total_hours"></td><td id="late_out_total_hours"></td><td><input type="number" id="manual_total_hours" disabled></td><td id="adjusted_total_hours"></td><td><input type="number" id="jwhub_total_hours" disabled></td><td id="isequal_total_hours"></td></tr>
+                <tr><td>Total BS</td><td id="actual_total_bs"></td><td id="late_in_total_bs"></td><td id="late_out_total_bs"></td><td><input type="number" id="manual_total_bs" disabled></td><td id="adjusted_total_bs"></td><td><input type="number" id="jwhub_total_bs" disabled></td><td id="isequal_total_bs"></td></tr>
+            </tbody>
+        </table>
 
-                <hr style="margin-top: 20px;">
-        <h3>Debug Lists (Para sa "Actual Total Report for This Month" Column)</h3>
-        <p>I-kumpara ang mga listahan na ito sa iyong Excel file para makita ang discrepancy.</p>
-        
-        <h4 style="margin-bottom: 5px;">Active Publishers (Total: ${activePublishersCount})</h4>
-        <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${activePublishersNames.join('\n') || 'Walang listahan.'}</pre>
+                <hr style="margin-top: 20px;">
+        <h3>Debug Lists (Para sa "Actual Total Report for This Month" Column)</h3>
+        <p>I-kumpara ang mga listahan na ito sa iyong Excel file para makita ang discrepancy.</p>
+        
+        <h4 style="margin-bottom: 5px;">Active Publishers (Total: ${activePublishersCount})</h4>
+        <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${activePublishersNames.join('\n') || 'Walang listahan.'}</pre>
 
-        <h4 style="margin-bottom: 5px;">Publishers Count (Total: ${publisherNames.publishers.length})</h4>
-        <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.publishers.join('\n') || 'Walang listahan.'}</pre>
+        <h4 style="margin-bottom: 5px;">Publishers Count (Total: ${publisherNames.publishers.length})</h4>
+        <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.publishers.join('\n') || 'Walang listahan.'}</pre>
 
-        <h4 style="margin-bottom: 5px;">Auxi Count (Total: ${publisherNames.auxi.length})</h4>
-        <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.auxi.join('\n') || 'Walang listahan.'}</pre>
+        <h4 style="margin-bottom: 5px;">Auxi Count (Total: ${publisherNames.auxi.length})</h4>
+        <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.auxi.join('\n') || 'Walang listahan.'}</pre>
 
-        <h4 style="margin-bottom: 5px;">RP Count (Total: ${publisherNames.rp.length})</h4>
-         <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.rp.join('\n') || 'Walang listahan.'}</pre>
-                `;
-        advancedSummaryResults.innerHTML = resultsHTML;
-        attachSummaryInputListeners();
+        <h4 style="margin-bottom: 5px;">RP Count (Total: ${publisherNames.rp.length})</h4>
+         <pre style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${publisherNames.rp.join('\n') || 'Walang listahan.'}</pre>
+                `;
+        advancedSummaryResults.innerHTML = resultsHTML;
+        attachSummaryInputListeners();
 
-        document.getElementById('actual_total_count').textContent = summaryData.publishers.actual.count + summaryData.auxi.actual.count + summaryData.rp.actual.count;
-        document.getElementById('late_in_total_count').textContent = summaryData.publishers.lateIn.count + summaryData.auxi.lateIn.count + summaryData.rp.lateIn.count;
-        document.getElementById('late_out_total_count').textContent = summaryData.publishers.lateOut.count + summaryData.auxi.lateOut.count + summaryData.rp.lateOut.count;
-       document.getElementById('actual_total_hours').textContent = summaryData.auxi.actual.hours + summaryData.rp.actual.hours;
-        document.getElementById('late_in_total_hours').textContent = summaryData.auxi.lateIn.hours + summaryData.rp.lateIn.hours;
-        document.getElementById('late_out_total_hours').textContent = summaryData.auxi.lateOut.hours + summaryData.rp.lateOut.hours;
-        document.getElementById('actual_total_bs').textContent = summaryData.publishers.actual.bs + summaryData.auxi.actual.bs + summaryData.rp.actual.bs;
-        document.getElementById('late_in_total_bs').textContent = summaryData.publishers.lateIn.bs + summaryData.auxi.lateIn.bs + summaryData.rp.lateIn.bs;
-        document.getElementById('late_out_total_bs').textContent = summaryData.publishers.lateOut.bs + summaryData.auxi.lateOut.bs + summaryData.rp.lateOut.bs;
-        
-        const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
-        prefixes.forEach(prefix => recalculateSummaryRow(prefix));
-        recalculateColumnTotals('manual');
-        recalculateColumnTotals('jwhub');
-    } catch (error) {
-        console.error("Error generating summary:", error);
-       advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
-    }
+        document.getElementById('actual_total_count').textContent = summaryData.publishers.actual.count + summaryData.auxi.actual.count + summaryData.rp.actual.count;
+        document.getElementById('late_in_total_count').textContent = summaryData.publishers.lateIn.count + summaryData.auxi.lateIn.count + summaryData.rp.lateIn.count;
+        document.getElementById('late_out_total_count').textContent = summaryData.publishers.lateOut.count + summaryData.auxi.lateOut.count + summaryData.rp.lateOut.count;
+       document.getElementById('actual_total_hours').textContent = summaryData.auxi.actual.hours + summaryData.rp.actual.hours;
+        document.getElementById('late_in_total_hours').textContent = summaryData.auxi.lateIn.hours + summaryData.rp.lateIn.hours;
+        document.getElementById('late_out_total_hours').textContent = summaryData.auxi.lateOut.hours + summaryData.rp.lateOut.hours;
+        document.getElementById('actual_total_bs').textContent = summaryData.publishers.actual.bs + summaryData.auxi.actual.bs + summaryData.rp.actual.bs;
+        document.getElementById('late_in_total_bs').textContent = summaryData.publishers.lateIn.bs + summaryData.auxi.lateIn.bs + summaryData.rp.lateIn.bs;
+        document.getElementById('late_out_total_bs').textContent = summaryData.publishers.lateOut.bs + summaryData.auxi.lateOut.bs + summaryData.rp.lateOut.bs;
+        
+        const prefixes = ['active_publishers', 'publishers_count', 'publishers_bs', 'auxi_count', 'auxi_hours', 'auxi_bs', 'rp_count', 'rp_hours', 'rp_bs', 'total_count', 'total_hours', 'total_bs'];
+        prefixes.forEach(prefix => recalculateSummaryRow(prefix));
+        recalculateColumnTotals('manual');
+        recalculateColumnTotals('jwhub');
+    } catch (error) {
+        console.error("Error generating summary:", error);
+       advancedSummaryResults.innerHTML = `<p style="color:red;">An error occurred. Please check the console.</p>`;
+    }
 }
+        
       // 👇 IDAGDAG ANG LAHAT NG FUNCTIONS NA ITO SA DULO NG IYONG SCRIPT 👇
 
 function setupViewRecordsPage() {
