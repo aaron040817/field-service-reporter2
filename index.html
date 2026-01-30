@@ -1724,11 +1724,15 @@ else if (pageId === 'missingReportsPage') {
         alert("Please complete First Name, Last Name, and Publisher Status."); 
         return;
     }
+    
     const status = publisherStatus.value;
+    
+    // Validation para sa dates
     if ((status === 'Transferred' && (!transferYear.value || !transferMonth.value)) || (status === 'Dead' && (!deathYear.value || !deathMonth.value))) {
         alert("Please select the month and year for the selected status."); 
         return;
     }
+    
     if (!confirm("Are you sure you want to update this publisher? This will also update their name on all past reports.")) {
         return;
     }
@@ -1737,13 +1741,23 @@ else if (pageId === 'missingReportsPage') {
     const oldFullName = oldPublisherData ? oldPublisherData.fullName : '';
     const newFullName = `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`;
 
+    // --- ITO ANG BAGONG LOGIC ---
+    // Kung Transferred o Dead, i-set ang Field Group sa empty string ("")
+    // Kung Active ("In the Congregation"), kunin ang value sa dropdown
+    let finalFieldServiceGroup = fieldServiceGroupDropdown.value;
+    
+    if (status === 'Transferred' || status === 'Dead') {
+        finalFieldServiceGroup = ""; // Force clear group
+    }
+    // -----------------------------
+
     const updatedData = {
         firstName: firstNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         fullName: newFullName,
         publisherStatus: publisherStatus.value,
-        monthOfTransfer: status === 'Transferred' ? transferMonth.value : '',
-        monthOfDeath: status === 'Dead' ? deathMonth.value : '',
+        monthOfTransfer: status === 'Transferred' ? `${transferMonth.value} ${transferYear.value}` : '',
+        monthOfDeath: status === 'Dead' ? `${deathMonth.value} ${deathYear.value}` : '',
         birthdate: birthdateInput.value,
         baptismStatus: baptismStatusDropdown.value,
         baptismDate: baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "",
@@ -1751,7 +1765,10 @@ else if (pageId === 'missingReportsPage') {
         hope: hopeDropdown.value,
         privilege: privilegeDropdown.value,
         privilege2: privilege2Dropdown.value,
-        fieldServiceGroup: fieldServiceGroupDropdown.value,
+        
+        // Gamitin ang variable na ginawa natin sa taas
+        fieldServiceGroup: finalFieldServiceGroup, 
+        
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -1760,6 +1777,7 @@ else if (pageId === 'missingReportsPage') {
         const publisherRef = db.collection("publishers").doc(currentDocId);
         batch.update(publisherRef, updatedData);
 
+        // Update din ang pangalan sa reports kung nagbago
         if (oldFullName !== newFullName && newFullName.trim() !== '') {
             const reportsQuery = db.collection("reports").where("publisherId", "==", currentDocId);
             const reportsSnapshot = await reportsQuery.get();
@@ -1775,6 +1793,12 @@ else if (pageId === 'missingReportsPage') {
         
         alert("Publisher record and all associated reports updated successfully!");
         
+        // I-clear ang form at i-refresh ang listahan
+        // Update UI logic: Kung naging Transferred/Dead, alisin ang value sa dropdown visually kung hindi pa nag-clear form
+        if (status === 'Transferred' || status === 'Dead') {
+            fieldServiceGroupDropdown.value = "";
+        }
+
         await loadPublishers();
         
         const updatedIndex = publisherList.findIndex(p => p.id === currentDocId);
