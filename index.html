@@ -2457,78 +2457,115 @@ else if (pageId === 'missingReportsPage') {
         reader.readAsArrayBuffer(file);
     }
     async function processAndUploadPublishers() {
-        if (parsedExcelData.length === 0) { alert("No data to upload."); return; }
-        processUploadBtnPublishers.disabled = true;
-        uploadStatusPublishers.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
-        const statusLog = uploadStatusPublishers.querySelector('pre');
-        const batch = db.batch();
-        let newRecordsCount = 0, skippedRecordsCount = 0, errorCount = 0;
-        const requiredFields = ["FirstName", "LastName", "Birthdate", "BaptismStatus", "Gender", "Hope", "Privilege", "Privilege2", "FieldServiceGroup"];
-        for (const record of parsedExcelData) {
-            try {
-                const missingField = requiredFields.find(field => !record[field]);
-                if (missingField) {
-                    statusLog.textContent += `Skipping row: Missing required field "${missingField}".\n`;
-                    skippedRecordsCount++;
-                    continue;
-                }
-                const firstName = record.FirstName.trim();
-                const lastName = record.LastName.trim();
-                const birthdateRaw = record.Birthdate;
-                if (!(birthdateRaw instanceof Date)) {
-                     statusLog.textContent += `Skipping ${lastName}, ${firstName}: 'Birthdate' is not a valid date format.\n`;
-                     skippedRecordsCount++;
-                     continue;
-                }
-                const tzOffset = birthdateRaw.getTimezoneOffset() * 60000;
-                const localDate = new Date(birthdateRaw.getTime() - tzOffset);
-                const birthdate = localDate.toISOString().slice(0, 10);
-                if (record.BaptismStatus === 'Baptized' && !(record.BaptismDate instanceof Date)) {
-                    statusLog.textContent += `Skipping ${lastName}, ${firstName}: 'BaptismDate' is required and must be a valid date when status is 'Baptized'.\n`;
-                    skippedRecordsCount++;
-                    continue;
-                }
-                const baptismDate = record.BaptismDate instanceof Date ? new Date(record.BaptismDate.getTime() - (record.BaptismDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 10) : "";
-                const docId = `${lastName}_${firstName}_${birthdate}`.replace(/\s+/g, "_");
-                const publisherRef = db.collection("publishers").doc(docId);
-                const docSnap = await publisherRef.get();
-                if (docSnap.exists) {
-                    statusLog.textContent += `Skipping "${lastName}, ${firstName}": Already exists.\n`;
-                    skippedRecordsCount++;
-                    continue;
-                }
-                const publisherData = {
-                    firstName, lastName, birthdate, baptismDate,
-                    fullName: `${lastName}, ${firstName}`,
-                    baptismStatus: record.BaptismStatus,
-                    gender: record.Gender,
-                    hope: record.Hope,
-                    privilege: record.Privilege,
-                    privilege2: record.Privilege2,
-                    fieldServiceGroup: record.FieldServiceGroup,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                batch.set(publisherRef, publisherData);
-                newRecordsCount++;
-            } catch (error) {
-                 console.error("Error processing record:", record, error);
-                 statusLog.textContent += `Error on row for "${record.LastName}, ${record.FirstName}". Skipping.\n`;
-                 errorCount++;
-            }
-        }
+    if (parsedExcelData.length === 0) { alert("No data to upload."); return; }
+    
+    processUploadBtnPublishers.disabled = true;
+    uploadStatusPublishers.innerHTML = `<p>Processing ${parsedExcelData.length} records... Please wait.</p><pre></pre>`;
+    
+    const statusLog = uploadStatusPublishers.querySelector('pre');
+    const batch = db.batch();
+    
+    // Nagdagdag tayo ng updatedRecordsCount
+    let newRecordsCount = 0, updatedRecordsCount = 0, skippedRecordsCount = 0, errorCount = 0;
+    
+    const requiredFields = ["FirstName", "LastName", "Birthdate", "BaptismStatus", "Gender", "Hope", "Privilege", "Privilege2", "FieldServiceGroup"];
+
+    for (const record of parsedExcelData) {
         try {
-            await batch.commit();
-            let summary = `Upload complete!\n\nNew Publishers Added: ${newRecordsCount}\nPublishers Skipped: ${skippedRecordsCount}\nErrors: ${errorCount}`;
-            statusLog.textContent += `\n${summary}`;
-            alert(summary);
-            await loadPublishers();
-            processUploadBtnPublishers.disabled = true;
+            // Validation (Check kung may kulang)
+            const missingField = requiredFields.find(field => !record[field]);
+            if (missingField) {
+                statusLog.textContent += `Skipping row: Missing required field "${missingField}".\n`;
+                skippedRecordsCount++;
+                continue;
+            }
+
+            const firstName = record.FirstName.trim();
+            const lastName = record.LastName.trim();
+            
+            // Date Validation
+            const birthdateRaw = record.Birthdate;
+            if (!(birthdateRaw instanceof Date)) {
+                 statusLog.textContent += `Skipping ${lastName}, ${firstName}: 'Birthdate' is not a valid date format.\n`;
+                 skippedRecordsCount++;
+                 continue;
+            }
+            
+            // Format Birthdate
+            const tzOffset = birthdateRaw.getTimezoneOffset() * 60000;
+            const localDate = new Date(birthdateRaw.getTime() - tzOffset);
+            const birthdate = localDate.toISOString().slice(0, 10);
+
+            // Baptism Date Validation
+            if (record.BaptismStatus === 'Baptized' && !(record.BaptismDate instanceof Date)) {
+                statusLog.textContent += `Skipping ${lastName}, ${firstName}: 'BaptismDate' is required and must be a valid date when status is 'Baptized'.\n`;
+                skippedRecordsCount++;
+                continue;
+            }
+            
+            const baptismDate = record.BaptismDate instanceof Date ? new Date(record.BaptismDate.getTime() - (record.BaptismDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 10) : "";
+
+            // Create ID (Unique Identifier)
+            const docId = `${lastName}_${firstName}_${birthdate}`.replace(/\s+/g, "_");
+            const publisherRef = db.collection("publishers").doc(docId);
+            
+            // Prepare Data Object
+            const publisherData = {
+                firstName, lastName, birthdate, baptismDate,
+                fullName: `${lastName}, ${firstName}`,
+                baptismStatus: record.BaptismStatus,
+                gender: record.Gender,
+                hope: record.Hope,
+                privilege: record.Privilege,
+                privilege2: record.Privilege2,
+                publisherStatus: record.Status || "In the Congregation", // Default to In the Cong if missing
+                fieldServiceGroup: record.FieldServiceGroup,
+                monthOfTransfer: record.MonthOfTransfer || "", // Optional fields for transfer/death
+                monthOfDeath: record.MonthOfDeath || "",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp() // Update timestamp
+            };
+
+            // CHECK KUNG EXISTING NA
+            const docSnap = await publisherRef.get();
+
+            if (docSnap.exists) {
+                // --- UPDATE LOGIC (Ito ang bago) ---
+                // Kung nag-eexist na, i-update natin ang fields gamit ang nasa Excel
+                batch.update(publisherRef, publisherData);
+                statusLog.textContent += `Updating details for "${lastName}, ${firstName}"...\n`;
+                updatedRecordsCount++;
+            } else {
+                // --- CREATE LOGIC (Gaya ng dati) ---
+                // Kung wala pa, gumawa ng bago
+                batch.set(publisherRef, publisherData);
+                statusLog.textContent += `Adding new record: "${lastName}, ${firstName}"...\n`;
+                newRecordsCount++;
+            }
+
         } catch (error) {
-            console.error("Error committing batch upload:", error);
-            statusLog.textContent += "\nFATAL ERROR: Could not save records to the database.";
-            alert("A fatal error occurred. Please check the status log.");
+             console.error("Error processing record:", record, error);
+             statusLog.textContent += `Error on row for "${record.LastName}, ${record.FirstName}". Skipping.\n`;
+             errorCount++;
         }
     }
+
+    try {
+        await batch.commit();
+        
+        let summary = `Process complete!\n\nNew Added: ${newRecordsCount}\nUpdated: ${updatedRecordsCount}\nSkipped/Errors: ${skippedRecordsCount + errorCount}`;
+        
+        statusLog.textContent += `\n--- SUMMARY ---\n${summary}`;
+        alert(summary);
+        
+        await loadPublishers(); // Refresh list
+        processUploadBtnPublishers.disabled = true;
+        
+    } catch (error) {
+        console.error("Error committing batch upload:", error);
+        statusLog.textContent += "\nFATAL ERROR: Could not save records to the database.";
+        alert("A fatal error occurred. Please check the status log.");
+    }
+}
         async function saveReport() {
     const publisherId = publisherNameDropdown.value;
     const serviceYear = serviceYearDropdown.value;
