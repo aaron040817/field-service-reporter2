@@ -1697,8 +1697,8 @@ else if (pageId === 'missingReportsPage') {
                 lastName: lastNameInput.value.trim(),
                 fullName: `${lastNameInput.value.trim()}, ${firstNameInput.value.trim()}`,
                 publisherStatus: publisherStatus.value,
-                monthOfTransfer: status === 'Transferred' ? `${transferMonth.value} ${transferYear.value}` : '',
-                monthOfDeath: status === 'Dead' ? `${deathMonth.value} ${deathYear.value}` : '',
+                monthOfTransfer: status === 'Transferred' ? transferMonth.value : '',
+                monthOfDeath: status === 'Dead' ? deathMonth.value : '',
                 birthdate: birthdateInput.value,
                 baptismStatus: baptismStatusDropdown.value,
                 baptismDate: baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "",
@@ -1757,8 +1757,8 @@ else if (pageId === 'missingReportsPage') {
         lastName: lastNameInput.value.trim(),
         fullName: newFullName,
         publisherStatus: publisherStatus.value,
-        monthOfTransfer: status === 'Transferred' ? `${transferMonth.value} ${transferYear.value}` : '',
-        monthOfDeath: status === 'Dead' ? `${deathMonth.value} ${deathYear.value}` : '',
+        monthOfTransfer: status === 'Transferred' ? transferMonth.value : '',
+        monthOfDeath: status === 'Dead' ? deathMonth.value : '',
         birthdate: birthdateInput.value,
         baptismStatus: baptismStatusDropdown.value,
         baptismDate: baptismStatusDropdown.value === "Baptized" ? baptismDateInput.value : "",
@@ -1857,8 +1857,10 @@ else if (pageId === 'missingReportsPage') {
     function displayPublisher(index) {
         const pub = publisherList[index];
         if (!pub) { clearPublisherForm(); return; }
+        
         currentIndex = index;
         currentDocId = pub.id;
+        
         firstNameInput.value = pub.firstName || "";
         lastNameInput.value = pub.lastName || "";
         fullNameInput.value = pub.fullName || "";
@@ -1875,17 +1877,40 @@ else if (pageId === 'missingReportsPage') {
 
         toggleStatusDateFields();
 
+        // --- FIX PARA SA MONTH OF TRANSFER (Display Logic) ---
         if (pub.monthOfTransfer) {
-            const [transferM, transferY] = pub.monthOfTransfer.split(' ');
-            transferYear.value = transferY;
-            populateMonths(transferMonth, transferY);
-            transferMonth.value = pub.monthOfTransfer;
+            // I-split ang string. Ex: "January 2026 2026" magiging ["January", "2026", "2026"]
+            const parts = pub.monthOfTransfer.split(' ');
+            
+            if (parts.length >= 2) {
+                const monthName = parts[0]; // "January"
+                // Kunin ang huling part bilang taon (para sure kahit doble)
+                const year = parts[parts.length - 1]; // "2026"
+                
+                // 1. Set Year Dropdown
+                transferYear.value = year;
+                
+                // 2. Populate Month Dropdown based sa taon
+                populateMonths(transferMonth, year);
+                
+                // 3. Reconstruct correct value ("January 2026") para tumugma sa dropdown option
+                // Ito ang magpapakita ng value kahit "January 2026 2026" ang nasa database
+                transferMonth.value = `${monthName} ${year}`;
+            }
         }
+
+        // --- FIX PARA SA MONTH OF DEATH (Display Logic) ---
         if (pub.monthOfDeath) {
-            const [deathM, deathY] = pub.monthOfDeath.split(' ');
-            deathYear.value = deathY;
-            populateMonths(deathMonth, deathY);
-            deathMonth.value = pub.monthOfDeath;
+            const parts = pub.monthOfDeath.split(' ');
+            
+            if (parts.length >= 2) {
+                const monthName = parts[0];
+                const year = parts[parts.length - 1];
+                
+                deathYear.value = year;
+                populateMonths(deathMonth, year);
+                deathMonth.value = `${monthName} ${year}`;
+            }
         }
     }
         function setupUpdateReportPage() {
