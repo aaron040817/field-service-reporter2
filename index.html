@@ -563,6 +563,7 @@
         <label for="fieldServiceGroup">Field Service Group:</label>
         <select id="fieldServiceGroup">
             <option value="">-- Select --</option>
+            <option value="None">None</option>
             <option value="Field Service Group 1">Field Service Group 1</option>
             <option value="Field Service Group 2">Field Service Group 2</option>
             <option value="Field Service Group 3">Field Service Group 3</option>
@@ -1747,7 +1748,7 @@ else if (pageId === 'missingReportsPage') {
     let finalFieldServiceGroup = fieldServiceGroupDropdown.value;
     
     if (status === 'Transferred' || status === 'Dead') {
-        finalFieldServiceGroup = ""; // Force clear group
+        finalFieldServiceGroup = "None"; // Set to None
     }
     // -----------------------------
 
@@ -1796,7 +1797,7 @@ else if (pageId === 'missingReportsPage') {
         // I-clear ang form at i-refresh ang listahan
         // Update UI logic: Kung naging Transferred/Dead, alisin ang value sa dropdown visually kung hindi pa nag-clear form
         if (status === 'Transferred' || status === 'Dead') {
-            fieldServiceGroupDropdown.value = "";
+            fieldServiceGroupDropdown.value = "None";
         }
 
         await loadPublishers();
