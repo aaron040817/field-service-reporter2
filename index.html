@@ -3770,8 +3770,20 @@ async function exportPublishersToExcel() {
     }
 
     try {
-        // 1. I-map ang data para maging malinis ang Headers sa Excel
-        // Pwede mong ayusin ang pagkakasunod-sunod dito
+        // --- HELPER FUNCTION PANG-LINIS NG DATE ---
+        // Ito ang magtatanggal ng dobleng taon (e.g., "January 2026 2026" -> "January 2026")
+        const cleanMonthYear = (dateStr) => {
+            if (!dateStr) return "";
+            const parts = dateStr.trim().split(' ');
+            // Kung may sobra (e.g. Month Year Year), kunin lang ang Una (Month) at Huli (Year)
+            if (parts.length >= 3) {
+                return `${parts[0]} ${parts[parts.length - 1]}`;
+            }
+            return dateStr;
+        };
+        // -------------------------------------------
+
+        // 1. I-map ang data
         const dataToExport = publisherList.map(pub => ({
             "Last Name": pub.lastName,
             "First Name": pub.firstName,
@@ -3785,14 +3797,16 @@ async function exportPublishersToExcel() {
             "Privilege": pub.privilege,
             "Privilege 2 (Pioneer Status)": pub.privilege2,
             "Field Service Group": pub.fieldServiceGroup,
-            "Month of Transfer": pub.monthOfTransfer || "",
-            "Month of Death": pub.monthOfDeath || ""
+            
+            // 👇 GINAGAMITAN NATIN NG CLEANER FUNCTION DITO 👇
+            "Month of Transfer": cleanMonthYear(pub.monthOfTransfer),
+            "Month of Death": cleanMonthYear(pub.monthOfDeath)
         }));
 
         // 2. Gumawa ng Worksheet
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
 
-        // (Optional) I-adjust ang lapad ng columns para maganda tingnan
+        // (Optional) I-adjust ang lapad ng columns
         const wscols = [
             {wch: 15}, // Last Name
             {wch: 15}, // First Name
@@ -3816,7 +3830,6 @@ async function exportPublishersToExcel() {
         XLSX.utils.book_append_sheet(workbook, worksheet, "Publishers");
 
         // 4. I-download ang file
-        // Gumawa ng filename na may date ngayon
         const dateStr = new Date().toISOString().slice(0, 10);
         XLSX.writeFile(workbook, `Congregation_Publishers_${dateStr}.xlsx`);
 
