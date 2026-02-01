@@ -1158,6 +1158,29 @@ backHomeFromMissingBtn?.addEventListener('click', () => showPage('homePage'));
 serviceYearMissing?.addEventListener('change', () => {
     populateMonths(monthMissing, serviceYearMissing.value);
 });
+// Listener para sa Add Report Page "No Report" Checkbox
+    noReportCheckboxAdd?.addEventListener('change', () => {
+        handleNoReportCheck(
+            noReportCheckboxAdd, 
+            fieldHoursInput, 
+            bibleStudiesInput, 
+            sharedMinistryCheckbox, 
+            auxiliaryPioneerCheckbox, 
+            commentsAdd
+        );
+    });
+
+    // Listener para sa Update Report Page "No Report" Checkbox
+    noReportCheckboxUpdate?.addEventListener('change', () => {
+        handleNoReportCheck(
+            noReportCheckboxUpdate, 
+            fieldHoursUpdate, 
+            bibleStudiesUpdate, 
+            sharedMinistryUpdate, 
+            auxiliaryPioneerCheckboxUpdate, 
+            commentsUpdate
+        );
+    });
     }
         function showPage(pageId) {
     document.querySelectorAll('.page-container').forEach(page => page.classList.add('hidden'));
@@ -2312,6 +2335,22 @@ else if (pageId === 'missingReportsPage') {
             <div id="lastModifiedByRequest" class="last-modified"></div>
         `;
         requestFields.innerHTML = fieldsHTML;
+        // --- IDAGDAG ITO PAGKATAPOS MA-RENDER ANG HTML ---
+    
+    // 1. Re-select elements (kasi bagong gawa sila sa innerHTML)
+    noReportCheckboxRequest = document.getElementById('noReportRequest');
+    const hoursIn = document.getElementById('fieldHoursRequest');
+    const studiesIn = document.getElementById('bibleStudiesRequest');
+    const sharedIn = document.getElementById('sharedMinistryRequest');
+    const auxIn = document.getElementById('auxiliaryPioneerRequest');
+    const commentIn = document.getElementById('commentsRequest');
+
+    // 2. Add Listener
+    if (noReportCheckboxRequest) {
+        noReportCheckboxRequest.addEventListener('change', () => {
+            handleNoReportCheck(noReportCheckboxRequest, hoursIn, studiesIn, sharedIn, auxIn, commentIn);
+        });
+    }
         noReportCheckboxRequest = document.getElementById('noReportRequest');
         
         const dynamicElements = {
@@ -4294,7 +4333,26 @@ async function generateBatchS21Cards() {
         generateBatchS21Btn.disabled = false;
     }
     }
-
+// --- NEW HELPER FUNCTION ---
+function handleNoReportCheck(checkboxElem, hoursElem, studiesElem, sharedElem, auxElem, commentsElem) {
+    if (checkboxElem.checked) {
+        // 1. Clear numeric fields
+        if (hoursElem) hoursElem.value = "";
+        if (studiesElem) studiesElem.value = "";
+        
+        // 2. Uncheck boxes
+        if (sharedElem) sharedElem.checked = false;
+        if (auxElem) auxElem.checked = false;
+        
+        // 3. Set Comments to "No Report"
+        if (commentsElem) commentsElem.value = "No Report";
+    } else {
+        // Optional: Kapag in-uncheck, alisin ang "No Report" sa comments kung yun lang ang laman
+        if (commentsElem && commentsElem.value === "No Report") {
+            commentsElem.value = "";
+        }
+    }
+}
 </script>
 </body>
 </html>
