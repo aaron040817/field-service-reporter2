@@ -428,6 +428,7 @@
                 <label for="auxiliaryPioneerCheckbox">Auxiliary Pioneer</label>
             </div>
         </div>
+        
         <label for="commentsAdd">Comments (Optional):</label>
         <textarea id="commentsAdd" maxlength="30" placeholder="Max 30 characters only"></textarea>
         <div id="lastModifiedByAdd" class="last-modified"></div>
@@ -476,6 +477,12 @@
                     <label for="auxiliaryPioneerCheckboxUpdate">Auxiliary Pioneer</label>
                 </div>
             </div>
+            <div id="auxiliaryPioneerCheckboxContainerUpdate" class="hidden">
+             </div>
+        <div class="checkbox-container" style="margin-top: 10px; border: 1px solid red; padding: 5px; border-radius: 4px;">
+            <input type="checkbox" id="noReportUpdate">
+            <label for="noReportUpdate" style="color: #dc3545; font-weight: bold;">No Report (Check this if Pub has no report)</label>
+        </div>
             <label for="commentsUpdate">Comments (Optional):</label>
             <textarea id="commentsUpdate" maxlength="30" placeholder="Max 30 characters only"></textarea>
             <div id="lastModifiedByUpdate" class="last-modified"></div>
@@ -822,7 +829,7 @@
     let publisherStatus, transferDateContainer, transferYear, transferMonth, deathDateContainer, deathYear, deathMonth;
     let consolidateYearReport, consolidateMonthReport, consolidateYearUpdate, consolidateMonthUpdate, consolidateYearRequest, consolidateMonthRequest;
     let advancedSummaryPage, serviceYearAdvancedSummary, monthAdvancedSummary, generateAdvancedSummaryBtn, saveAdvancedSummaryBtn, summaryFilter, advancedSummaryResults, backHomeFromAdvancedSummaryBtn;
-        
+    let noReportCheckboxAdd, noReportCheckboxUpdate, noReportCheckboxRequest; // Add these  
 // 👇 IDAGDAG ANG MGA BAGONG VARIABLES NA ITO 👇
     let viewRecordsPage, searchPublisherS21, suggestionBoxS21, publisherNameDropdownS21, serviceYearS21, generateS21Btn, individualRecordResult;
     let serviceYearSummaryCat, monthSummaryCat, generateSummaryCatBtn, summaryTotalsResult, backHomeFromViewRecordsBtn;
@@ -1025,7 +1032,8 @@ backHomeFromAdvancedSummaryBtn = document.getElementById('backHomeFromAdvancedSu
 
 // ... ibang buttons ...
 missingReportsBtn = document.getElementById('missingReportsBtn');
-
+noReportCheckboxAdd = document.getElementById('noReportAdd');
+noReportCheckboxUpdate = document.getElementById('noReportUpdate');
 // ... ibang pages ...
 missingReportsPage = document.getElementById('missingReportsPage');
 serviceYearMissing = document.getElementById('serviceYearMissing');
@@ -2073,21 +2081,36 @@ else if (pageId === 'missingReportsPage') {
     }
     if (!confirm("Are you sure you want to update this record?")) return;
     
+    // --- CHECK NO REPORT FLAG ---
+    const isNoReport = noReportCheckboxUpdate.checked;
+
     let hoursVal = parseInt(fieldHoursUpdate.value) || 0;
-    fieldHoursUpdate.value = hoursVal;
     let studiesVal = parseInt(bibleStudiesUpdate.value) || 0;
+
+    if (isNoReport) {
+        hoursVal = 0;
+        studiesVal = 0;
+    }
+
+    fieldHoursUpdate.value = hoursVal;
     bibleStudiesUpdate.value = studiesVal;
     
     const updatedData = {
         hours: hoursVal,
         bibleStudies: studiesVal,
-        sharedInMinistry: sharedMinistryUpdate.checked,
-        wasAuxiliaryPioneer: auxiliaryPioneerCheckboxUpdate.checked,
+        // Force false if No Report
+        sharedInMinistry: isNoReport ? false : sharedMinistryUpdate.checked,
+        wasAuxiliaryPioneer: isNoReport ? false : auxiliaryPioneerCheckboxUpdate.checked,
         comments: commentsUpdate.value,
         consolidateToMonth: consolidateMonthUpdate.value,
         lastModifiedBy: currentUser.email,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
+    
+    // Note: Sa Update, hindi na natin strictly iche-check ang validation ng Pioneers/Publishers 
+    // dahil minsan admin override ito, pero kung gusto mo, pwede mo kopyahin ang validation logic sa saveReport.
+    // Sa ngayon, basta naka-check ang No Report, 0 ang papasok.
+
     try {
         await db.collection("reports").doc(currentReportId).update(updatedData);
         alert("Report updated successfully!");
@@ -2129,6 +2152,7 @@ else if (pageId === 'missingReportsPage') {
     if(auxiliaryPioneerCheckboxUpdate) auxiliaryPioneerCheckboxUpdate.checked = false;
     if(commentsUpdate) commentsUpdate.value = "";
     if(lastModifiedByUpdate) lastModifiedByUpdate.textContent = "";
+    if(noReportCheckboxUpdate) noReportCheckboxUpdate.checked = false; // Add this
     updateReportFieldsDiv.style.display = 'none';
     currentReportId = null;
 }
@@ -2276,12 +2300,17 @@ else if (pageId === 'missingReportsPage') {
                 <input type="checkbox" id="auxiliaryPioneerRequest">
                 <label for="auxiliaryPioneerRequest">Auxiliary Pioneer</label>
             </div>
+            <div class="checkbox-container" style="margin-top: 10px; border: 1px solid red; padding: 5px; border-radius: 4px;">
+                <input type="checkbox" id="noReportRequest">
+                <label for="noReportRequest" style="color: #dc3545; font-weight: bold;">No Report (Check this if Pub has no report)</label>
+            </div>
             <label for="commentsRequest">Comments/Reason for Update (Optional):</label>
             <textarea id="commentsRequest" maxlength="30" placeholder="Max 30 characters only"></textarea>
             <div id="lastModifiedByRequest" class="last-modified"></div>
         `;
         requestFields.innerHTML = fieldsHTML;
-
+        noReportCheckboxRequest = document.getElementById('noReportRequest');
+        
         const dynamicElements = {
             privilegeInput: privilege2Request,
             fieldHoursContainer: document.getElementById('fieldHoursContainerRequest'),
@@ -2318,54 +2347,68 @@ else if (pageId === 'missingReportsPage') {
     }
 }
     async function submitRequestForApproval() {
+    // ... (existing variable declarations) ...
     const publisherId = publisherNameDropdownRequest.value;
     const serviceYear = serviceYearRequest.value;
     const month = monthYearRequest.value;
+
     if (!publisherId || !serviceYear || !month) {
         alert("Please select the publisher, service year, and month of the report.");
         return;
     }
     const originalReportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+    
     const hoursInput = document.getElementById('fieldHoursRequest');
-    if (!hoursInput) {
-        alert("No report data loaded. Please select a valid period with an existing report.");
-        return;
-    }
     const studiesInput = document.getElementById('bibleStudiesRequest');
     const sharedMinistryInput = document.getElementById('sharedMinistryRequest');
     const auxPioneerInput = document.getElementById('auxiliaryPioneerRequest');
     const commentsInput = document.getElementById('commentsRequest');
+    
+    // Check if elements exist
+    if (!hoursInput) {
+         alert("Please select a publisher to load the form."); return;
+    }
+
+    // --- CHECK NO REPORT FLAG ---
+    const isNoReport = noReportCheckboxRequest.checked;
 
     const privilege = privilege2Request.value;
     let isAuxThisMonth = false;
     if (privilege === 'Publisher/Auxi') {
+         // ... existing aux check code ...
          try {
             const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
             const docSnap = await db.collection("auxiliary_status").doc(docId).get();
             if (docSnap.exists && docSnap.data().isAuxiliary) { isAuxThisMonth = true; }
-        } catch (e) { console.error("Error checking aux status on submit", e); }
+        } catch (e) { console.error(e); }
     }
 
-    if (isAuxThisMonth && (parseInt(hoursInput.value) || 0) <= 0) {
-         alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
-    }
-    if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryInput.checked) {
-        alert("Validation Error: The 'Shared in Ministry' box must be checked."); return;
+    // --- MODIFIED VALIDATION ---
+    if (!isNoReport) {
+        if (isAuxThisMonth && (parseInt(hoursInput.value) || 0) <= 0) {
+             alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
+        }
+        if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryInput.checked) {
+            alert("Validation Error: The 'Shared in Ministry' box must be checked."); return;
+        }
     }
 
     const wasAuxPioneerThisMonth = (auxPioneerInput && !auxPioneerInput.parentElement.classList.contains('hidden') && auxPioneerInput.checked);
 
     const requestedChanges = {
-        hours: parseInt(hoursInput.value) || 0,
-        bibleStudies: parseInt(studiesInput.value) || 0,
-        sharedInMinistry: sharedMinistryInput.checked,
-        wasAuxiliaryPioneer: wasAuxPioneerThisMonth,
+        // Kung No Report, force 0/false. Kung hindi, kunin ang value.
+        hours: isNoReport ? 0 : (parseInt(hoursInput.value) || 0),
+        bibleStudies: isNoReport ? 0 : (parseInt(studiesInput.value) || 0),
+        sharedInMinistry: isNoReport ? false : sharedMinistryInput.checked,
+        wasAuxiliaryPioneer: isNoReport ? false : wasAuxPioneerThisMonth,
         comments: commentsInput.value,
         consolidateToMonth: consolidateMonthRequest.value,
         lastModifiedBy: currentUser.email,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
-    const requestData = {
+    
+    // ... (rest of the function for adding to db is same) ...
+     const requestData = {
         requestingUserUid: currentUser.uid,
         requestingUserEmail: currentUser.email,
         publisherToUpdateId: publisherId,
@@ -2687,7 +2730,7 @@ else if (pageId === 'missingReportsPage') {
         alert("A fatal error occurred.");
     }
 }
-        async function saveReport() {
+    async function saveReport() {
     const publisherId = publisherNameDropdown.value;
     const serviceYear = serviceYearDropdown.value;
     const month = monthYearDropdown.value;
@@ -2696,44 +2739,68 @@ else if (pageId === 'missingReportsPage') {
     if (!publisherId || !serviceYear || !month) { alert("Please select publisher, year, and month."); return; }
     if (!consolidateTo) { alert("Validation Error: 'Consolidate Report to' is a mandatory field."); return; }
 
+    // --- CHECK NO REPORT FLAG ---
+    const isNoReport = noReportCheckboxAdd.checked;
+
     let hoursVal = parseInt(fieldHoursInput.value) || 0;
-    fieldHoursInput.value = hoursVal;
     let studiesVal = parseInt(bibleStudiesInput.value) || 0;
+    
+    // Kung No Report, force zero/false lahat
+    if (isNoReport) {
+        hoursVal = 0;
+        studiesVal = 0;
+    }
+    
+    fieldHoursInput.value = hoursVal;
     bibleStudiesInput.value = studiesVal;
+
     const privilege = privilege2ReportInput.value;
     let isAuxThisMonth = false;
+    
+    // ... (existing logic for aux checking) ...
     if (privilege === 'Publisher/Auxi') {
-        const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-        try {
+         // ... existing code ...
+         try {
+            const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
             const docSnap = await db.collection("auxiliary_status").doc(docId).get();
-            if (docSnap.exists && docSnap.data().isAuxiliary) {
-                isAuxThisMonth = true;
-            }
-        } catch (e) { console.error("Error checking aux status on save", e); }
+            if (docSnap.exists && docSnap.data().isAuxiliary) { isAuxThisMonth = true; }
+        } catch (e) { console.error(e); }
     } else if (["Regular Pioneer", "Special Pioneer", "Field Missionary", "Continuous Auxiliary Pioneer"].includes(privilege)) {
         isAuxThisMonth = true;
     }
-    if ((isAuxThisMonth || auxiliaryPioneerCheckbox.checked) && hoursVal <= 0) {
-        alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
+
+    // --- MODIFIED VALIDATION ---
+    // Mag-aalert lang kung HINDI naka-check ang No Report
+    if (!isNoReport) {
+        if ((isAuxThisMonth || auxiliaryPioneerCheckbox.checked) && hoursVal <= 0) {
+            alert("Validation Error: Field Hours must be greater than zero for an Auxiliary Pioneer."); return;
+        }
+        if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryCheckbox.checked) {
+            alert("Validation Error: 'Shared in Ministry' must be checked for this report."); return;
+        }
     }
-    if (privilege === 'Publisher/Auxi' && !isAuxThisMonth && !sharedMinistryCheckbox.checked) {
-        alert("Validation Error: 'Shared in Ministry' must be checked for this report."); return;
-    }
+
     const publisherFullName = publisherNameDropdown.options[publisherNameDropdown.selectedIndex].text;
     const reportId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
     const reportRef = db.collection("reports").doc(reportId);
+
     try {
         const doc = await reportRef.get();
         if (doc.exists) { alert("Error: A report for this publisher, service year, and month already exists."); return; }
+        
         const reportData = {
             publisherId, publisherFullName, serviceYear, month, 
             consolidateToMonth: consolidateTo, 
             fieldServiceGroup: fieldGroupInput.value, 
             privilege2AtTimeOfReport: privilege2ReportInput.value, 
+            
+            // Gamitin ang calculated values
             hours: hoursVal, 
             bibleStudies: studiesVal, 
-            sharedInMinistry: sharedMinistryCheckbox.checked, 
-            wasAuxiliaryPioneer: auxiliaryPioneerCheckbox.checked, 
+            // Kung No Report, force false ang shared/aux checkboxes
+            sharedInMinistry: isNoReport ? false : sharedMinistryCheckbox.checked, 
+            wasAuxiliaryPioneer: isNoReport ? false : auxiliaryPioneerCheckbox.checked, 
+            
             comments: commentsAdd.value,
             lastModifiedBy: currentUser.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -2845,6 +2912,7 @@ else if (pageId === 'missingReportsPage') {
         consolidateYearReport.value = "";
         consolidateMonthReport.innerHTML = '<option value="">-- Select Month --</option>';
     }
+    if(noReportCheckboxAdd) noReportCheckboxAdd.checked = false; // Add this
     updateReportFieldsVisibility();
 }
     async function updateReportFieldsVisibility() {
