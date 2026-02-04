@@ -570,6 +570,16 @@
             <option value="Continuous Auxiliary Pioneer">Continuous Auxiliary Pioneer</option>
             <option value="Publisher/Auxi">Publisher/Auxi</option>
         </select>
+
+        <div id="privilege2EffectivityContainer" class="hidden" style="border: 1px dashed #007bff; padding: 10px; margin-bottom: 10px; border-radius: 5px; background-color: #f8f9fa;">
+            <p style="margin: 0 0 5px 0; font-weight: bold; font-size: 0.9em; color: #0056b3;">Privilege 2 Effectivity Date:</p>
+            <label for="p2StartYear">Start Service Year:</label>
+            <select id="p2StartYear"></select>
+            <label for="p2StartMonth">Start Month:</label>
+            <select id="p2StartMonth"></select>
+        </div>
+        <label for="fieldServiceGroup">Field Service Group:</label>
+        
         <label for="fieldServiceGroup">Field Service Group:</label>
         <select id="fieldServiceGroup">
             <option value="">-- Select --</option>
@@ -832,7 +842,8 @@
     let publisherStatus, transferDateContainer, transferYear, transferMonth, deathDateContainer, deathYear, deathMonth;
     let consolidateYearReport, consolidateMonthReport, consolidateYearUpdate, consolidateMonthUpdate, consolidateYearRequest, consolidateMonthRequest;
     let advancedSummaryPage, serviceYearAdvancedSummary, monthAdvancedSummary, generateAdvancedSummaryBtn, saveAdvancedSummaryBtn, summaryFilter, advancedSummaryResults, backHomeFromAdvancedSummaryBtn;
-    let noReportCheckboxAdd, noReportCheckboxUpdate, noReportCheckboxRequest; // Add these  
+    let noReportCheckboxAdd, noReportCheckboxUpdate, noReportCheckboxRequest; // Add these
+    let p2EffectivityContainer, p2StartYear, p2StartMonth;
 // 👇 IDAGDAG ANG MGA BAGONG VARIABLES NA ITO 👇
     let viewRecordsPage, searchPublisherS21, suggestionBoxS21, publisherNameDropdownS21, serviceYearS21, generateS21Btn, individualRecordResult;
     let serviceYearSummaryCat, monthSummaryCat, generateSummaryCatBtn, summaryTotalsResult, backHomeFromViewRecordsBtn;
@@ -1051,6 +1062,9 @@ batchGroup = document.getElementById('batchGroup');
 batchPrivilege = document.getElementById('batchPrivilege');
 generateBatchS21Btn = document.getElementById('generateBatchS21Btn');
 batchPrintResult = document.getElementById('batchPrintResult');
+p2EffectivityContainer = document.getElementById('privilege2EffectivityContainer');
+p2StartYear = document.getElementById('p2StartYear');
+p2StartMonth = document.getElementById('p2StartMonth');
         }
     function toggleStatusDateFields() {
     const status = publisherStatus.value;
@@ -1180,6 +1194,15 @@ serviceYearMissing?.addEventListener('change', () => {
             auxiliaryPioneerCheckboxUpdate, 
             commentsUpdate
         );
+    });
+    // Sa loob ng attachAllListeners:
+
+    // Toggle Effectivity Fields
+    privilege2Dropdown?.addEventListener('change', togglePrivilege2Date);
+    
+    // Populate Months kapag nagbago ang Year sa Effectivity
+    p2StartYear?.addEventListener('change', () => {
+        populateMonths(p2StartMonth, p2StartYear.value);
     });
     }
         function showPage(pageId) {
@@ -1608,134 +1631,155 @@ else if (pageId === 'missingReportsPage') {
             alert("An error occurred while updating the status.");
         }
     }
-        async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
-        // 1. I-RESET: Itago muna ang LAHAT at i-clear ang values
-        elements.fieldHoursContainer.classList.add("hidden");
-        elements.bibleStudiesContainer.classList.add("hidden");
-        elements.sharedMinistryContainer.classList.add("hidden");
-        elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
-        
-        elements.fieldHoursInput.value = "";
-        elements.bibleStudiesInput.value = "";
-        elements.sharedMinistryCheckbox.checked = false;
-        elements.auxiliaryPioneerCheckbox.checked = false;
-        
-        elements.sharedMinistryCheckbox.disabled = false;
-        elements.auxiliaryPioneerCheckbox.disabled = false;
+    async function handleReportFieldLogic(elements, publisherId, serviceYear, month) {
+    // 1. I-RESET: Itago muna ang LAHAT at i-clear ang values
+    elements.fieldHoursContainer.classList.add("hidden");
+    elements.bibleStudiesContainer.classList.add("hidden");
+    elements.sharedMinistryContainer.classList.add("hidden");
+    elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
+    
+    elements.fieldHoursInput.value = "";
+    elements.bibleStudiesInput.value = "";
+    elements.sharedMinistryCheckbox.checked = false;
+    elements.auxiliaryPioneerCheckbox.checked = false;
+    
+    elements.sharedMinistryCheckbox.disabled = false;
+    elements.auxiliaryPioneerCheckbox.disabled = false;
 
-        // Reset listeners para hindi magpatong-patong
-        elements.fieldHoursInput.oninput = null;
-        elements.bibleStudiesInput.oninput = null;
+    // Reset listeners
+    elements.fieldHoursInput.oninput = null;
+    elements.bibleStudiesInput.oninput = null;
 
-        // --- HELPER FUNCTIONS ---
-        
-        const handleStudiesInput = () => { 
-            elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); 
-        };
+    // --- FETCH PUBLISHER DETAILS FOR EFFECTIVITY CHECK ---
+    let publisherPrivilege2 = "";
+    let p2StartYear = "";
+    let p2StartMonth = "";
 
-        // Logic para sa Full Time (RP/SP/FM)
-        const handleHoursInput_FullTime = () => {
-            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-            if (value && parseInt(value, 10) === 0) { value = ''; }
-            elements.fieldHoursInput.value = value;
-            // Auto-check Shared
-            elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
-            // Force Uncheck Aux
-            if(elements.auxiliaryPioneerCheckbox) elements.auxiliaryPioneerCheckbox.checked = false; 
-        };
+    if (publisherId) {
+        // Find publisher in global list (mas mabilis kaysa mag-db query ulit)
+        const pub = publisherList.find(p => p.id === publisherId);
+        if (pub) {
+            publisherPrivilege2 = pub.privilege2 || "";
+            p2StartYear = pub.p2StartYear || "";
+            p2StartMonth = pub.p2StartMonth || "";
+        }
+    }
 
-        // Logic para sa Aux Pioneers
-        const handleHoursInput_Aux = () => {
-            let value = elements.fieldHoursInput.value.replace(/\D/g, '');
-            if (value && parseInt(value, 10) === 0) { value = ''; }
-            elements.fieldHoursInput.value = value;
-            const hasHours = parseInt(value, 10) > 0;
-            elements.sharedMinistryCheckbox.checked = hasHours;
-            elements.auxiliaryPioneerCheckbox.checked = hasHours;
-        };
+    // --- DETERMINE EFFECTIVE PRIVILEGE ---
+    // Default privilege is whatever is on the profile
+    let effectivePrivilege = publisherPrivilege2;
 
-        // --- MAIN LOGIC BASE SA PRIVILEGE ---
+    // KUNG may date sa report at may effectivity date ang privilege
+    if (serviceYear && month && p2StartYear && p2StartMonth) {
+        const reportDate = getChronologicalDate(serviceYear, month);
+        const effectivityDate = getChronologicalDate(p2StartYear, p2StartMonth);
 
-        const privilege2 = elements.privilegeInput.value;
-        
-        switch (privilege2) {
-            case "Regular Pioneer":
-            case "Special Pioneer":
-            case "Field Missionary":
-                // SHOW: Hours, Studies, Shared
-                elements.fieldHoursContainer.classList.remove("hidden");
-                elements.bibleStudiesContainer.classList.remove("hidden");
-                elements.sharedMinistryContainer.classList.remove("hidden");
-                
-                elements.sharedMinistryCheckbox.disabled = true; // Auto-check kaya disabled
-                
-                elements.fieldHoursInput.oninput = handleHoursInput_FullTime; 
-                elements.bibleStudiesInput.oninput = handleStudiesInput;
-                break;
+        if (reportDate && effectivityDate) {
+            // Kung ang report ay MAS MAAGA kaysa sa effectivity,
+            // ibig sabihin HINDI PA sila Pioneer noong time na yun.
+            // So tratuhin silang parang regular publisher (empty privilege2)
+            if (reportDate < effectivityDate) {
+                effectivePrivilege = ""; // Downgrade to Publisher
+            }
+        }
+    }
 
-            case "Continuous Auxiliary Pioneer":
-                // SHOW: Hours, Studies, Shared, Aux Checkbox
+    // --- APPLY LOGIC BASED ON EFFECTIVE PRIVILEGE ---
+    
+    const handleStudiesInput = () => { 
+        elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); 
+    };
+
+    const handleHoursInput_FullTime = () => {
+        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+        if (value && parseInt(value, 10) === 0) { value = ''; }
+        elements.fieldHoursInput.value = value;
+        elements.sharedMinistryCheckbox.checked = parseInt(value, 10) > 0;
+        if(elements.auxiliaryPioneerCheckbox) elements.auxiliaryPioneerCheckbox.checked = false; 
+    };
+
+    const handleHoursInput_Aux = () => {
+        let value = elements.fieldHoursInput.value.replace(/\D/g, '');
+        if (value && parseInt(value, 10) === 0) { value = ''; }
+        elements.fieldHoursInput.value = value;
+        const hasHours = parseInt(value, 10) > 0;
+        elements.sharedMinistryCheckbox.checked = hasHours;
+        elements.auxiliaryPioneerCheckbox.checked = hasHours;
+    };
+
+    switch (effectivePrivilege) {
+        case "Regular Pioneer":
+        case "Special Pioneer":
+        case "Field Missionary":
+            // SHOW: Hours, Studies, Shared
+            elements.fieldHoursContainer.classList.remove("hidden");
+            elements.bibleStudiesContainer.classList.remove("hidden");
+            elements.sharedMinistryContainer.classList.remove("hidden");
+            
+            elements.sharedMinistryCheckbox.disabled = true; 
+            
+            elements.fieldHoursInput.oninput = handleHoursInput_FullTime; 
+            elements.bibleStudiesInput.oninput = handleStudiesInput;
+            break;
+
+        case "Continuous Auxiliary Pioneer":
+            // SHOW: Hours, Studies, Shared, Aux Checkbox
+            elements.fieldHoursContainer.classList.remove("hidden");
+            elements.bibleStudiesContainer.classList.remove("hidden");
+            elements.sharedMinistryContainer.classList.remove("hidden");
+            elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
+            
+            elements.sharedMinistryCheckbox.disabled = true;
+            elements.auxiliaryPioneerCheckbox.disabled = true; 
+            
+            elements.fieldHoursInput.oninput = handleHoursInput_Aux;
+            elements.bibleStudiesInput.oninput = handleStudiesInput;
+            break;
+
+        case "Publisher/Auxi":
+            let isAux = false;
+            // Check sa database kung nag-Auxiliary siya sa buwan na ito
+            if (publisherId && serviceYear && month) {
+                const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
+                try {
+                    const docSnap = await db.collection("auxiliary_status").doc(docId).get();
+                    if (docSnap.exists && docSnap.data().isAuxiliary) {
+                        isAux = true;
+                    }
+                } catch (e) { console.error("Error fetching aux status", e); }
+            }
+
+            if (isAux) {
                 elements.fieldHoursContainer.classList.remove("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
                 elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
                 
                 elements.sharedMinistryCheckbox.disabled = true;
-                elements.auxiliaryPioneerCheckbox.disabled = true; 
+                elements.auxiliaryPioneerCheckbox.disabled = true;
                 
                 elements.fieldHoursInput.oninput = handleHoursInput_Aux;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
-                break;
-
-            case "Publisher/Auxi":
-                let isAux = false;
-                // Check sa database kung nag-Auxiliary siya sa buwan na ito
-                if (publisherId && serviceYear && month) {
-                    const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
-                    try {
-                        const docSnap = await db.collection("auxiliary_status").doc(docId).get();
-                        if (docSnap.exists && docSnap.data().isAuxiliary) {
-                            isAux = true;
-                        }
-                    } catch (e) { console.error("Error fetching aux status", e); }
-                }
-
-                if (isAux) {
-                    // --- KUNG AUXILIARY SYA NGAYONG BUWAN ---
-                    // SHOW: Hours, Studies, Shared, Aux Checkbox
-                    elements.fieldHoursContainer.classList.remove("hidden"); // <--- SHOW HOURS
-                    elements.bibleStudiesContainer.classList.remove("hidden");
-                    elements.sharedMinistryContainer.classList.remove("hidden");
-                    elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-                    
-                    elements.sharedMinistryCheckbox.disabled = true;
-                    elements.auxiliaryPioneerCheckbox.disabled = true;
-                    
-                    elements.fieldHoursInput.oninput = handleHoursInput_Aux;
-                    elements.bibleStudiesInput.oninput = handleStudiesInput;
-                } else {
-                    // --- KUNG REGULAR PUBLISHER LANG SYA ---
-                    // HIDE: Hours (Ito ang hinahanap mong restriction)
-                    elements.fieldHoursContainer.classList.add("hidden"); // <--- HIDE HOURS
-                    
-                    // SHOW: Studies, Shared Checkbox ONLY
-                    elements.bibleStudiesContainer.classList.remove("hidden");
-                    elements.sharedMinistryContainer.classList.remove("hidden");
-                    
-                    elements.sharedMinistryCheckbox.disabled = false; // Manual check ng user
-                    elements.bibleStudiesInput.oninput = handleStudiesInput;
-                }
-                break;
-                
-            default:
-                // Default fallback (Publisher lang) -> Hide Hours
+            } else {
+                // Publisher Mode
                 elements.fieldHoursContainer.classList.add("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
+                
+                elements.sharedMinistryCheckbox.disabled = false;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
-                break;
-        }
+            }
+            break;
+            
+        default:
+            // Regular Publisher (Active but no privilege, or Not yet effective)
+            elements.fieldHoursContainer.classList.add("hidden");
+            elements.bibleStudiesContainer.classList.remove("hidden");
+            elements.sharedMinistryContainer.classList.remove("hidden");
+            elements.bibleStudiesInput.oninput = handleStudiesInput;
+            break;
     }
+}
     function setupManagePublisherPage() {
         clearPublisherForm();
         searchInputManage.addEventListener("input", function () {
@@ -1794,6 +1838,8 @@ else if (pageId === 'missingReportsPage') {
                 hope: hopeDropdown.value,
                 privilege: privilegeDropdown.value,
                 privilege2: privilege2Dropdown.value,
+                p2StartYear: privilege2Dropdown.value ? p2StartYear.value : "",
+                p2StartMonth: privilege2Dropdown.value ? p2StartMonth.value : "",
                 fieldServiceGroup: fieldServiceGroupDropdown.value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -1854,7 +1900,8 @@ else if (pageId === 'missingReportsPage') {
         hope: hopeDropdown.value,
         privilege: privilegeDropdown.value,
         privilege2: privilege2Dropdown.value,
-        
+        p2StartYear: privilege2Dropdown.value ? p2StartYear.value : "",
+        p2StartMonth: privilege2Dropdown.value ? p2StartMonth.value : "",
         // Gamitin ang variable na ginawa natin sa taas
         fieldServiceGroup: finalFieldServiceGroup, 
         
@@ -1961,6 +2008,14 @@ else if (pageId === 'missingReportsPage') {
         hopeDropdown.value = pub.hope || "";
         privilegeDropdown.value = pub.privilege || "";
         privilege2Dropdown.value = pub.privilege2 || "";
+        togglePrivilege2Date(); // Show/Hide container based on priv2
+        if (pub.privilege2 && pub.p2StartYear) {
+            populateServiceYears(p2StartYear); // Ensure options exist
+            p2StartYear.value = pub.p2StartYear;
+            
+            populateMonths(p2StartMonth, pub.p2StartYear); // Populate months based on saved year
+            p2StartMonth.value = pub.p2StartMonth || "";
+        }
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
 
         toggleStatusDateFields();
@@ -3971,6 +4026,7 @@ async function exportPublishersToExcel() {
             "Hope": pub.hope,
             "Privilege": pub.privilege,
             "Privilege 2 (Pioneer Status)": pub.privilege2,
+            "Privilege 2 Start Date": (pub.p2StartMonth && pub.p2StartYear) ? `${pub.p2StartMonth} ${pub.p2StartYear}` : "",
             "Field Service Group": pub.fieldServiceGroup,
             
             // 👇 GINAGAMITAN NATIN NG CLEANER FUNCTION DITO 👇
@@ -4351,6 +4407,52 @@ function handleNoReportCheck(checkboxElem, hoursElem, studiesElem, sharedElem, a
         if (commentsElem && commentsElem.value === "No Report") {
             commentsElem.value = "";
         }
+    }
+}
+// --- HELPER: Convert Service Year + Month to Date Object ---
+function getChronologicalDate(serviceYear, monthName) {
+    if (!serviceYear || !monthName) return null;
+    
+    const sy = parseInt(serviceYear);
+    // Service Year 2026 starts Sept 2025.
+    // Months: Sept=0, Oct=1 ... Aug=11 (relative to start)
+    const months = ["September", "October", "November", "December", "January", "February", "March", "April", "May", "June", "July", "August"];
+    const monthIndex = months.indexOf(monthName);
+    
+    if (monthIndex === -1) return null; // Invalid month
+
+    // Kung ang month ay Sept-Dec, ang calendar year ay (SY - 1)
+    // Kung Jan-Aug, ang calendar year ay (SY)
+    let calendarYear;
+    let jsMonthIndex; // 0=Jan, 1=Feb...
+
+    // Mapping monthName to JS Date Month Index (0-11)
+    const jsMonths = {
+        "January": 0, "February": 1, "March": 2, "April": 3, "May": 4, "June": 5,
+        "July": 6, "August": 7, "September": 8, "October": 9, "November": 10, "December": 11
+    };
+    jsMonthIndex = jsMonths[monthName];
+
+    if (jsMonthIndex >= 8) { // Sept - Dec
+        calendarYear = sy - 1;
+    } else { // Jan - Aug
+        calendarYear = sy;
+    }
+
+    // Return first day of that month
+    return new Date(calendarYear, jsMonthIndex, 1);
+}
+function togglePrivilege2Date() {
+    const val = privilege2Dropdown.value;
+    // Ipakita lang kung may pinili (bukod sa blank)
+    if (val && val !== "") {
+        p2EffectivityContainer.classList.remove('hidden');
+        // Populate kung wala pang laman
+        if (p2StartYear.innerHTML === "") populateServiceYears(p2StartYear);
+    } else {
+        p2EffectivityContainer.classList.add('hidden');
+        p2StartYear.value = "";
+        p2StartMonth.innerHTML = "";
     }
 }
 </script>
