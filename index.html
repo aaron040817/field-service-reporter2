@@ -1973,11 +1973,20 @@ else if (pageId === 'missingReportsPage') {
     function clearPublisherForm() {
         const inputs = [firstNameInput, lastNameInput, fullNameInput, birthdateInput, baptismDateInput, searchInputManage];
         const selects = [baptismStatusDropdown, genderDropdown, hopeDropdown, privilegeDropdown, privilege2Dropdown, fieldServiceGroupDropdown, publisherStatus, transferYear, transferMonth, deathYear, deathMonth];
+        
         inputs.forEach(i => i && (i.value = ''));
         selects.forEach(s => s && (s.value = ''));
+        
         baptismDateContainer?.classList.add("hidden");
         transferDateContainer?.classList.add("hidden");
         deathDateContainer?.classList.add("hidden");
+        
+        // --- ADDED: Clear Effectivity Fields ---
+        if(p2EffectivityContainer) p2EffectivityContainer.classList.add('hidden');
+        if(p2StartYear) p2StartYear.value = "";
+        if(p2StartMonth) p2StartMonth.innerHTML = '<option value="">-- Select --</option>';
+        // -------------------------------------
+
         suggestionBoxManage && (suggestionBoxManage.innerHTML = "");
         currentIndex = -1;
         currentDocId = null;
@@ -2000,53 +2009,69 @@ else if (pageId === 'missingReportsPage') {
         genderDropdown.value = pub.gender || "";
         hopeDropdown.value = pub.hope || "";
         privilegeDropdown.value = pub.privilege || "";
+        
+        // Privilege 2 Logic
         privilege2Dropdown.value = pub.privilege2 || "";
-        togglePrivilege2Date(); // Show/Hide container based on priv2
+        
+        // --- FIX: RESET EFFECTIVITY FIELDS FIRST ---
+        // 1. Siguraduhing may laman ang Year Dropdown
+        if (p2StartYear.options.length <= 1) { 
+            populateServiceYears(p2StartYear); 
+        }
+        
+        // 2. I-clear muna ang values para hindi "dumikit" ang data ng previous record
+        p2StartYear.value = "";
+        p2StartMonth.innerHTML = '<option value="">-- Select --</option>';
+
+        // 3. I-update ang visibility
+        togglePrivilege2Date();
+
+        // 4. Kung MERON talagang saved data ang current publisher, i-load ito
         if (pub.privilege2 && pub.p2StartYear) {
-            populateServiceYears(p2StartYear); // Ensure options exist
             p2StartYear.value = pub.p2StartYear;
             
-            populateMonths(p2StartMonth, pub.p2StartYear); // Populate months based on saved year
+            // Populate month based sa saved year
+            populateMonths(p2StartMonth, pub.p2StartYear);
+            
+            // Set saved month
             p2StartMonth.value = pub.p2StartMonth || "";
         }
+        // ---------------------------------------------
+
         fieldServiceGroupDropdown.value = pub.fieldServiceGroup || "";
 
         toggleStatusDateFields();
 
-        // --- FIX PARA SA MONTH OF TRANSFER (Display Logic) ---
+        // Transfer Date Logic
         if (pub.monthOfTransfer) {
-            // I-split ang string. Ex: "January 2026 2026" magiging ["January", "2026", "2026"]
             const parts = pub.monthOfTransfer.split(' ');
-            
             if (parts.length >= 2) {
-                const monthName = parts[0]; // "January"
-                // Kunin ang huling part bilang taon (para sure kahit doble)
-                const year = parts[parts.length - 1]; // "2026"
-                
-                // 1. Set Year Dropdown
+                const monthName = parts[0]; 
+                const year = parts[parts.length - 1]; 
                 transferYear.value = year;
-                
-                // 2. Populate Month Dropdown based sa taon
                 populateMonths(transferMonth, year);
-                
-                // 3. Reconstruct correct value ("January 2026") para tumugma sa dropdown option
-                // Ito ang magpapakita ng value kahit "January 2026 2026" ang nasa database
                 transferMonth.value = `${monthName} ${year}`;
             }
+        } else {
+            // Reset kung wala
+            transferYear.value = "";
+            transferMonth.innerHTML = '<option value="">-- Select --</option>';
         }
 
-        // --- FIX PARA SA MONTH OF DEATH (Display Logic) ---
+        // Death Date Logic
         if (pub.monthOfDeath) {
             const parts = pub.monthOfDeath.split(' ');
-            
             if (parts.length >= 2) {
                 const monthName = parts[0];
-                const year = parts[parts.length - 1];
-                
+                const year = parts[parts.length - 1]; 
                 deathYear.value = year;
                 populateMonths(deathMonth, year);
                 deathMonth.value = `${monthName} ${year}`;
             }
+        } else {
+             // Reset kung wala
+             deathYear.value = "";
+             deathMonth.innerHTML = '<option value="">-- Select --</option>';
         }
     }
         function setupUpdateReportPage() {
