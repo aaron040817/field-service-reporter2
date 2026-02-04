@@ -1638,6 +1638,8 @@ else if (pageId === 'missingReportsPage') {
     elements.sharedMinistryContainer.classList.add("hidden");
     elements.auxiliaryPioneerCheckboxContainer.classList.add("hidden");
     
+    // Clear inputs ONLY if not triggered by the "No Report" checkbox logic
+    // (Assuming this function is called on dropdown change, not checkbox change)
     elements.fieldHoursInput.value = "";
     elements.bibleStudiesInput.value = "";
     elements.sharedMinistryCheckbox.checked = false;
@@ -1656,7 +1658,6 @@ else if (pageId === 'missingReportsPage') {
     let p2StartMonth = "";
 
     if (publisherId) {
-        // Find publisher in global list (mas mabilis kaysa mag-db query ulit)
         const pub = publisherList.find(p => p.id === publisherId);
         if (pub) {
             publisherPrivilege2 = pub.privilege2 || "";
@@ -1666,26 +1667,25 @@ else if (pageId === 'missingReportsPage') {
     }
 
     // --- DETERMINE EFFECTIVE PRIVILEGE ---
-    // Default privilege is whatever is on the profile
     let effectivePrivilege = publisherPrivilege2;
 
-    // KUNG may date sa report at may effectivity date ang privilege
-    if (serviceYear && month && p2StartYear && p2StartMonth) {
+    // CHECK: Kung may start date ang privilege, i-compare sa report date
+    if (serviceYear && month && p2StartYear && p2StartMonth && publisherPrivilege2 !== "") {
         const reportDate = getChronologicalDate(serviceYear, month);
         const effectivityDate = getChronologicalDate(p2StartYear, p2StartMonth);
 
+        // Debugging (Optional: pwede mong tanggalin pag okay na)
+        // console.log("Report:", reportDate, "Effective:", effectivityDate);
+
         if (reportDate && effectivityDate) {
-            // Kung ang report ay MAS MAAGA kaysa sa effectivity,
-            // ibig sabihin HINDI PA sila Pioneer noong time na yun.
-            // So tratuhin silang parang regular publisher (empty privilege2)
+            // Kung ang report ay MAS MAAGA (Less than) sa effectivity date
             if (reportDate < effectivityDate) {
-                effectivePrivilege = ""; // Downgrade to Publisher
+                effectivePrivilege = ""; // Downgrade to Regular Publisher
             }
         }
     }
 
     // --- APPLY LOGIC BASED ON EFFECTIVE PRIVILEGE ---
-    
     const handleStudiesInput = () => { 
         elements.bibleStudiesInput.value = elements.bibleStudiesInput.value.replace(/\D/g, ''); 
     };
@@ -1715,9 +1715,7 @@ else if (pageId === 'missingReportsPage') {
             elements.fieldHoursContainer.classList.remove("hidden");
             elements.bibleStudiesContainer.classList.remove("hidden");
             elements.sharedMinistryContainer.classList.remove("hidden");
-            
             elements.sharedMinistryCheckbox.disabled = true; 
-            
             elements.fieldHoursInput.oninput = handleHoursInput_FullTime; 
             elements.bibleStudiesInput.oninput = handleStudiesInput;
             break;
@@ -1728,17 +1726,15 @@ else if (pageId === 'missingReportsPage') {
             elements.bibleStudiesContainer.classList.remove("hidden");
             elements.sharedMinistryContainer.classList.remove("hidden");
             elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-            
             elements.sharedMinistryCheckbox.disabled = true;
             elements.auxiliaryPioneerCheckbox.disabled = true; 
-            
             elements.fieldHoursInput.oninput = handleHoursInput_Aux;
             elements.bibleStudiesInput.oninput = handleStudiesInput;
             break;
 
         case "Publisher/Auxi":
+            // Check Aux Status in DB
             let isAux = false;
-            // Check sa database kung nag-Auxiliary siya sa buwan na ito
             if (publisherId && serviceYear && month) {
                 const docId = `${publisherId}_${serviceYear}_${month.replace(/\s+/g, '-')}`;
                 try {
@@ -1754,10 +1750,8 @@ else if (pageId === 'missingReportsPage') {
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
                 elements.auxiliaryPioneerCheckboxContainer.classList.remove("hidden");
-                
                 elements.sharedMinistryCheckbox.disabled = true;
                 elements.auxiliaryPioneerCheckbox.disabled = true;
-                
                 elements.fieldHoursInput.oninput = handleHoursInput_Aux;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
             } else {
@@ -1765,14 +1759,13 @@ else if (pageId === 'missingReportsPage') {
                 elements.fieldHoursContainer.classList.add("hidden");
                 elements.bibleStudiesContainer.classList.remove("hidden");
                 elements.sharedMinistryContainer.classList.remove("hidden");
-                
                 elements.sharedMinistryCheckbox.disabled = false;
                 elements.bibleStudiesInput.oninput = handleStudiesInput;
             }
             break;
             
         default:
-            // Regular Publisher (Active but no privilege, or Not yet effective)
+            // Regular Publisher 
             elements.fieldHoursContainer.classList.add("hidden");
             elements.bibleStudiesContainer.classList.remove("hidden");
             elements.sharedMinistryContainer.classList.remove("hidden");
@@ -3993,74 +3986,59 @@ async function generateSummaryTotalsCard() {
 }
         
 async function exportPublishersToExcel() {
-    // Check kung may laman ang listahan
     if (!publisherList || publisherList.length === 0) {
         alert("No publisher records found to export.");
         return;
     }
 
     try {
-        // --- HELPER FUNCTION PANG-LINIS NG DATE ---
-        // Ito ang magtatanggal ng dobleng taon (e.g., "January 2026 2026" -> "January 2026")
         const cleanMonthYear = (dateStr) => {
             if (!dateStr) return "";
             const parts = dateStr.trim().split(' ');
-            // Kung may sobra (e.g. Month Year Year), kunin lang ang Una (Month) at Huli (Year)
             if (parts.length >= 3) {
                 return `${parts[0]} ${parts[parts.length - 1]}`;
             }
             return dateStr;
         };
-        // -------------------------------------------
 
-        // 1. I-map ang data
-        const dataToExport = publisherList.map(pub => ({
-            "Last Name": pub.lastName,
-            "First Name": pub.firstName,
-            "Full Name": pub.fullName,
-            "Status": pub.publisherStatus,
-            "Birthdate": pub.birthdate,
-            "Gender": pub.gender,
-            "Baptism Status": pub.baptismStatus,
-            "Baptism Date": pub.baptismDate || "",
-            "Hope": pub.hope,
-            "Privilege": pub.privilege,
-            "Privilege 2 (Pioneer Status)": pub.privilege2,
-            "Privilege 2 Start Date": (pub.p2StartMonth && pub.p2StartYear) ? `${pub.p2StartMonth} ${pub.p2StartYear}` : "",
-            "Field Service Group": pub.fieldServiceGroup,
+        const dataToExport = publisherList.map(pub => {
+            // FIX: Start Date Logic for Export
+            // Kung may p2StartMonth, yun na ang gamitin dahil may year na yun kadalasan.
+            // Kung wala, blank.
+            let p2StartDate = "";
+            if (pub.p2StartMonth) {
+                p2StartDate = pub.p2StartMonth; // Usually "Month Year" na ito
+            } 
             
-            // 👇 GINAGAMITAN NATIN NG CLEANER FUNCTION DITO 👇
-            "Month of Transfer": cleanMonthYear(pub.monthOfTransfer),
-            "Month of Death": cleanMonthYear(pub.monthOfDeath)
-        }));
+            return {
+                "Last Name": pub.lastName,
+                "First Name": pub.firstName,
+                "Full Name": pub.fullName,
+                "Status": pub.publisherStatus,
+                "Birthdate": pub.birthdate,
+                "Gender": pub.gender,
+                "Baptism Status": pub.baptismStatus,
+                "Baptism Date": pub.baptismDate || "",
+                "Hope": pub.hope,
+                "Privilege": pub.privilege,
+                "Privilege 2 (Pioneer Status)": pub.privilege2,
+                "Privilege 2 Start Date": p2StartDate, // Gamitin ang fixed variable
+                "Field Service Group": pub.fieldServiceGroup,
+                "Month of Transfer": cleanMonthYear(pub.monthOfTransfer),
+                "Month of Death": cleanMonthYear(pub.monthOfDeath)
+            };
+        });
 
-        // 2. Gumawa ng Worksheet
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-
-        // (Optional) I-adjust ang lapad ng columns
         const wscols = [
-            {wch: 15}, // Last Name
-            {wch: 15}, // First Name
-            {wch: 25}, // Full Name
-            {wch: 20}, // Status
-            {wch: 12}, // Birthdate
-            {wch: 10}, // Gender
-            {wch: 15}, // Baptism Status
-            {wch: 12}, // Baptism Date
-            {wch: 15}, // Hope
-            {wch: 20}, // Privilege
-            {wch: 25}, // Privilege 2
-            {wch: 20}, // Group
-            {wch: 15}, // Transfer
-            {wch: 15}  // Death
+            {wch: 15}, {wch: 15}, {wch: 25}, {wch: 20}, {wch: 12}, 
+            {wch: 10}, {wch: 15}, {wch: 12}, {wch: 15}, {wch: 20}, 
+            {wch: 25}, {wch: 20}, {wch: 20}, {wch: 15}, {wch: 15}
         ];
         worksheet['!cols'] = wscols;
 
-        // 3. Gumawa ng Workbook at i-append ang worksheet
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Publishers");
-
-        // 4. I-download ang file
         const dateStr = new Date().toISOString().slice(0, 10);
         XLSX.writeFile(workbook, `Congregation_Publishers_${dateStr}.xlsx`);
 
@@ -4410,36 +4388,38 @@ function handleNoReportCheck(checkboxElem, hoursElem, studiesElem, sharedElem, a
     }
 }
 // --- HELPER: Convert Service Year + Month to Date Object ---
-function getChronologicalDate(serviceYear, monthName) {
-    if (!serviceYear || !monthName) return null;
+// --- HELPER: Convert Service Year + Month to Date Object ---
+function getChronologicalDate(serviceYear, monthStr) {
+    if (!serviceYear || !monthStr) return null;
+    
+    // FIX: Kunin lang ang unang parte ng string (e.g., "February" from "February 2026")
+    const monthName = monthStr.split(' ')[0].trim(); 
     
     const sy = parseInt(serviceYear);
-    // Service Year 2026 starts Sept 2025.
-    // Months: Sept=0, Oct=1 ... Aug=11 (relative to start)
-    const months = ["September", "October", "November", "December", "January", "February", "March", "April", "May", "June", "July", "August"];
-    const monthIndex = months.indexOf(monthName);
     
-    if (monthIndex === -1) return null; // Invalid month
-
-    // Kung ang month ay Sept-Dec, ang calendar year ay (SY - 1)
-    // Kung Jan-Aug, ang calendar year ay (SY)
-    let calendarYear;
-    let jsMonthIndex; // 0=Jan, 1=Feb...
-
-    // Mapping monthName to JS Date Month Index (0-11)
+    // JS Month Index (0 = January, 11 = December)
     const jsMonths = {
         "January": 0, "February": 1, "March": 2, "April": 3, "May": 4, "June": 5,
         "July": 6, "August": 7, "September": 8, "October": 9, "November": 10, "December": 11
     };
-    jsMonthIndex = jsMonths[monthName];
 
-    if (jsMonthIndex >= 8) { // Sept - Dec
+    if (jsMonths[monthName] === undefined) return null; // Invalid month name
+
+    const jsMonthIndex = jsMonths[monthName];
+    let calendarYear;
+
+    // Logic: 
+    // Service Year 2026: Sept 2025 - Aug 2026
+    // Sept (8) to Dec (11) uses (SY - 1)
+    // Jan (0) to Aug (7) uses (SY)
+    
+    if (jsMonthIndex >= 8) { // Sept, Oct, Nov, Dec
         calendarYear = sy - 1;
-    } else { // Jan - Aug
+    } else { // Jan, Feb, Mar, Apr, May, Jun, Jul, Aug
         calendarYear = sy;
     }
 
-    // Return first day of that month
+    // Return Date object (First day of the month)
     return new Date(calendarYear, jsMonthIndex, 1);
 }
 function togglePrivilege2Date() {
