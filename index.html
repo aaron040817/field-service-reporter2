@@ -4072,7 +4072,7 @@ async function exportPublishersToExcel() {
         alert("An error occurred while exporting. Please check the console.");
     }
 }
-        async function generateMissingReports() {
+async function generateMissingReports() {
     const selectedYear = serviceYearMissing.value;
     const selectedMonth = monthMissing.value;
 
@@ -4098,28 +4098,37 @@ async function exportPublishersToExcel() {
 
         // 3. I-filter ang mga Publishers
         const missingPublishers = publisherList.filter(pub => {
-            // Kunin ang status, gawing empty string kung null/undefined, at linisin ang spaces
             const rawStatus = pub.publisherStatus || "";
             const status = rawStatus.trim().toLowerCase();
             
-            // CONDITION 1: Status ay "In the Congregation"
             const isInCongregation = status === 'in the congregation';
-            
-            // CONDITION 2: Status ay Blank (Wala pang nilagay)
             const isBlank = status === '';
 
-            // ACTIVE kapag: Nasa Cong O KAYA Blank ang status
-            // (Hindi kasali ang 'Dead' o 'Transferred')
+            // Active kung In Cong o Blank status
             const isActive = isInCongregation || isBlank;
             
-            // Check kung wala sa listahan ng nag-report
             const hasReported = reportedPublisherIds.includes(pub.id);
 
             return isActive && !hasReported;
         });
 
-        // 4. Sort Alphabetical
-        missingPublishers.sort((a, b) => a.fullName.localeCompare(b.fullName));
+        // 4. Sort: Field Service Group (Numeric) -> Full Name
+        missingPublishers.sort((a, b) => {
+            let groupA = a.fieldServiceGroup || "zzz"; 
+            let groupB = b.fieldServiceGroup || "zzz";
+            
+            // Push "None" to bottom
+            if (groupA === "None") groupA = "zzz";
+            if (groupB === "None") groupB = "zzz";
+
+            // Primary Sort: Group (Numeric aware para 2 < 10)
+            const groupCompare = groupA.localeCompare(groupB, undefined, { numeric: true, sensitivity: 'base' });
+
+            if (groupCompare !== 0) return groupCompare;
+
+            // Secondary Sort: Name
+            return a.fullName.localeCompare(b.fullName);
+        });
 
         // 5. Display Result
         if (missingPublishers.length === 0) {
@@ -4135,8 +4144,7 @@ async function exportPublishersToExcel() {
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <thead>
                         <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Publisher Name</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Group</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Group</th> <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Publisher Name</th>
                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Privilege</th>
                             <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
                         </tr>
@@ -4145,13 +4153,12 @@ async function exportPublishersToExcel() {
             `;
 
             missingPublishers.forEach(pub => {
-                // Display status as "Blank" kung walang laman para makita mo
                 const displayStatus = pub.publisherStatus ? pub.publisherStatus : '<span style="color:red; font-style:italic;">(Blank)</span>';
                 
                 html += `
                     <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px; font-weight:bold;">${pub.fieldServiceGroup || '-'}</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">${pub.fullName}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${pub.fieldServiceGroup || '-'}</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">${pub.privilege2 || 'Publisher'}</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">${displayStatus}</td>
                     </tr>
@@ -4167,7 +4174,6 @@ async function exportPublishersToExcel() {
         missingReportsResults.innerHTML = "<p style='color:red'>An error occurred. Please check console.</p>";
     }
 }
-
 async function generateBatchS21Cards() {
     const serviceYear = batchServiceYear.value;
     const statusFilter = batchStatus.value;
